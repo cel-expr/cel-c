@@ -739,6 +739,7 @@ cc_test(
         "//cel-c:arena",
         "//cel-c:ast",
         "//cel-c:config",
+        "//cel-c:duration",
         "//cel-c:error",
         "//cel-c:error_code",
         "//cel-c:runtime",

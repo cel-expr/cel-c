@@ -33,6 +33,7 @@
 #include "cel-c/arena.h"
 #include "cel-c/ast.h"
 #include "cel-c/config.h"
+#include "cel-c/duration.h"
 #include "cel-c/error.h"
 #include "cel-c/error_code.h"
 #include "cel-c/program.h"
@@ -796,7 +797,7 @@ TEST_F(RuntimeTest, CallDuration) {
   _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsDuration(&value));
-  EXPECT_EQ(cel_Value_GetDuration(&value).sec, 3600);
+  EXPECT_EQ(cel_Duration_ToUnixSeconds(cel_Value_GetDuration(&value)), 3600);
 
   prog = Parse(R"cel(duration("invalid"))cel");
   act = Activate(prog.get(), &var_resolver);

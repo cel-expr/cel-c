@@ -121,6 +121,15 @@ static CEL_INLINE void cel_Duration_ToUnix(cel_Duration d,
   }
 }
 
+// cel_Duration_ToUnixSeconds
+//
+// Returns the seconds part of the cel_Duration.
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE int64_t cel_Duration_ToUnixSeconds(cel_Duration d) {
+  CEL_ASSERT(cel_Duration_Valid(d.sec, d.nsec));
+  return d.sec;
+}
+
 // cel_Duration_Equals
 //
 // Tests the two durations for equality.

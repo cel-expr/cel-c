@@ -270,11 +270,11 @@ static bool _cel_MutableMapValue_Resize(cel_MapValue* cel_nonnull map_value,
              (old_cap == 0 || _cel_has_single_bit(old_cap)));
   _cel_MutableMapValueEntry** new_ents =
       (_cel_MutableMapValueEntry**)cel_Arena_Malloc(
-          arena, sizeof(_cel_MutableMapValueEntry) * new_cap, cel_nullptr);
+          arena, sizeof(_cel_MutableMapValueEntry*) * new_cap, cel_nullptr);
   if (CEL_UNLIKELY(new_ents == cel_nullptr)) {
     return false;
   }
-  memset(new_ents, 0, sizeof(_cel_MutableMapValueEntry) * new_cap);
+  memset(new_ents, 0, sizeof(_cel_MutableMapValueEntry*) * new_cap);
   _cel_MutableMapValue_Rehash(new_ents, new_cap, old_ents, old_cap, len);
   map_value->content.ptr[_cel_MutableMapValueContent_kPtrOffset] = new_ents;
   map_value->content.u32[_cel_MutableMapValueContent_kCapOffset] = new_cap;
@@ -325,11 +325,11 @@ extern "C" _cel_MutableMapValueInsertResult _cel_MutableMapValue_Insert(
     len = 0;
     _cel_MutableMapValueEntry** ents =
         (_cel_MutableMapValueEntry**)cel_Arena_Malloc(
-            arena, sizeof(_cel_MutableMapValueEntry) * cap, cel_nullptr);
+            arena, sizeof(_cel_MutableMapValueEntry*) * cap, cel_nullptr);
     if (CEL_UNLIKELY(ents == cel_nullptr)) {
       return _cel_MutableMapValueInsertResult_kOutOfMemory;
     }
-    memset(ents, 0, sizeof(_cel_MutableMapValueEntry) * cap);
+    memset(ents, 0, sizeof(_cel_MutableMapValueEntry*) * cap);
     map_value->content.ptr[_cel_MutableMapValueContent_kPtrOffset] = ents;
     map_value->content.u32[_cel_MutableMapValueContent_kCapOffset] = cap;
   } else {
@@ -369,7 +369,7 @@ extern "C" _cel_MutableMapValueInsertResult _cel_MutableMapValue_Insert(
     *out_key = &ent->key;
   }
   *out_value = &ent->value;
-  ents[bit] = ent;
+  ents[bit & mask] = ent;
   map_value->content.u32[_cel_MutableMapValueContent_kLenOffset] = ++len;
 
   if (len > threshold) {

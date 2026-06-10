@@ -48,7 +48,7 @@ cc_library(
 
 cc_library(
     name = "any",
-    srcs = ["any.c"],
+    srcs = ["any.cc"],
     hdrs = ["any.h"],
     deps = [
         "//cel-c:assert",
@@ -260,7 +260,7 @@ cc_test(
 
 cc_library(
     name = "bit",
-    srcs = ["bit.c"],
+    srcs = ["bit.cc"],
     hdrs = ["bit.h"],
     deps = [
         "//cel-c:config",
@@ -278,7 +278,7 @@ cc_test(
 
 cc_library(
     name = "bitset",
-    srcs = ["bitset.c"],
+    srcs = ["bitset.cc"],
     hdrs = ["bitset.h"],
     deps = [
         ":bit",
@@ -298,7 +298,7 @@ cc_test(
 
 cc_library(
     name = "charconv",
-    srcs = ["charconv.c"],
+    srcs = ["charconv.cc"],
     hdrs = ["charconv.h"],
     deps = [
         ":ckdint",
@@ -387,7 +387,7 @@ cc_test(
 
 cc_library(
     name = "ctype",
-    srcs = ["ctype.c"],
+    srcs = ["ctype.cc"],
     hdrs = ["ctype.h"],
     deps = [
         "//cel-c:config",
@@ -489,7 +489,7 @@ cc_test(
 
 cc_library(
     name = "generic_array",
-    srcs = ["generic_array.c"],
+    srcs = ["generic_array.cc"],
     hdrs = ["generic_array.h"],
     deps = [
         ":asan",
@@ -503,7 +503,7 @@ cc_library(
 
 cc_library(
     name = "generic_deque",
-    srcs = ["generic_deque.c"],
+    srcs = ["generic_deque.cc"],
     hdrs = ["generic_deque.h"],
     deps = [
         ":align",
@@ -517,7 +517,7 @@ cc_library(
 
 cc_library(
     name = "generic_flat_hash",
-    srcs = ["generic_flat_hash.c"],
+    srcs = ["generic_flat_hash.cc"],
     hdrs = ["generic_flat_hash.h"],
     deps = [
         ":align",
@@ -532,7 +532,7 @@ cc_library(
 
 cc_library(
     name = "generic_string",
-    srcs = ["generic_string.c"],
+    srcs = ["generic_string.cc"],
     hdrs = ["generic_string.h"],
     deps = [
         ":asan",
@@ -557,7 +557,7 @@ cc_test(
 
 cc_library(
     name = "malloc",
-    srcs = ["malloc.c"],
+    srcs = ["malloc.cc"],
     hdrs = ["malloc.h"],
     deps = [
         ":bit",
@@ -580,7 +580,7 @@ cc_test(
 
 cc_library(
     name = "memory",
-    srcs = ["memory.c"],
+    srcs = ["memory.cc"],
     hdrs = ["memory.h"],
     deps = [
         ":config",
@@ -600,7 +600,7 @@ cc_test(
 
 cc_library(
     name = "message_equality",
-    srcs = ["message_equality.c"],
+    srcs = ["message_equality.cc"],
     hdrs = ["message_equality.h"],
     deps = [
         ":any",
@@ -933,7 +933,7 @@ cc_test(
 
 cc_library(
     name = "utf8",
-    srcs = ["utf8.c"],
+    srcs = ["utf8.cc"],
     hdrs = ["utf8.h"],
     deps = [
         ":uchar",
@@ -958,19 +958,19 @@ cc_test(
 cc_library(
     name = "value",
     srcs = [
-        "empty_list_value.c",
-        "empty_map_value.c",
-        "list_value.c",
-        "map_value.c",
-        "mutable_list_value.c",
-        "mutable_map_value.c",
-        "opaque_value.c",
-        "optional_value.c",
-        "parsed_map_field_value.c",
-        "parsed_message_value.c",
-        "parsed_repeated_field_value.c",
-        "struct_value.c",
-        "value.c",
+        "empty_list_value.cc",
+        "empty_map_value.cc",
+        "list_value.cc",
+        "map_value.cc",
+        "mutable_list_value.cc",
+        "mutable_map_value.cc",
+        "opaque_value.cc",
+        "optional_value.cc",
+        "parsed_map_field_value.cc",
+        "parsed_message_value.cc",
+        "parsed_repeated_field_value.cc",
+        "struct_value.cc",
+        "value.cc",
     ],
     hdrs = [
         "empty_list_value.h",

@@ -46,7 +46,7 @@ package_group(
 cc_library(
     name = "alloc",
     srcs = [
-        "alloc.c",
+        "alloc.cc",
     ],
     hdrs = [
         "alloc.h",
@@ -75,7 +75,7 @@ cc_test(
 cc_library(
     name = "arena",
     srcs = [
-        "arena.c",
+        "arena.cc",
     ],
     hdrs = [
         "arena.h",
@@ -106,7 +106,7 @@ cc_test(
 
 cc_library(
     name = "assert",
-    srcs = ["assert.c"],
+    srcs = ["assert.cc"],
     hdrs = ["assert.h"],
     visibility = [":friends"],
     deps = [
@@ -127,7 +127,7 @@ cc_test(
 cc_library(
     name = "ast",
     srcs = [
-        "ast.c",
+        "ast.cc",
     ],
     hdrs = [
         "ast.h",
@@ -165,7 +165,7 @@ cc_test(
 cc_library(
     name = "ast_proto",
     srcs = [
-        "ast_proto.c",
+        "ast_proto.cc",
     ],
     hdrs = [
         "ast_proto.h",
@@ -221,7 +221,7 @@ cc_test(
 cc_library(
     name = "ast_proto_v1alpha1",
     srcs = [
-        "ast_proto_v1alpha1.c",
+        "ast_proto_v1alpha1.cc",
     ],
     hdrs = [
         "ast_proto_v1alpha1.h",
@@ -276,7 +276,7 @@ cc_test(
 cc_library(
     name = "ast_traverse",
     srcs = [
-        "ast_traverse.c",
+        "ast_traverse.cc",
     ],
     hdrs = [
         "ast_traverse.h",
@@ -331,7 +331,7 @@ cc_library(
 
 cc_library(
     name = "constant",
-    srcs = ["constant.c"],
+    srcs = ["constant.cc"],
     hdrs = ["constant.h"],
     visibility = [":friends"],
     deps = [
@@ -358,7 +358,7 @@ cc_test(
 
 cc_library(
     name = "constant_proto",
-    srcs = ["constant_proto.c"],
+    srcs = ["constant_proto.cc"],
     hdrs = ["constant_proto.h"],
     visibility = [":friends"],
     deps = [
@@ -403,7 +403,7 @@ cc_test(
 
 cc_library(
     name = "constant_proto_v1alpha1",
-    srcs = ["constant_proto_v1alpha1.c"],
+    srcs = ["constant_proto_v1alpha1.cc"],
     hdrs = ["constant_proto_v1alpha1.h"],
     visibility = [":friends"],
     deps = [
@@ -449,7 +449,7 @@ cc_test(
 cc_library(
     name = "cstring_view",
     srcs = [
-        "cstring_view.c",
+        "cstring_view.cc",
     ],
     hdrs = [
         "cstring_view.h",
@@ -476,7 +476,7 @@ cc_test(
 cc_library(
     name = "decl",
     srcs = [
-        "decl.c",
+        "decl.cc",
     ],
     hdrs = [
         "decl.h",
@@ -514,7 +514,7 @@ cc_test(
 cc_library(
     name = "decl_proto",
     srcs = [
-        "decl_proto.c",
+        "decl_proto.cc",
     ],
     hdrs = [
         "decl_proto.h",
@@ -561,7 +561,7 @@ cc_test(
 cc_library(
     name = "decl_proto_v1alpha1",
     srcs = [
-        "decl_proto_v1alpha1.c",
+        "decl_proto_v1alpha1.cc",
     ],
     hdrs = [
         "decl_proto_v1alpha1.h",
@@ -608,7 +608,7 @@ cc_test(
 cc_library(
     name = "duration",
     srcs = [
-        "duration.c",
+        "duration.cc",
     ],
     hdrs = [
         "duration.h",
@@ -656,7 +656,7 @@ cc_test(
 cc_library(
     name = "duration_proto",
     srcs = [
-        "duration_proto.c",
+        "duration_proto.cc",
     ],
     hdrs = [
         "duration_proto.h",
@@ -686,7 +686,7 @@ cc_test(
 cc_library(
     name = "error",
     srcs = [
-        "error.c",
+        "error.cc",
     ],
     hdrs = [
         "error.h",
@@ -760,7 +760,7 @@ cc_test(
 
 cc_library(
     name = "error_proto",
-    srcs = ["error_proto.c"],
+    srcs = ["error_proto.cc"],
     hdrs = ["error_proto.h"],
     visibility = [":friends"],
     deps = [
@@ -800,7 +800,7 @@ cc_test(
 cc_library(
     name = "error_code",
     srcs = [
-        "error_code.c",
+        "error_code.cc",
     ],
     hdrs = [
         "error_code.h",
@@ -869,7 +869,7 @@ cc_test(
 cc_library(
     name = "error_space",
     srcs = [
-        "error_space.c",
+        "error_space.cc",
     ],
     hdrs = [
         "error_space.h",
@@ -901,7 +901,7 @@ cc_test(
 cc_library(
     name = "error_status",
     srcs = [
-        "error_status.c",
+        "error_status.cc",
     ],
     hdrs = [
         "error_status.h",
@@ -947,7 +947,7 @@ cc_library(
 cc_library(
     name = "hash",
     srcs = [
-        "hash.c",
+        "hash.cc",
     ],
     hdrs = [
         "hash.h",
@@ -977,7 +977,7 @@ cc_test(
 cc_library(
     name = "operators",
     srcs = [
-        "operators.c",
+        "operators.cc",
     ],
     hdrs = [
         "operators.h",
@@ -1066,7 +1066,7 @@ cc_library(
 cc_library(
     name = "ref",
     srcs = [
-        "ref.c",
+        "ref.cc",
     ],
     hdrs = [
         "ref.h",
@@ -1084,7 +1084,7 @@ cc_library(
 cc_library(
     name = "ref_proto",
     srcs = [
-        "ref_proto.c",
+        "ref_proto.cc",
     ],
     hdrs = [
         "ref_proto.h",
@@ -1127,7 +1127,7 @@ cc_test(
 cc_library(
     name = "ref_proto_v1alpha1",
     srcs = [
-        "ref_proto_v1alpha1.c",
+        "ref_proto_v1alpha1.cc",
     ],
     hdrs = [
         "ref_proto_v1alpha1.h",
@@ -1171,7 +1171,7 @@ cc_test(
 cc_library(
     name = "status",
     srcs = [
-        "status.c",
+        "status.cc",
     ],
     hdrs = [
         "status.h",
@@ -1242,7 +1242,7 @@ cc_test(
 
 cc_library(
     name = "status_proto",
-    srcs = ["status_proto.c"],
+    srcs = ["status_proto.cc"],
     hdrs = ["status_proto.h"],
     visibility = [":friends"],
     deps = [
@@ -1282,7 +1282,7 @@ cc_test(
 cc_library(
     name = "status_code",
     srcs = [
-        "status_code.c",
+        "status_code.cc",
     ],
     hdrs = [
         "status_code.h",
@@ -1352,7 +1352,7 @@ cc_test(
 cc_library(
     name = "string_view",
     srcs = [
-        "string_view.c",
+        "string_view.cc",
     ],
     hdrs = [
         "string_view.h",
@@ -1404,7 +1404,7 @@ cc_test(
 cc_library(
     name = "timestamp",
     srcs = [
-        "timestamp.c",
+        "timestamp.cc",
     ],
     hdrs = [
         "timestamp.h",
@@ -1454,7 +1454,7 @@ cc_test(
 cc_library(
     name = "timestamp_proto",
     srcs = [
-        "timestamp_proto.c",
+        "timestamp_proto.cc",
     ],
     hdrs = [
         "timestamp_proto.h",
@@ -1494,7 +1494,7 @@ cc_library(
 cc_library(
     name = "type",
     srcs = [
-        "type.c",
+        "type.cc",
     ],
     hdrs = [
         "type.h",
@@ -1546,7 +1546,7 @@ cc_library(
 cc_library(
     name = "type_proto",
     srcs = [
-        "type_proto.c",
+        "type_proto.cc",
     ],
     hdrs = [
         "type_proto.h",
@@ -1586,7 +1586,7 @@ cc_test(
 cc_library(
     name = "type_proto_v1alpha1",
     srcs = [
-        "type_proto_v1alpha1.c",
+        "type_proto_v1alpha1.cc",
     ],
     hdrs = [
         "type_proto_v1alpha1.h",
@@ -1681,7 +1681,7 @@ cc_library(
 cc_library(
     name = "well_known_types",
     srcs = [
-        "well_known_types.c",
+        "well_known_types.cc",
     ],
     hdrs = [
         "well_known_types.h",

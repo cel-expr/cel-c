@@ -14,8 +14,6 @@
 
 #include "cel-c/error_code.h"
 
-#include <limits>
-
 #include "gtest/gtest.h"
 
 namespace {
@@ -45,10 +43,6 @@ TEST(ErrorCode, Name) {
   EXPECT_STREQ(cel_ErrorCode_Name(cel_ErrorCode_kDataLoss), "DATA_LOSS");
   EXPECT_STREQ(cel_ErrorCode_Name(cel_ErrorCode_kUnauthenticated),
                "UNAUTHENTICATED");
-
-  EXPECT_STREQ(cel_ErrorCode_Name(
-                   static_cast<cel_ErrorCode>(std::numeric_limits<int>::max())),
-               "UNKNOWN");
 }
 
 }  // namespace

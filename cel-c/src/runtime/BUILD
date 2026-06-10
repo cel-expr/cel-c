@@ -22,11 +22,11 @@ package(
 cc_library(
     name = "runtime",
     srcs = [
-        "activation.c",
-        "interpretable.c",
-        "interpreter.c",
-        "program.c",
-        "runtime.c",
+        "activation.cc",
+        "interpretable.cc",
+        "interpreter.cc",
+        "program.cc",
+        "runtime.cc",
     ],
     hdrs = [
         "activation.h",

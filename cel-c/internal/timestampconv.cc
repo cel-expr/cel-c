@@ -20,7 +20,6 @@
 #include "absl/strings/string_view.h"
 #include "absl/time/time.h"
 #include "cel-c/arena.h"
-#include "cel-c/assert.h"
 #include "cel-c/internal/config.h"
 #include "cel-c/string_view.h"
 #include "cel-c/string_view_absl.h"
@@ -32,8 +31,10 @@ CEL_ATTRIBUTE_NODISCARD
 CEL_ATTRIBUTE_NOTHROW
 bool _cel_Timestamp_ToRFC3339(cel_Timestamp ts, cel_StringView* cel_nonnull out,
                               CEL_NONNULL(cel_Arena*) arena) {
-  CEL_ASSERT(cel_Timestamp_Valid(ts.sec, ts.nsec));
-  absl::Time time = absl::FromUnixSeconds(ts.sec) + absl::Nanoseconds(ts.nsec);
+  int64_t sec;
+  int32_t nsec;
+  cel_Timestamp_ToUnix(ts, &sec, &nsec);
+  absl::Time time = absl::FromUnixSeconds(sec) + absl::Nanoseconds(nsec);
   absl::TimeZone utc = absl::UTCTimeZone();
 
   std::string rfc3339 = absl::FormatTime("%Y-%m-%d%ET%H:%M:%E*SZ", time, utc);
@@ -64,9 +65,7 @@ bool _cel_Timestamp_FromRFC3339(cel_Timestamp* cel_nonnull out,
   if (!cel_Timestamp_Valid(seconds, nanos)) {
     return false;
   }
-
-  out->sec = seconds;
-  out->nsec = nanos;
+  *out = cel_Timestamp_FromUnix(seconds, nanos);
   return true;
 }
 

@@ -40,6 +40,31 @@
 #include <stdlib.h>    // IWYU pragma: keep
 #endif
 
+#ifdef _CEL_IS_BIG_ENDIAN
+#error _CEL_IS_BIG_ENDIAN cannot be directly set
+#endif
+
+#ifdef _CEL_IS_LITTLE_ENDIAN
+#error _CEL_IS_LITTLE_ENDIAN cannot be directly set
+#endif
+
+#if defined(__BIG_ENDIAN__) || defined(__ARMEB__) || defined(__THUMBEB__) || \
+    defined(__AARCH64EB__) || defined(_MIPSEB) || defined(__MIPSEB) ||       \
+    defined(__MIPSEB__) ||                                                   \
+    (defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) &&             \
+     __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+#define _CEL_IS_BIG_ENDIAN 1
+#elif defined(__LITTLE_ENDIAN__) || defined(__ARMEL__) ||                 \
+    defined(__THUMBEL__) || defined(__AARCH64EL__) || defined(_MIPSEL) || \
+    defined(__MIPSEL) || defined(__MIPSEL__) ||                           \
+    (defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) &&       \
+     __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__) ||                        \
+    defined(_WIN32)
+#define _CEL_IS_LITTLE_ENDIAN 1
+#else
+#error Endian detection needs to be set up for your environment.
+#endif
+
 #ifdef CEL_STATIC_ASSERT
 #error CEL_STATIC_ASSERT cannot be directly set
 #endif

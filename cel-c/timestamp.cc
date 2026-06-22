@@ -49,15 +49,15 @@ extern "C" bool cel_Timestamp_Normalize(int64_t* cel_nonnull sec,
 extern "C" bool cel_Timestamp_Add(cel_Timestamp* cel_nonnull out,
                                   cel_Timestamp lhs, cel_Duration rhs) {
   CEL_ASSERT_NOT_NULL(out);
-  CEL_ASSERT(cel_Timestamp_Valid(lhs.sec, lhs.nsec));
-  CEL_ASSERT(cel_Duration_Valid(rhs.sec, rhs.nsec));
 
-  int64_t lhs_sec = lhs.sec;
-  int64_t rhs_sec = rhs.sec;
+  int64_t lhs_sec;
+  int64_t rhs_sec;
   int64_t sec;
   int32_t nsec;
-  int32_t lhs_nsec = lhs.nsec;
-  int32_t rhs_nsec = rhs.nsec;
+  int32_t lhs_nsec;
+  int32_t rhs_nsec;
+  cel_Timestamp_ToUnix(lhs, &lhs_sec, &lhs_nsec);
+  cel_Duration_ToUnix(rhs, &rhs_sec, &rhs_nsec);
 
   if (CEL_UNLIKELY(_cel_ckd_add(&sec, lhs_sec, rhs_sec))) {
     return false;
@@ -78,15 +78,15 @@ extern "C" bool cel_Timestamp_Add(cel_Timestamp* cel_nonnull out,
 extern "C" bool cel_Timestamp_Sub(cel_Timestamp* cel_nonnull out,
                                   cel_Timestamp lhs, cel_Duration rhs) {
   CEL_ASSERT_NOT_NULL(out);
-  CEL_ASSERT(cel_Timestamp_Valid(lhs.sec, lhs.nsec));
-  CEL_ASSERT(cel_Duration_Valid(rhs.sec, rhs.nsec));
 
-  int64_t lhs_sec = lhs.sec;
-  int64_t rhs_sec = rhs.sec;
+  int64_t lhs_sec;
+  int64_t rhs_sec;
   int64_t sec;
   int32_t nsec;
-  int32_t lhs_nsec = lhs.nsec;
-  int32_t rhs_nsec = rhs.nsec;
+  int32_t lhs_nsec;
+  int32_t rhs_nsec;
+  cel_Timestamp_ToUnix(lhs, &lhs_sec, &lhs_nsec);
+  cel_Duration_ToUnix(rhs, &rhs_sec, &rhs_nsec);
 
   if (CEL_UNLIKELY(_cel_ckd_sub(&sec, lhs_sec, rhs_sec))) {
     return false;
@@ -107,15 +107,15 @@ extern "C" bool cel_Timestamp_Sub(cel_Timestamp* cel_nonnull out,
 extern "C" bool cel_Timestamp_Diff(cel_Duration* cel_nonnull out,
                                    cel_Timestamp lhs, cel_Timestamp rhs) {
   CEL_ASSERT_NOT_NULL(out);
-  CEL_ASSERT(cel_Timestamp_Valid(lhs.sec, lhs.nsec));
-  CEL_ASSERT(cel_Timestamp_Valid(rhs.sec, rhs.nsec));
 
-  int64_t lhs_sec = lhs.sec;
-  int64_t rhs_sec = rhs.sec;
+  int64_t lhs_sec;
+  int64_t rhs_sec;
   int64_t sec;
   int32_t nsec;
-  int32_t lhs_nsec = lhs.nsec;
-  int32_t rhs_nsec = rhs.nsec;
+  int32_t lhs_nsec;
+  int32_t rhs_nsec;
+  cel_Timestamp_ToUnix(lhs, &lhs_sec, &lhs_nsec);
+  cel_Timestamp_ToUnix(rhs, &rhs_sec, &rhs_nsec);
 
   if (CEL_UNLIKELY(_cel_ckd_sub(&sec, lhs_sec, rhs_sec))) {
     return false;

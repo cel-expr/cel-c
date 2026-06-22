@@ -58,25 +58,49 @@ CEL_BEGIN_DECLS
 #define cel_Duration_kMinNanos INT32_C(-999999999)
 #define cel_Duration_kMaxNanos INT32_C(999999999)
 
-#define cel_Duration_kZero ((cel_Duration){INT64_C(0), INT32_C(0)})
-#define cel_Duration_kMin \
-  ((cel_Duration){cel_Duration_kMinSeconds, cel_Duration_kMinNanos})
-#define cel_Duration_kMax \
-  ((cel_Duration){cel_Duration_kMaxSeconds, cel_Duration_kMaxNanos})
-
-#ifdef _MSC_VER
-#pragma pack(push, 4)
+#ifdef _CEL_IS_BIG_ENDIAN
+#define cel_Duration_kZero \
+  ((cel_Duration){{INT32_C(0), UINT32_C{0}}, INT32_C(0)})
+#define cel_Duration_kMin                                               \
+  ((cel_Duration){                                                      \
+      {(int32_t)(uint32_t)(((uint64_t)cel_Duration_kMinSeconds) >> 32), \
+       ((uint32_t)(uint64_t)cel_Duration_kMinSeconds)},                 \
+      cel_Duration_kMinNanos})
+#define cel_Duration_kMax                                               \
+  ((cel_Duration){                                                      \
+      {(int32_t)(uint32_t)(((uint64_t)cel_Duration_kMaxSeconds) >> 32), \
+       ((uint32_t)(uint64_t)cel_Duration_kMaxSeconds)},                 \
+      cel_Duration_kMaxNanos})
+#endif
+#ifdef _CEL_IS_LITTLE_ENDIAN
+#define cel_Duration_kZero \
+  ((cel_Duration){{UINT32_C(0), INT32_C(0)}, INT32_C(0)})
+#define cel_Duration_kMin                                                \
+  ((cel_Duration){                                                       \
+      {((uint32_t)(uint64_t)cel_Duration_kMinSeconds),                   \
+       (int32_t)(uint32_t)(((uint64_t)cel_Duration_kMinSeconds) >> 32)}, \
+      cel_Duration_kMinNanos})
+#define cel_Duration_kMax                                                \
+  ((cel_Duration){                                                       \
+      {((uint32_t)(uint64_t)cel_Duration_kMaxSeconds),                   \
+       (int32_t)(uint32_t)(((uint64_t)cel_Duration_kMaxSeconds) >> 32)}, \
+      cel_Duration_kMaxNanos})
 #endif
 
-typedef struct CEL_ATTRIBUTE_PACKED(4) {
-  // As this structure is packed, do not access these members directly.
-  int64_t sec;
+typedef struct {
+  // Alter layout based on endianness for consistency.
+  struct {
+#ifdef _CEL_IS_BIG_ENDIAN
+    int32_t hi;
+    uint32_t lo;
+#endif
+#ifdef _CEL_IS_LITTLE_ENDIAN
+    uint32_t lo;
+    int32_t hi;
+#endif
+  } sec;
   int32_t nsec;
 } cel_Duration;
-
-#ifdef _MSC_VER
-#pragma pack(pop)
-#endif
 
 CEL_STATIC_ASSERT(sizeof(cel_Duration) == 12);
 CEL_STATIC_ASSERT(alignof(cel_Duration) == 4);
@@ -101,7 +125,8 @@ static CEL_INLINE cel_Duration cel_Duration_FromUnix(int64_t sec,
   CEL_ASSERT(cel_Duration_Valid(sec, nsec));
 
   cel_Duration d;
-  d.sec = sec;
+  d.sec.hi = (int32_t)(uint32_t)(((uint64_t)sec) >> 32);
+  d.sec.lo = (uint32_t)(uint64_t)sec;
   d.nsec = nsec;
   return d;
 }
@@ -112,13 +137,10 @@ static CEL_INLINE cel_Duration cel_Duration_FromUnix(int64_t sec,
 // in `sec` and `nsec` respectively.
 static CEL_INLINE void cel_Duration_ToUnix(cel_Duration d,
                                            int64_t* cel_nonnull sec,
-                                           int32_t* cel_nullable nsec) {
-  CEL_ASSERT(cel_Duration_Valid(d.sec, d.nsec));
-
-  *sec = d.sec;
-  if (nsec != cel_nullptr) {
-    *nsec = d.nsec;
-  }
+                                           int32_t* cel_nonnull nsec) {
+  *sec = (int64_t)((((uint64_t)(uint32_t)d.sec.hi) << 32) | d.sec.lo);
+  *nsec = d.nsec;
+  CEL_ASSERT(cel_Duration_Valid(*sec, *nsec));
 }
 
 // cel_Duration_ToUnixSeconds
@@ -126,8 +148,9 @@ static CEL_INLINE void cel_Duration_ToUnix(cel_Duration d,
 // Returns the seconds part of the cel_Duration.
 CEL_ATTRIBUTE_NODISCARD
 static CEL_INLINE int64_t cel_Duration_ToUnixSeconds(cel_Duration d) {
-  CEL_ASSERT(cel_Duration_Valid(d.sec, d.nsec));
-  return d.sec;
+  int64_t sec = (int64_t)((((uint64_t)(uint32_t)d.sec.hi) << 32) | d.sec.lo);
+  CEL_ASSERT(cel_Duration_Valid(sec, d.nsec));
+  return sec;
 }
 
 // cel_Duration_Equals
@@ -135,10 +158,8 @@ static CEL_INLINE int64_t cel_Duration_ToUnixSeconds(cel_Duration d) {
 // Tests the two durations for equality.
 CEL_ATTRIBUTE_NODISCARD
 static CEL_INLINE bool cel_Duration_Equals(cel_Duration lhs, cel_Duration rhs) {
-  CEL_ASSERT(cel_Duration_Valid(lhs.sec, lhs.nsec));
-  CEL_ASSERT(cel_Duration_Valid(rhs.sec, rhs.nsec));
-
-  return lhs.sec == rhs.sec && lhs.nsec == rhs.nsec;
+  return lhs.sec.hi == rhs.sec.hi && lhs.sec.lo == rhs.sec.lo &&
+         lhs.nsec == rhs.nsec;
 }
 
 // cel_Duration_Compare
@@ -146,13 +167,12 @@ static CEL_INLINE bool cel_Duration_Equals(cel_Duration lhs, cel_Duration rhs) {
 // Compares the two durations.
 CEL_ATTRIBUTE_NODISCARD
 static CEL_INLINE int cel_Duration_Compare(cel_Duration lhs, cel_Duration rhs) {
-  CEL_ASSERT(cel_Duration_Valid(lhs.sec, lhs.nsec));
-  CEL_ASSERT(cel_Duration_Valid(rhs.sec, rhs.nsec));
-
-  if (lhs.sec < rhs.sec) {
+  int64_t lhs_sec = cel_Duration_ToUnixSeconds(lhs);
+  int64_t rhs_sec = cel_Duration_ToUnixSeconds(rhs);
+  if (lhs_sec < rhs_sec) {
     return -1;
   }
-  if (lhs.sec > rhs.sec) {
+  if (lhs_sec > rhs_sec) {
     return 1;
   }
   if (lhs.nsec < rhs.nsec) {

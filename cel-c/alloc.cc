@@ -22,8 +22,8 @@
 
 #include "cel-c/assert.h"
 #include "cel-c/config.h"
-#include "cel-c/src/ckdint.h"
-#include "cel-c/src/malloc.h"
+#include "cel-c/internal/ckdint.h"
+#include "cel-c/internal/malloc.h"
 #include "upb/mem/alloc.h"
 
 extern "C" CEL_NULLABLE(void*)

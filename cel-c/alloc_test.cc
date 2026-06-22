@@ -20,7 +20,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "cel-c/config.h"
-#include "cel-c/src/align.h"
+#include "cel-c/internal/align.h"
 
 namespace {
 

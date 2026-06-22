@@ -19,7 +19,7 @@
 
 #include "cel-c/assert.h"
 #include "cel-c/config.h"
-#include "cel-c/src/memory.h"
+#include "cel-c/internal/memory.h"
 
 extern "C" const char* cel_nullable
 cel_StringView_FindFirst(cel_StringView haystack, cel_StringView needle) {

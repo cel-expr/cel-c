@@ -20,7 +20,7 @@
 #include "cel-c/assert.h"
 #include "cel-c/config.h"
 #include "cel-c/duration.h"
-#include "cel-c/src/ckdint.h"
+#include "cel-c/internal/ckdint.h"
 
 extern "C" bool cel_Timestamp_Normalize(int64_t* cel_nonnull sec,
                                         int32_t* cel_nonnull nsec) {

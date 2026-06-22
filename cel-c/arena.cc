@@ -22,8 +22,8 @@
 
 #include "cel-c/assert.h"
 #include "cel-c/config.h"
-#include "cel-c/src/align.h"
-#include "cel-c/src/ckdint.h"
+#include "cel-c/internal/align.h"
+#include "cel-c/internal/ckdint.h"
 #include "upb/base/string_view.h"
 #include "upb/mem/arena.h"
 

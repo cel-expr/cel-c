@@ -25,8 +25,8 @@
 #include "cel-c/assert.h"
 #include "cel-c/config.h"
 #include "cel-c/error_space.h"
-#include "cel-c/src/array.h"
-#include "cel-c/src/string.h"
+#include "cel-c/internal/array.h"
+#include "cel-c/internal/string.h"
 #include "cel-c/status_code.h"
 #include "cel-c/string_view.h"
 

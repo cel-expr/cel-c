@@ -19,10 +19,10 @@
 #include <stdint.h>
 
 #include "cel-c/assert.h"
-#include "cel-c/src/bit.h"
-#include "cel-c/src/config.h"
-#include "cel-c/src/uint128.h"
-#include "cel-c/src/unaligned.h"
+#include "cel-c/internal/bit.h"
+#include "cel-c/internal/config.h"
+#include "cel-c/internal/uint128.h"
+#include "cel-c/internal/unaligned.h"
 
 static CEL_NONNULL(const void*) const _cel_kHashSeed = &_cel_kHashSeed;
 

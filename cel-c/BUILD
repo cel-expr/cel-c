@@ -55,8 +55,8 @@ cc_library(
     deps = [
         ":assert",
         ":config",
-        "//cel-c/src:ckdint",
-        "//cel-c/src:malloc",
+        "//cel-c/internal:ckdint",
+        "//cel-c/internal:malloc",
         "@protobuf//upb/mem",
     ],
 )
@@ -67,7 +67,7 @@ cc_test(
     deps = [
         ":alloc",
         ":config",
-        "//cel-c/src:align",
+        "//cel-c/internal:align",
         "@googletest//:gtest_main",
     ],
 )
@@ -85,8 +85,8 @@ cc_library(
         ":alloc",
         ":assert",
         ":config",
-        "//cel-c/src:align",
-        "//cel-c/src:ckdint",
+        "//cel-c/internal:align",
+        "//cel-c/internal:ckdint",
         "@protobuf//upb/base",
         "@protobuf//upb/mem",
     ],
@@ -184,8 +184,8 @@ cc_library(
         ":string_view",
         ":type",
         ":type_proto",
-        "//cel-c/src:malloc",
-        "//cel-c/src:setjmp",
+        "//cel-c/internal:malloc",
+        "//cel-c/internal:setjmp",
         "@cel-spec//proto/cel/expr:checked_upb_proto",
         "@cel-spec//proto/cel/expr:syntax_upb_proto",
         "@protobuf//upb/mem",
@@ -240,8 +240,8 @@ cc_library(
         ":string_view",
         ":type",
         ":type_proto_v1alpha1",
-        "//cel-c/src:malloc",
-        "//cel-c/src:setjmp",
+        "//cel-c/internal:malloc",
+        "//cel-c/internal:setjmp",
         "@googleapis//google/api/expr/v1alpha1:checked_upb_proto",
         "@protobuf//upb/mem",
     ],
@@ -290,8 +290,8 @@ cc_library(
         ":config",
         ":status",
         ":string_view",
-        "//cel-c/src:deque",
-        "//cel-c/src:malloc",
+        "//cel-c/internal:deque",
+        "//cel-c/internal:malloc",
     ],
 )
 
@@ -617,7 +617,7 @@ cc_library(
     deps = [
         ":assert",
         ":config",
-        "//cel-c/src:ckdint",
+        "//cel-c/internal:ckdint",
     ],
 )
 
@@ -956,10 +956,10 @@ cc_library(
     deps = [
         ":assert",
         ":config",
-        "//cel-c/src:bit",
-        "//cel-c/src:config",
-        "//cel-c/src:uint128",
-        "//cel-c/src:unaligned",
+        "//cel-c/internal:bit",
+        "//cel-c/internal:config",
+        "//cel-c/internal:uint128",
+        "//cel-c/internal:unaligned",
         "@protobuf//upb/base",
     ],
 )
@@ -1049,7 +1049,7 @@ cc_library(
         ":type",
         ":value",
         ":well_known_types",
-        "//cel-c/src/runtime",  # buildcleaner: keep
+        "//cel-c/internal/runtime",  # buildcleaner: keep
         "@protobuf//upb/reflection",
     ],
 )
@@ -1184,8 +1184,8 @@ cc_library(
         ":error_space",
         ":status_code",
         ":string_view",
-        "//cel-c/src:array",
-        "//cel-c/src:string",
+        "//cel-c/internal:array",
+        "//cel-c/internal:string",
     ],
 )
 
@@ -1363,7 +1363,7 @@ cc_library(
         ":config",
         ":cstring_view",
         ":hash",
-        "//cel-c/src:memory",
+        "//cel-c/internal:memory",
         "@protobuf//upb/base",
     ],
 )
@@ -1414,7 +1414,7 @@ cc_library(
         ":assert",
         ":config",
         ":duration",
-        "//cel-c/src:ckdint",
+        "//cel-c/internal:ckdint",
     ],
 )
 
@@ -1663,7 +1663,7 @@ cc_library(
         ":timestamp",
         ":value_kind",
         ":well_known_types",
-        "//cel-c/src:value",  # buildcleaner: keep
+        "//cel-c/internal:value",  # buildcleaner: keep
         "@protobuf//upb/message",
         "@protobuf//upb/reflection",
     ],

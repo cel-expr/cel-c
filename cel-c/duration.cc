@@ -19,7 +19,7 @@
 
 #include "cel-c/assert.h"
 #include "cel-c/config.h"
-#include "cel-c/src/ckdint.h"
+#include "cel-c/internal/ckdint.h"
 
 extern "C" bool cel_Duration_Normalize(int64_t* cel_nonnull sec,
                                        int32_t* cel_nonnull nsec) {

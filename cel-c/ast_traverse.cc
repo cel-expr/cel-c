@@ -23,8 +23,8 @@
 #include "cel-c/ast.h"
 #include "cel-c/ast_visitor.h"
 #include "cel-c/config.h"
-#include "cel-c/src/deque.h"
-#include "cel-c/src/malloc.h"
+#include "cel-c/internal/deque.h"
+#include "cel-c/internal/malloc.h"
 #include "cel-c/status.h"
 #include "cel-c/string_view.h"
 

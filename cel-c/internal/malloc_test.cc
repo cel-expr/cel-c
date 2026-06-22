@@ -19,8 +19,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "cel-c/config.h"
 #include "cel-c/internal/align.h"
+#include "cel-c/internal/config.h"
 
 namespace {
 

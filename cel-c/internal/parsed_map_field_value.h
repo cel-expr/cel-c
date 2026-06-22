@@ -16,7 +16,7 @@
 #define THIRD_PARTY_CEL_C_INTERNAL_PARSED_MAP_FIELD_VALUE_H_
 
 #include "cel-c/assert.h"
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/internal/empty_map_value.h"
 #include "cel-c/value.h"
 #include "upb/message/map.h"

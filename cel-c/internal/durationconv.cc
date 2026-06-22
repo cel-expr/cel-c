@@ -23,8 +23,8 @@
 #include "absl/time/time.h"
 #include "cel-c/arena.h"
 #include "cel-c/assert.h"
-#include "cel-c/config.h"
 #include "cel-c/duration.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/string_view.h"
 #include "cel-c/string_view_absl.h"
 

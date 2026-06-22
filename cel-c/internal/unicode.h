@@ -20,7 +20,7 @@
 #include <stdbool.h>  // IWYU pragma: keep
 #include <stdint.h>
 
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/internal/uchar.h"  // IWYU pragma: keep
 
 CEL_BEGIN_DECLS

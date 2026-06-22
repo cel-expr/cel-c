@@ -20,9 +20,9 @@
 #include <string.h>
 
 #include "cel-c/alloc.h"
-#include "cel-c/config.h"
 #include "cel-c/internal/arc.h"
 #include "cel-c/internal/array.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/internal/runtime/instr.h"
 #include "cel-c/internal/string.h"
 #include "cel-c/program.h"  // IWYU pragma: export

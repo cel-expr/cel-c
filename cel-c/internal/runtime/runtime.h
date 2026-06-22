@@ -16,8 +16,8 @@
 #define THIRD_PARTY_CEL_C_INTERNAL_RUNTIME_RUNTIME_H_
 
 #include "cel-c/alloc.h"
-#include "cel-c/config.h"
 #include "cel-c/internal/arc.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/internal/container.h"
 #include "cel-c/runtime.h"  // IWYU pragma: export
 #include "cel-c/well_known_types.h"

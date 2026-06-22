@@ -20,7 +20,7 @@
 #include "absl/strings/string_view.h"
 #include "cel-c/alloc.h"
 #include "cel-c/arena.h"
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/status.h"
 #include "cel-c/value.h"
 #include "cel-c/well_known_types.h"

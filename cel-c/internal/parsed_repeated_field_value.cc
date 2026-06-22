@@ -21,9 +21,9 @@
 
 #include "cel-c/alloc.h"
 #include "cel-c/assert.h"
-#include "cel-c/config.h"
 #include "cel-c/error.h"
 #include "cel-c/error_code.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/internal/message_equality.h"
 #include "cel-c/status.h"
 #include "cel-c/status_code.h"

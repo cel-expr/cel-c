@@ -25,7 +25,6 @@
 #include "cel-c/activation.h"
 #include "cel-c/arena.h"
 #include "cel-c/assert.h"
-#include "cel-c/config.h"
 #include "cel-c/duration.h"
 #include "cel-c/error.h"
 #include "cel-c/error_code.h"

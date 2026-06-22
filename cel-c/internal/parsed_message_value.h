@@ -16,7 +16,7 @@
 #define THIRD_PARTY_CEL_C_INTERNAL_PARSED_MESSAGE_VALUE_H_
 
 #include "cel-c/assert.h"
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/type.h"
 #include "cel-c/value.h"
 #include "upb/message/message.h"

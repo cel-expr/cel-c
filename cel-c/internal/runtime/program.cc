@@ -19,9 +19,9 @@
 
 #include "cel-c/alloc.h"
 #include "cel-c/assert.h"
-#include "cel-c/config.h"
 #include "cel-c/internal/arc.h"
 #include "cel-c/internal/array.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/internal/runtime/activation.h"
 #include "cel-c/internal/runtime/runtime.h"
 #include "cel-c/internal/string.h"

@@ -15,7 +15,7 @@
 #ifndef THIRD_PARTY_CEL_C_INTERNAL_COMPARE_H_
 #define THIRD_PARTY_CEL_C_INTERNAL_COMPARE_H_
 
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 
 CEL_BEGIN_DECLS
 

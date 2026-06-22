@@ -19,8 +19,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "cel-c/config.h"
 #include "cel-c/duration.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/string_view.h"
 #include "cel-c/timestamp.h"
 #include "upb/reflection/def.h"

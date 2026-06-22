@@ -41,7 +41,7 @@
 #include "absl/types/variant.h"
 #include "cel-c/alloc.h"
 #include "cel-c/arena.h"
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/status.h"
 #include "cel-c/well_known_types.h"
 #include "cel/expr/conformance/proto3/test_all_types.pb.h"

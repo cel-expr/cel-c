@@ -22,7 +22,7 @@
 #include <limits.h>   // IWYU pragma: keep
 #include <stdbool.h>  // IWYU pragma: keep
 
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 
 #if CEL_HAVE_INCLUDE(<stdbit.h>)
 #include <stdbit.h>

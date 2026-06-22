@@ -18,10 +18,10 @@
 
 #include "cel-c/arena.h"
 #include "cel-c/assert.h"
-#include "cel-c/config.h"
 #include "cel-c/duration.h"
 #include "cel-c/error.h"
 #include "cel-c/error_code.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/status.h"
 #include "cel-c/string_view.h"
 #include "cel-c/timestamp.h"

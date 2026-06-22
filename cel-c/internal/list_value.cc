@@ -18,7 +18,7 @@
 #include <string.h>
 
 #include "cel-c/assert.h"
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/status.h"
 #include "cel-c/value.h"
 

@@ -24,7 +24,7 @@
 #include <string.h>
 
 #include "cel-c/alloc.h"
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/internal/generic_flat_hash.h"
 
 CEL_BEGIN_DECLS

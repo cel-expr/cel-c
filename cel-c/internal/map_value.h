@@ -17,8 +17,8 @@
 
 #include <stdint.h>
 
-#include "cel-c/config.h"
 #include "cel-c/hash.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/string_view.h"
 #include "cel-c/value.h"
 #include "upb/base/descriptor_constants.h"

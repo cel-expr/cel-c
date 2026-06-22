@@ -20,7 +20,7 @@
 
 #include <stdint.h>  // IWYU pragma: keep
 
-#include "cel-c/config.h"  // IWYU pragma: keep
+#include "cel-c/internal/config.h"  // IWYU pragma: keep
 
 #if !defined(__cplusplus) || __cplusplus < 201103L
 CEL_BEGIN_DECLS

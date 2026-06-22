@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "gtest/gtest.h"
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/internal/value_testing.h"
 #include "cel-c/status.h"
 #include "cel-c/string_view.h"

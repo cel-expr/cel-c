@@ -19,10 +19,10 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "cel-c/config.h"
 #include "cel-c/error.h"
 #include "cel-c/error_code.h"
 #include "cel-c/hash.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/internal/empty_map_value.h"
 #include "cel-c/internal/value_testing.h"
 #include "cel-c/status.h"

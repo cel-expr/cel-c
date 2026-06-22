@@ -26,9 +26,9 @@
 #include "cel-c/alloc.h"
 #include "cel-c/arena.h"
 #include "cel-c/assert.h"
-#include "cel-c/config.h"
 #include "cel-c/internal/asan.h"
 #include "cel-c/internal/ckdint.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/string_view.h"
 
 static void _cel_GenericString_AnnotateNew(CEL_NONNULL(char*) str, size_t len,

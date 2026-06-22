@@ -16,7 +16,7 @@
 #define THIRD_PARTY_CEL_C_INTERNAL_RUNTIME_INTERPRETER_H_
 
 #include "cel-c/ast.h"
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/internal/runtime/program.h"
 #include "cel-c/internal/runtime/runtime.h"
 #include "cel-c/status.h"

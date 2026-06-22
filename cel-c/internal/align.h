@@ -24,8 +24,8 @@
 #include <stdint.h>
 
 #include "cel-c/assert.h"
-#include "cel-c/config.h"
 #include "cel-c/internal/bit.h"
+#include "cel-c/internal/config.h"
 
 // NOLINTBEGIN(runtime/int)
 // NOLINTBEGIN(google-runtime-int)

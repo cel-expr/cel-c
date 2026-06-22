@@ -19,11 +19,11 @@
 #include <stdlib.h>
 
 #include "cel-c/assert.h"
-#include "cel-c/config.h"
 #include "cel-c/duration.h"
 #include "cel-c/error.h"
 #include "cel-c/error_code.h"
 #include "cel-c/internal/any.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/internal/parsed_map_field_value.h"
 #include "cel-c/internal/parsed_message_value.h"
 #include "cel-c/internal/parsed_repeated_field_value.h"

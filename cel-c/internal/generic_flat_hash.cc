@@ -24,10 +24,10 @@
 #include "cel-c/alloc.h"
 #include "cel-c/arena.h"
 #include "cel-c/assert.h"
-#include "cel-c/config.h"
 #include "cel-c/internal/align.h"
 #include "cel-c/internal/bit.h"
 #include "cel-c/internal/bitset.h"
+#include "cel-c/internal/config.h"
 
 CEL_ATTRIBUTE_NODISCARD
 static size_t _cel_GenericFlatHash_Rehash(

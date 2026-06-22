@@ -18,7 +18,7 @@
 #include <stdbool.h>
 
 #include "cel-c/alloc.h"
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/well_known_types.h"
 #include "upb/message/array.h"
 #include "upb/message/message.h"

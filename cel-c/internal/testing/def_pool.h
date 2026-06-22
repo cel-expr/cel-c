@@ -15,7 +15,7 @@
 #ifndef THIRD_PARTY_CEL_C_INTERNAL_TESTING_DEF_POOL_H_
 #define THIRD_PARTY_CEL_C_INTERNAL_TESTING_DEF_POOL_H_
 
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 #include "upb/reflection/def.h"
 
 CEL_BEGIN_DECLS

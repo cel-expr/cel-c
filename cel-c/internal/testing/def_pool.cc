@@ -22,7 +22,7 @@
 #include "google/protobuf/wrappers.upbdefs.h"
 #include "absl/log/die_if_null.h"
 #include "cel-c/assert.h"
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 #include "cel/expr/conformance/proto3/test_all_types.upbdefs.h"
 #include "upb/reflection/def.h"
 

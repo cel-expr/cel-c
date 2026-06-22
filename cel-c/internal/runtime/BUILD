@@ -43,7 +43,6 @@ cc_library(
         "//cel-c:ast",
         "//cel-c:ast_traverse",
         "//cel-c:ast_visitor",
-        "//cel-c:config",
         "//cel-c:constant",
         "//cel-c:duration",
         "//cel-c:error",

@@ -25,8 +25,8 @@ cc_library(
     hdrs = ["align.h"],
     deps = [
         ":bit",
+        ":config",
         "//cel-c:assert",
-        "//cel-c:config",
     ],
 )
 
@@ -35,7 +35,7 @@ cc_test(
     srcs = ["align_test.cc"],
     deps = [
         ":align",
-        "//cel-c:config",
+        ":config",
         "@googletest//:gtest_main",
     ],
 )
@@ -51,8 +51,8 @@ cc_library(
     srcs = ["any.cc"],
     hdrs = ["any.h"],
     deps = [
+        ":config",
         "//cel-c:assert",
-        "//cel-c:config",
         "//cel-c:status",
         "//cel-c:status_code",
         "//cel-c:string_view",
@@ -70,9 +70,9 @@ cc_test(
     srcs = ["any_test.cc"],
     deps = [
         ":any",
+        ":config",
         "//cel-c:alloc",
         "//cel-c:arena",
-        "//cel-c:config",
         "//cel-c:status",
         "//cel-c:status_code",
         "//cel-c:string_view",
@@ -98,8 +98,8 @@ cc_library(
     name = "arc",
     hdrs = ["arc.h"],
     deps = [
+        ":config",
         "//cel-c:assert",
-        "//cel-c:config",
     ],
 )
 
@@ -108,7 +108,7 @@ cc_test(
     srcs = ["arc_test.cc"],
     deps = [
         ":arc",
-        "//cel-c:config",
+        ":config",
         "@googletest//:gtest_main",
     ],
 )
@@ -117,9 +117,9 @@ cc_library(
     name = "arena_array",
     hdrs = ["arena_array.h"],
     deps = [
+        ":config",
         ":generic_array",
         "//cel-c:arena",
-        "//cel-c:config",
     ],
 )
 
@@ -128,9 +128,9 @@ cc_test(
     srcs = ["arena_array_test.cc"],
     deps = [
         ":arena_array",
+        ":config",
         "//cel-c:alloc",
         "//cel-c:arena",
-        "//cel-c:config",
         "@abseil-cpp//absl/log:die_if_null",
         "@googletest//:gtest_main",
     ],
@@ -140,9 +140,9 @@ cc_library(
     name = "arena_deque",
     hdrs = ["arena_deque.h"],
     deps = [
+        ":config",
         ":generic_deque",
         "//cel-c:arena",
-        "//cel-c:config",
     ],
 )
 
@@ -151,9 +151,9 @@ cc_test(
     srcs = ["arena_deque_test.cc"],
     deps = [
         ":arena_deque",
+        ":config",
         "//cel-c:alloc",
         "//cel-c:arena",
-        "//cel-c:config",
         "@abseil-cpp//absl/log:die_if_null",
         "@googletest//:gtest_main",
     ],
@@ -163,9 +163,9 @@ cc_library(
     name = "arena_flat_hash_map",
     hdrs = ["arena_flat_hash_map.h"],
     deps = [
+        ":config",
         ":generic_flat_hash",
         "//cel-c:arena",
-        "//cel-c:config",
     ],
 )
 
@@ -174,9 +174,9 @@ cc_test(
     srcs = ["arena_flat_hash_map_test.cc"],
     deps = [
         ":arena_flat_hash_map",
+        ":config",
         "//cel-c:alloc",
         "//cel-c:arena",
-        "//cel-c:config",
         "//cel-c:hash",
         "@abseil-cpp//absl/log:die_if_null",
         "@googletest//:gtest_main",
@@ -187,9 +187,9 @@ cc_library(
     name = "arena_string",
     hdrs = ["arena_string.h"],
     deps = [
+        ":config",
         ":generic_string",
         "//cel-c:arena",
-        "//cel-c:config",
         "//cel-c:cstring_view",
         "//cel-c:string_view",
     ],
@@ -200,10 +200,10 @@ cc_test(
     srcs = ["arena_string_test.cc"],
     deps = [
         ":arena_string",
+        ":config",
         ":generic_string",
         "//cel-c:alloc",
         "//cel-c:arena",
-        "//cel-c:config",
         "//cel-c:cstring_view",
         "//cel-c:string_view",
         "@abseil-cpp//absl/log:die_if_null",
@@ -215,9 +215,9 @@ cc_library(
     name = "array",
     hdrs = ["array.h"],
     deps = [
+        ":config",
         ":generic_array",
         "//cel-c:alloc",
-        "//cel-c:config",
     ],
 )
 
@@ -226,8 +226,8 @@ cc_test(
     srcs = ["array_test.cc"],
     deps = [
         ":array",
+        ":config",
         "//cel-c:alloc",
-        "//cel-c:config",
         "@googletest//:gtest_main",
     ],
 )
@@ -244,8 +244,8 @@ cc_library(
     name = "binary_search",
     hdrs = ["binary_search.h"],
     deps = [
+        ":config",
         "//cel-c:assert",
-        "//cel-c:config",
     ],
 )
 
@@ -263,7 +263,7 @@ cc_library(
     srcs = ["bit.cc"],
     hdrs = ["bit.h"],
     deps = [
-        "//cel-c:config",
+        ":config",
     ],
 )
 
@@ -282,8 +282,8 @@ cc_library(
     hdrs = ["bitset.h"],
     deps = [
         ":bit",
+        ":config",
         "//cel-c:assert",
-        "//cel-c:config",
     ],
 )
 
@@ -305,7 +305,6 @@ cc_library(
         ":config",
         ":ctype",
         "//cel-c:assert",
-        "//cel-c:config",
     ],
 )
 
@@ -322,7 +321,7 @@ cc_library(
     name = "ckdint",
     hdrs = ["ckdint.h"],
     deps = [
-        "//cel-c:config",
+        ":config",
     ],
 )
 
@@ -339,7 +338,7 @@ cc_library(
     name = "compare",
     hdrs = ["compare.h"],
     deps = [
-        "//cel-c:config",
+        ":config",
     ],
 )
 
@@ -355,7 +354,7 @@ cc_test(
     name = "config_test",
     srcs = ["config_test.cc"],
     deps = [
-        "//cel-c:config",
+        ":config",
         "@googletest//:gtest_main",
     ],
 )
@@ -364,10 +363,10 @@ cc_library(
     name = "container",
     hdrs = ["container.h"],
     deps = [
+        ":config",
         ":string",
         "//cel-c:alloc",
         "//cel-c:assert",
-        "//cel-c:config",
         "//cel-c:string_view",
     ],
 )
@@ -390,7 +389,7 @@ cc_library(
     srcs = ["ctype.cc"],
     hdrs = ["ctype.h"],
     deps = [
-        "//cel-c:config",
+        ":config",
     ],
 )
 
@@ -407,9 +406,9 @@ cc_library(
     name = "deque",
     hdrs = ["deque.h"],
     deps = [
+        ":config",
         ":generic_deque",
         "//cel-c:alloc",
-        "//cel-c:config",
     ],
 )
 
@@ -417,9 +416,9 @@ cc_test(
     name = "deque_test",
     srcs = ["deque_test.cc"],
     deps = [
+        ":config",
         ":deque",
         "//cel-c:alloc",
-        "//cel-c:config",
         "@googletest//:gtest_main",
     ],
 )
@@ -447,9 +446,9 @@ cc_library(
     name = "flat_hash_map",
     hdrs = ["flat_hash_map.h"],
     deps = [
+        ":config",
         ":generic_flat_hash",
         "//cel-c:alloc",
-        "//cel-c:config",
     ],
 )
 
@@ -457,9 +456,9 @@ cc_test(
     name = "flat_hash_map_test",
     srcs = ["flat_hash_map_test.cc"],
     deps = [
+        ":config",
         ":flat_hash_map",
         "//cel-c:alloc",
-        "//cel-c:config",
         "//cel-c:hash",
         "@googletest//:gtest_main",
     ],
@@ -469,9 +468,9 @@ cc_library(
     name = "flat_hash_set",
     hdrs = ["flat_hash_set.h"],
     deps = [
+        ":config",
         ":generic_flat_hash",
         "//cel-c:alloc",
-        "//cel-c:config",
     ],
 )
 
@@ -479,9 +478,9 @@ cc_test(
     name = "flat_hash_set_test",
     srcs = ["flat_hash_set_test.cc"],
     deps = [
+        ":config",
         ":flat_hash_set",
         "//cel-c:alloc",
-        "//cel-c:config",
         "//cel-c:hash",
         "@googletest//:gtest_main",
     ],
@@ -508,10 +507,10 @@ cc_library(
     deps = [
         ":align",
         ":asan",
+        ":config",
         "//cel-c:alloc",
         "//cel-c:arena",
         "//cel-c:assert",
-        "//cel-c:config",
     ],
 )
 
@@ -523,10 +522,10 @@ cc_library(
         ":align",
         ":bit",
         ":bitset",
+        ":config",
         "//cel-c:alloc",
         "//cel-c:arena",
         "//cel-c:assert",
-        "//cel-c:config",
     ],
 )
 
@@ -537,10 +536,10 @@ cc_library(
     deps = [
         ":asan",
         ":ckdint",
+        ":config",
         "//cel-c:alloc",
         "//cel-c:arena",
         "//cel-c:assert",
-        "//cel-c:config",
         "//cel-c:cstring_view",
         "//cel-c:string_view",
     ],
@@ -572,8 +571,8 @@ cc_test(
     srcs = ["malloc_test.cc"],
     deps = [
         ":align",
+        ":config",
         ":malloc",
-        "//cel-c:config",
         "@googletest//:gtest_main",
     ],
 )
@@ -604,12 +603,12 @@ cc_library(
     hdrs = ["message_equality.h"],
     deps = [
         ":any",
+        ":config",
         ":number",
         ":setjmp",
         "//cel-c:alloc",
         "//cel-c:arena",
         "//cel-c:assert",
-        "//cel-c:config",
         "//cel-c:string_view",
         "//cel-c:well_known_types",
         "@protobuf//upb/base",
@@ -624,10 +623,10 @@ cc_test(
     name = "message_equality_test",
     srcs = ["message_equality_test.cc"],
     deps = [
+        ":config",
         ":message_equality",
         "//cel-c:alloc",
         "//cel-c:arena",
-        "//cel-c:config",
         "//cel-c:status",
         "//cel-c:well_known_types",
         "@abseil-cpp//absl/base",
@@ -665,8 +664,8 @@ cc_library(
     hdrs = ["number.h"],
     deps = [
         ":compare",
+        ":config",
         "//cel-c:assert",
-        "//cel-c:config",
     ],
 )
 
@@ -684,8 +683,8 @@ cc_library(
     name = "rc",
     hdrs = ["rc.h"],
     deps = [
+        ":config",
         "//cel-c:assert",
-        "//cel-c:config",
     ],
 )
 
@@ -693,8 +692,8 @@ cc_test(
     name = "rc_test",
     srcs = ["rc_test.cc"],
     deps = [
+        ":config",
         ":rc",
-        "//cel-c:config",
         "@googletest//:gtest_main",
     ],
 )
@@ -705,9 +704,9 @@ cc_library(
     hdrs = ["regexp.h"],
     deps = [
         ":alloca",
+        ":config",
         ":malloc",
         "//cel-c:assert",
-        "//cel-c:config",
         "//cel-c:status",
         "//cel-c:status_code",
         "//cel-c:string_view",
@@ -721,8 +720,8 @@ cc_test(
     name = "regexp_test",
     srcs = ["regexp_test.cc"],
     deps = [
+        ":config",
         ":regexp",
-        "//cel-c:config",
         "//cel-c:status",
         "//cel-c:status_code",
         "//cel-c:string_view",
@@ -734,11 +733,11 @@ cc_test(
     name = "runtime_test",
     srcs = ["runtime_test.cc"],
     deps = [
+        ":config",
         ":value",
         "//cel-c:alloc",
         "//cel-c:arena",
         "//cel-c:ast",
-        "//cel-c:config",
         "//cel-c:duration",
         "//cel-c:error",
         "//cel-c:error_code",
@@ -773,7 +772,7 @@ cc_library(
     name = "setjmp",
     hdrs = ["setjmp.h"],
     deps = [
-        "//cel-c:config",
+        ":config",
     ],
 )
 
@@ -791,8 +790,8 @@ cc_library(
     hdrs = ["sort.h"],
     deps = [
         ":alloca",
+        ":config",
         "//cel-c:assert",
-        "//cel-c:config",
     ],
 )
 
@@ -814,8 +813,8 @@ cc_library(
     hdrs = ["stable_sort.h"],
     deps = [
         ":alloca",
+        ":config",
         "//cel-c:assert",
-        "//cel-c:config",
     ],
 )
 
@@ -836,9 +835,9 @@ cc_library(
     name = "string",
     hdrs = ["string.h"],
     deps = [
+        ":config",
         ":generic_string",
         "//cel-c:alloc",
-        "//cel-c:config",
         "//cel-c:cstring_view",
         "//cel-c:string_view",
     ],
@@ -848,10 +847,10 @@ cc_test(
     name = "string_test",
     srcs = ["string_test.cc"],
     deps = [
+        ":config",
         ":generic_string",
         ":string",
         "//cel-c:alloc",
-        "//cel-c:config",
         "//cel-c:cstring_view",
         "//cel-c:string_view",
         "@googletest//:gtest_main",
@@ -862,7 +861,7 @@ cc_test(
     name = "trilean_test",
     srcs = ["trilean_test.cc"],
     deps = [
-        "//cel-c:config",
+        ":config",
         "//cel-c:trilean",
         "@googletest//:gtest_main",
     ],
@@ -872,7 +871,7 @@ cc_library(
     name = "uchar",
     hdrs = ["uchar.h"],
     deps = [
-        "//cel-c:config",
+        ":config",
     ],
 )
 
@@ -883,7 +882,6 @@ cc_library(
         ":config",
         ":endian",
         "//cel-c:assert",
-        "//cel-c:config",
     ],
 )
 
@@ -918,8 +916,8 @@ cc_library(
     name = "unicode",
     hdrs = ["unicode.h"],
     deps = [
+        ":config",
         ":uchar",
-        "//cel-c:config",
     ],
 )
 
@@ -937,10 +935,10 @@ cc_library(
     srcs = ["utf8.cc"],
     hdrs = ["utf8.h"],
     deps = [
+        ":config",
         ":uchar",
         ":unicode",
         "//cel-c:assert",
-        "//cel-c:config",
         "@protobuf//upb/base",
     ],
 )
@@ -990,13 +988,13 @@ cc_library(
         ":bit",
         ":bitset",
         ":ckdint",
+        ":config",
         ":malloc",
         ":message_equality",
         ":sort",
         "//cel-c:alloc",
         "//cel-c:arena",
         "//cel-c:assert",
-        "//cel-c:config",
         "//cel-c:duration",
         "//cel-c:error",
         "//cel-c:error_code",
@@ -1036,9 +1034,9 @@ cc_test(
         "value_test.cc",
     ],
     deps = [
+        ":config",
         ":value",
         ":value_testing",
-        "//cel-c:config",
         "//cel-c:duration",
         "//cel-c:error",
         "//cel-c:error_code",
@@ -1063,9 +1061,9 @@ cc_library(
     srcs = ["value_testing.cc"],
     hdrs = ["value_testing.h"],
     deps = [
+        ":config",
         "//cel-c:alloc",
         "//cel-c:arena",
-        "//cel-c:config",
         "//cel-c:duration",
         "//cel-c:error",
         "//cel-c:status",
@@ -1138,9 +1136,9 @@ cc_library(
     srcs = ["durationconv.cc"],
     hdrs = ["durationconv.h"],
     deps = [
+        ":config",
         "//cel-c:arena",
         "//cel-c:assert",
-        "//cel-c:config",
         "//cel-c:duration",
         "//cel-c:string_view",
         "//cel-c:string_view_absl",

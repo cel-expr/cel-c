@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 
 #include <cstdint>
 #include <type_traits>

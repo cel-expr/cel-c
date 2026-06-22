@@ -27,7 +27,7 @@
 #include "absl/log/die_if_null.h"
 #include "cel-c/alloc.h"
 #include "cel-c/arena.h"
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/status.h"
 #include "cel-c/status_code.h"
 #include "cel-c/string_view.h"

@@ -21,7 +21,7 @@
 #include "cel-c/alloc.h"
 #include "cel-c/arena.h"
 #include "cel-c/assert.h"
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/internal/runtime/instr.h"
 #include "cel-c/internal/runtime/interpretable.h"
 #include "cel-c/internal/runtime/program.h"

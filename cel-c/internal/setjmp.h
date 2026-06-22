@@ -21,7 +21,7 @@
 
 #include <setjmp.h>  // IWYU pragma: keep
 
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 
 #if CEL_HAVE_INCLUDE(<unistd.h>)
 // Include <unistd.h> for _POSIX_VERSION.

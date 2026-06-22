@@ -19,7 +19,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/status.h"
 #include "cel-c/string_view.h"
 

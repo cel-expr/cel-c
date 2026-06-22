@@ -23,7 +23,7 @@
 #include <stddef.h>
 
 #include "cel-c/arena.h"
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/internal/generic_array.h"
 
 CEL_BEGIN_DECLS

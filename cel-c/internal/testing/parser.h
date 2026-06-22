@@ -17,7 +17,7 @@
 
 #include "cel-c/arena.h"
 #include "cel-c/ast.h"
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/string_view.h"
 
 #ifdef __cplusplus

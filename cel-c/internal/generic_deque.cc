@@ -22,9 +22,9 @@
 #include "cel-c/alloc.h"
 #include "cel-c/arena.h"
 #include "cel-c/assert.h"
-#include "cel-c/config.h"
 #include "cel-c/internal/align.h"
 #include "cel-c/internal/asan.h"
+#include "cel-c/internal/config.h"
 
 typedef struct _cel_GenericDequeBlock _cel_GenericDequeBlock;
 

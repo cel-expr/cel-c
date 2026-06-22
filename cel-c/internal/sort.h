@@ -20,8 +20,8 @@
 #include <string.h>
 
 #include "cel-c/assert.h"
-#include "cel-c/config.h"
 #include "cel-c/internal/alloca.h"
+#include "cel-c/internal/config.h"
 
 CEL_BEGIN_DECLS
 

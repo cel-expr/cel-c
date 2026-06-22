@@ -18,8 +18,8 @@
 #include <stddef.h>
 
 #include "cel-c/assert.h"
-#include "cel-c/config.h"
 #include "cel-c/internal/bit.h"
+#include "cel-c/internal/config.h"
 
 extern "C" bool _cel_BitSet_Next(CEL_NULLABLE(const _cel_BitSetWord*) words,
                                  size_t bits, CEL_NONNULL(size_t*) bit) {

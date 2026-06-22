@@ -22,7 +22,7 @@
 #include "absl/log/die_if_null.h"
 #include "cel-c/alloc.h"
 #include "cel-c/arena.h"
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 
 namespace {
 

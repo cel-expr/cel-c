@@ -16,8 +16,8 @@
 #define THIRD_PARTY_CEL_C_INTERNAL_DURATIONCONV_H_
 
 #include "cel-c/arena.h"
-#include "cel-c/config.h"
 #include "cel-c/duration.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/string_view.h"
 
 // NOLINTBEGIN(runtime/int)

@@ -26,8 +26,6 @@
 #include <cstddef>      // IWYU pragma: keep
 #include <cstdint>      // IWYU pragma: keep
 #include <cstdlib>      // IWYU pragma: keep
-#include <type_traits>  // IWYU pragma: keep
-#include <utility>      // IWYU pragma: keep
 #ifdef __has_include
 #if __has_include(<version>)
 #include <version>  // IWYU pragma: keep
@@ -84,119 +82,6 @@ CEL_STATIC_ASSERT(sizeof(unsigned char) == 1);
 #define CEL_END_DECLS
 #endif
 
-// cel_typeof/cel_typeof_unqual
-//
-// Expands to `typeof` and `typeof_unqual` equivalents, respectively. In C++
-// mode we remove references which do not exist in C. We also map `char8_t`,
-// `char16_t`, `char32_t`, and `wchar_t` to their respective C types which are
-// aliases of other builtin types instead of distinct types. Additionally we map
-// enums to their underlying type.
-#ifdef __cplusplus
-template <typename T, typename = void>
-struct _cel_typeof {
-  using type = T;
-};
-template <typename T>
-struct _cel_typeof<T, typename std::enable_if<(
-                          std::is_enum<T>::value && !std::is_const<T>::value &&
-                          !std::is_volatile<T>::value)>::type> {
-  using type =
-      typename _cel_typeof<typename std::underlying_type<T>::type>::type;
-};
-template <typename T>
-struct _cel_typeof<T&> {
-  using type = typename _cel_typeof<T>::type;
-};
-template <typename T>
-struct _cel_typeof<T&&> {
-  using type = typename _cel_typeof<T>::type;
-};
-template <typename T>
-struct _cel_typeof<T*> {
-  using type = typename _cel_typeof<T>::type*;
-};
-template <typename T>
-struct _cel_typeof<T[]> {
-  using type = typename _cel_typeof<T>::type[];
-};
-template <typename T>
-struct _cel_typeof<const T[]> {
-  using type = const typename _cel_typeof<T>::type[];
-};
-template <typename T>
-struct _cel_typeof<volatile T[]> {
-  using type = volatile typename _cel_typeof<T>::type[];
-};
-template <typename T>
-struct _cel_typeof<const volatile T[]> {
-  using type = const volatile typename _cel_typeof<T>::type[];
-};
-template <typename T, size_t N>
-struct _cel_typeof<T[N]> {
-  using type = typename _cel_typeof<T>::type[N];
-};
-template <typename T, size_t N>
-struct _cel_typeof<const T[N]> {
-  using type = const typename _cel_typeof<T>::type[N];
-};
-template <typename T, size_t N>
-struct _cel_typeof<volatile T[N]> {
-  using type = volatile typename _cel_typeof<T>::type[N];
-};
-template <typename T, size_t N>
-struct _cel_typeof<const volatile T[N]> {
-  using type = const volatile typename _cel_typeof<T>::type[N];
-};
-template <typename T>
-struct _cel_typeof<const T> {
-  using type = const typename _cel_typeof<T>::type;
-};
-template <typename T>
-struct _cel_typeof<volatile T> {
-  using type = volatile typename _cel_typeof<T>::type;
-};
-template <typename T>
-struct _cel_typeof<const volatile T> {
-  using type = const volatile typename _cel_typeof<T>::type;
-};
-template <>
-struct _cel_typeof<wchar_t> {
-#if defined(__GNUC__) || defined(__clang__)
-  using type = __WCHAR_TYPE__;
-#elif defined(_MSC_VER)
-  using type = unsigned short;  // NOLINT(runtime/int)
-#else
-#error Unexpected compiler.
-#endif
-};
-template <>
-struct _cel_typeof<char16_t> {
-  using type = uint_least16_t;
-};
-template <>
-struct _cel_typeof<char32_t> {
-  using type = uint_least32_t;
-};
-#if defined(__cpp_char8_t) && __cpp_char8_t >= 201811L
-template <>
-struct _cel_typeof<char8_t> {
-  using type = unsigned char;
-};
-#endif
-template <typename T>
-struct _cel_typeof_unqual {
-  using type = typename std::remove_cv<typename _cel_typeof<T>::type>::type;
-};
-#define cel_typeof(x) typename ::_cel_typeof<decltype(x)>::type
-#define cel_typeof_unqual(x) typename ::_cel_typeof_unqual<decltype(x)>::type
-#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L
-#define cel_typeof(x) typeof(x)
-#define cel_typeof_unqual(x) typeof_unqual(x)
-#else
-#define cel_typeof(x) __typeof__(x)
-#define cel_typeof_unqual(x) __typeof_unqual__(x)
-#endif
-
 #ifdef cel_nullptr
 #error cel_nullptr cannot be directly set
 #endif
@@ -210,32 +95,6 @@ struct _cel_typeof_unqual {
 #else
 #define cel_nullptr NULL
 #endif
-
-#ifdef cel_arraysize
-#error cel_arraysize cannot be directly set
-#endif
-
-// cel_arraysize
-//
-// Expands to the number of elements in the array literal.
-#ifdef __cplusplus
-template <typename T, std::size_t N>
-auto _cel_arraysize(const T (&array)[N]) -> char (&)[N];
-#define cel_arraysize(x) (sizeof(::_cel_arraysize((x))))
-#else
-#define cel_arraysize(x) (sizeof((x)) / sizeof((x)[0]))
-#endif
-
-#ifdef cel_containerof
-#error cel_containerof cannot be directly set
-#endif
-
-// cel_containerof
-//
-// Behaves the same as `container_of` in the Linux kernel.
-#define cel_containerof(ptr, type, member)                                    \
-  ((CEL_NULLABILITY_UNKNOWN(type*))(((CEL_NULLABILITY_UNKNOWN(char*))(ptr)) - \
-                                    offsetof(type, member)))
 
 #ifdef CEL_HAVE_BUILTIN
 #error CEL_HAVE_BUILTIN cannot be directly set
@@ -702,44 +561,19 @@ auto _cel_arraysize(const T (&array)[N]) -> char (&)[N];
 
 #define cel_kMaxAlign ((size_t)8)
 
-#ifdef _CEL_HAVE_TYPES_COMPATIBLE
-#error _CEL_HAVE_TYPES_COMPATIBLE cannot be directly set
+#ifdef cel_arraysize
+#error cel_arraysize cannot be directly set
 #endif
 
-#ifdef _CEL_TYPES_COMPATIBLE
-#error _CEL_TYPES_COMPATIBLE cannot be directly set
-#endif
-
+// cel_arraysize
+//
+// Expands to the number of elements in the array literal.
 #ifdef __cplusplus
-#define _CEL_HAVE_TYPES_COMPATIBLE 1
-template <typename, typename>
-struct _cel_types_compatible : std::false_type {};
-template <typename T>
-struct _cel_types_compatible<T, T> : std::true_type {};
-template <typename T>
-struct _cel_types_compatible<T[], T[]> : std::true_type {};
-template <typename T, size_t N>
-struct _cel_types_compatible<T[N], T[]> : _cel_types_compatible<T[], T[]> {};
-template <typename T, size_t N>
-struct _cel_types_compatible<T[], T[N]> : _cel_types_compatible<T[], T[]> {};
-#define _CEL_TYPES_COMPATIBLE(type1, type2)                           \
-  ::_cel_types_compatible<typename ::_cel_typeof_unqual<type1>::type, \
-                          typename ::_cel_typeof_unqual<type2>::type>::value
-#elif (defined(__GNUC__) && !defined(__clang__)) || \
-    CEL_HAVE_BUILTIN(__builtin_types_compatible_p)
-#define _CEL_HAVE_TYPES_COMPATIBLE 1
-#define _CEL_TYPES_COMPATIBLE(type1, type2) \
-  __builtin_types_compatible_p(type1, type2)
+template <typename T, std::size_t N>
+auto _cel_arraysize(const T (&array)[N]) -> char (&)[N];
+#define cel_arraysize(x) (sizeof(::_cel_arraysize((x))))
 #else
-#define _CEL_TYPES_COMPATIBLE(type1, type2) true
-#endif
-
-#ifdef _CEL_HAVE_STMT_EXPRS
-#define _CEL_HAVE_STMT_EXPRS cannot be directly set
-#endif
-
-#if defined(__GNUC__) || defined(__clang__)
-#define _CEL_HAVE_STMT_EXPRS 1
+#define cel_arraysize(x) (sizeof((x)) / sizeof((x)[0]))
 #endif
 
 // We require the standards conforming Microsoft C++ preprocessor.

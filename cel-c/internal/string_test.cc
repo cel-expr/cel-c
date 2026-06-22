@@ -19,8 +19,8 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "cel-c/alloc.h"
-#include "cel-c/config.h"
 #include "cel-c/cstring_view.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/internal/generic_string.h"
 #include "cel-c/string_view.h"
 

@@ -19,7 +19,7 @@
 
 #include "cel-c/alloc.h"
 #include "cel-c/assert.h"
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/internal/string.h"
 #include "cel-c/string_view.h"
 

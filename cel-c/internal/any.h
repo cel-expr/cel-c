@@ -17,7 +17,7 @@
 
 #include <stdbool.h>
 
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/status.h"
 #include "cel-c/status_code.h"
 #include "cel-c/well_known_types.h"

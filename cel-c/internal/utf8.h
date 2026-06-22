@@ -21,7 +21,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "cel-c/config.h"
+#include "cel-c/internal/config.h"
 #include "cel-c/internal/uchar.h"  // IWYU pragma: keep
 #include "upb/base/string_view.h"
 

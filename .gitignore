@@ -1,0 +1,11 @@
+bazel-bin
+bazel-eval
+bazel-genfiles
+bazel-out
+bazel-testlogs
+bazel-cel-c
+*~
+clang.bazelrc
+user.bazelrc
+local_tsan.bazelrc
+MODULE.bazel.lock

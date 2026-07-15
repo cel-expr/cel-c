@@ -2701,11 +2701,11 @@ TEST_F(RuntimeTest, BindMemoizes) {
   _cel_MockVariableResolver var_resolver;
   _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   EXPECT_CALL(var_resolver, Find(cel_StringView_From("x"), _, _))
-      .WillOnce(Invoke([](cel_StringView name, cel_Value* out,
-                          cel_Status* status) -> cel_Trilean {
+      .WillOnce([](cel_StringView name, cel_Value* out,
+                   cel_Status* status) -> cel_Trilean {
         cel_Value_SetInt(out, 1);
         return cel_Trilean_kTrue;
-      }));
+      });
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 2);

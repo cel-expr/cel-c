@@ -30,54 +30,17 @@
 #include "upb/base/descriptor_constants.h"
 #include "upb/base/string_view.h"
 #include "upb/message/array.h"
+#include "upb/message/internal/compare_unknown.h"
 #include "upb/message/map.h"
 #include "upb/message/message.h"
 #include "upb/reflection/def.h"
 #include "upb/reflection/message.h"
-#include "upb/wire/eps_copy_input_stream.h"
-#include "upb/wire/reader.h"
-#include "upb/wire/types.h"
-
-typedef struct _cel_UnknownField _cel_UnknownField;
-typedef struct _cel_UnknownFields _cel_UnknownFields;
-
-struct _cel_UnknownFields {
-  _cel_UnknownField* cel_nullable head;
-  _cel_UnknownField* cel_nullable tail;
-  _cel_UnknownField* cel_nullable mid;
-  uint32_t size;
-  int32_t balance;
-};
-
-struct _cel_UnknownField {
-  _cel_UnknownField* cel_nullable prev;
-  _cel_UnknownField* cel_nullable next;
-#ifdef _MSC_VER
-#pragma pack(push, 4)
-#endif
-  union CEL_ATTRIBUTE_PACKED(4) {
-    uint64_t varint;
-    uint64_t fixed64;
-    uint32_t fixed32;
-    struct CEL_ATTRIBUTE_PACKED(4) {
-      const char* cel_nullability_unknown data;
-      uint32_t size;
-    } delimited;
-    _cel_UnknownFields* cel_nullable group;
-  } data;
-#ifdef _MSC_VER
-#pragma pack(pop)
-#endif
-  uint32_t field_num : 29;
-  uint8_t wire_type : 3;
-};
 
 typedef struct {
   const upb_DefPool* const cel_nonnull def_pool;
   const cel_WellKnownTypes* const cel_nonnull wkts;
   cel_Allocator* const cel_nonnull alloc;
   cel_Arena* cel_nullable arena;
-  upb_EpsCopyInputStream stream;
   _cel_MessageEquality result;
   int depth;
   _cel_jmp_buf jmp;
@@ -107,261 +70,24 @@ _cel_MessageEqualityState_Arena(_cel_MessageEqualityState* cel_nonnull state) {
 }
 
 CEL_ATTRIBUTE_NODISCARD
-static _cel_UnknownFields* cel_nonnull
-_cel_UnknownFields_New(_cel_MessageEqualityState* cel_nonnull state) {
-  _cel_UnknownFields* fields = reinterpret_cast<_cel_UnknownFields*>(
-      cel_Arena_Malloc(_cel_MessageEqualityState_Arena(state),
-                       sizeof(_cel_UnknownFields), cel_nullptr));
-  if (CEL_UNLIKELY(fields == cel_nullptr)) {
-    _cel_MessageEqualityState_Throw(state, _cel_MessageEquality_kOutOfMemory);
-  }
-  fields->head = cel_nullptr;
-  fields->tail = cel_nullptr;
-  fields->mid = cel_nullptr;
-  fields->size = 0;
-  fields->balance = 0;
-  return fields;
-}
-
-CEL_ATTRIBUTE_NODISCARD
-static _cel_UnknownField* cel_nonnull _cel_UnknownField_New(
-    _cel_MessageEqualityState* cel_nonnull state, uint32_t tag) {
-  _cel_UnknownField* field = reinterpret_cast<_cel_UnknownField*>(
-      cel_Arena_Malloc(_cel_MessageEqualityState_Arena(state),
-                       sizeof(_cel_UnknownField), cel_nullptr));
-  if (CEL_UNLIKELY(field == cel_nullptr)) {
-    _cel_MessageEqualityState_Throw(state, _cel_MessageEquality_kOutOfMemory);
-  }
-  field->prev = cel_nullptr;
-  field->next = cel_nullptr;
-  field->field_num = upb_WireReader_GetFieldNumber(tag);
-  field->wire_type = upb_WireReader_GetWireType(tag);
-  return field;
-}
-
-CEL_ATTRIBUTE_NODISCARD
-static int _cel_UnknownField_Compare(const _cel_UnknownField* cel_nonnull lhs,
-                                     const _cel_UnknownField* cel_nonnull rhs) {
-  const uint32_t lhs_field_num = lhs->field_num;
-  const uint32_t rhs_field_num = rhs->field_num;
-  if (lhs_field_num < rhs_field_num) {
-    return -1;
-  }
-  if (lhs_field_num > rhs_field_num) {
-    return 1;
-  }
-  const uint8_t lhs_wire_type = lhs->wire_type;
-  const uint8_t rhs_wire_type = rhs->wire_type;
-  return lhs_wire_type < rhs_wire_type   ? -1
-         : lhs_wire_type > rhs_wire_type ? 1
-                                         : 0;
-}
-
-static void _cel_UnknownFields_Add(_cel_UnknownFields* cel_nonnull fields,
-                                   _cel_UnknownField* cel_nonnull field) {
-  if (fields->tail != cel_nullptr) {
-    _cel_UnknownField* tail = fields->tail;
-    if (_cel_UnknownField_Compare(field, tail) >= 0) {
-      // Fast path. Fields are in order already.
-      field->prev = tail;
-      tail->next = field;
-      fields->tail = field;
-      ++fields->balance;
-    } else {
-      // Slow path.
-      _cel_UnknownField* node = fields->mid;
-      CEL_ASSERT_NOT_NULL(node);
-      while (_cel_UnknownField_Compare(field, node) < 0) {
-        node = node->prev;
-        if (node == cel_nullptr) {
-          field->next = fields->head;
-          fields->head->prev = field;
-          fields->head = field;
-          goto inserted;
-        }
-        CEL_ASSERT_NOT_NULL(node);
-      }
-      CEL_ASSERT_NOT_NULL(node);
-      while (_cel_UnknownField_Compare(field, node) >= 0) {
-        node = node->next;
-        CEL_ASSERT_NOT_NULL(node);
-      }
-      field->next = node;
-      field->prev = node->prev;
-      if (node->prev != cel_nullptr) {
-        node->prev->next = field;
-        node->prev = field;
-      } else {
-        fields->head = field;
-      }
-    }
-  inserted:
-    fields->balance += _cel_UnknownField_Compare(field, fields->mid);
-  } else {
-    fields->head = fields->mid = fields->tail = field;
-  }
-  ++fields->size;
-  if (fields->size > 2 && (fields->size & 1) == 1) {
-    if (fields->balance < 0) {
-      fields->mid = fields->mid->prev;
-    } else if (fields->balance > 0) {
-      fields->mid = fields->mid->next;
-    }
-    fields->balance = 0;
-  }
-}
-
-CEL_ATTRIBUTE_NODISCARD
-static _cel_UnknownFields* cel_nullable
-_cel_UnknownFields_Read(_cel_MessageEqualityState* cel_nonnull state,
-                        _cel_UnknownFields* fields, const char** buf) {
-  const char* ptr = *buf;
-  while (!upb_EpsCopyInputStream_IsDone(&state->stream, &ptr)) {
-    uint32_t tag;
-    ptr = upb_WireReader_ReadTag(ptr, &tag, &state->stream);
-    uint8_t wire_type = upb_WireReader_GetWireType(tag);
-    if (wire_type == kUpb_WireType_EndGroup) {
-      break;
-    }
-    if (CEL_UNLIKELY(fields == cel_nullptr)) {
-      fields = _cel_UnknownFields_New(state);
-    }
-    _cel_UnknownField* field = _cel_UnknownField_New(state, tag);
-    switch (wire_type) {
-      case kUpb_WireType_Varint:
-        ptr =
-            upb_WireReader_ReadVarint(ptr, &field->data.varint, &state->stream);
-        break;
-      case kUpb_WireType_64Bit:
-        ptr = upb_WireReader_ReadFixed64(ptr, &field->data.fixed64,
-                                         &state->stream);
-        break;
-      case kUpb_WireType_32Bit:
-        ptr = upb_WireReader_ReadFixed32(ptr, &field->data.fixed32,
-                                         &state->stream);
-        break;
-      case kUpb_WireType_Delimited: {
-        int size;
-        upb_StringView sv;
-        ptr = upb_WireReader_ReadSize(ptr, &size, &state->stream);
-        ptr = upb_EpsCopyInputStream_ReadStringAlwaysAlias(&state->stream, ptr,
-                                                           size, &sv);
-        field->data.delimited.data = sv.data;
-        field->data.delimited.size = sv.size;
-      } break;
-      case kUpb_WireType_StartGroup:
-        CEL_ASSERT_GT(state->depth, 0);
-        if (--state->depth == 0) {
-          _cel_MessageEqualityState_Throw(
-              state, _cel_MessageEquality_kMaxDepthExceeded);
-        }
-        field->data.group = _cel_UnknownFields_Read(state, cel_nullptr, &ptr);
-        ++state->depth;
-        break;
-      default:
-        CEL_UNREACHABLE();
-    }
-    _cel_UnknownFields_Add(fields, field);
-  }
-  *buf = ptr;
-  return fields;
-}
-
-CEL_ATTRIBUTE_NODISCARD
-static _cel_UnknownFields* cel_nullable
-_cel_UnknownFields_FromMessage(_cel_MessageEqualityState* cel_nonnull state,
-                               const upb_Message* cel_nonnull msg) {
-  _cel_UnknownFields* fields = cel_nullptr;
-  cel_StringView unknown;
-  uintptr_t iter = kUpb_Message_UnknownBegin;
-  while (upb_Message_NextUnknown(msg, &unknown, &iter)) {
-    upb_EpsCopyInputStream_Init(&state->stream, &unknown.data,
-                                cel_StringView_Size(unknown));
-    fields = _cel_UnknownFields_Read(state, fields, &unknown.data);
-    CEL_ASSERT(upb_EpsCopyInputStream_IsDone(&state->stream, &unknown.data) &&
-               !upb_EpsCopyInputStream_IsError(&state->stream));
-  }
-  return fields;
-}
-
-CEL_ATTRIBUTE_NODISCARD
-static bool _cel_UnknownFields_Equals(
-    _cel_MessageEqualityState* cel_nonnull state,
-    const _cel_UnknownFields* cel_nullable lhs_fields,
-    const _cel_UnknownFields* cel_nullable rhs_fields) {
-  const size_t lhs_fields_size =
-      lhs_fields != cel_nullptr ? lhs_fields->size : 0;
-  const size_t rhs_fields_size =
-      rhs_fields != cel_nullptr ? rhs_fields->size : 0;
-  if (lhs_fields_size != rhs_fields_size) {
-    return false;
-  }
-  if (lhs_fields_size == 0) {
-    return true;
-  }
-
-  const _cel_UnknownField* lhs_field = lhs_fields->head;
-  const _cel_UnknownField* rhs_field = rhs_fields->head;
-  for (size_t i = 0; i < lhs_fields_size;
-       ++i, lhs_field = lhs_field->next, rhs_field = rhs_field->next) {
-    if (lhs_field->field_num != rhs_field->field_num ||
-        lhs_field->wire_type != rhs_field->wire_type) {
-      return false;
-    }
-    switch (lhs_field->wire_type) {
-      case kUpb_WireType_Varint:
-        if (lhs_field->data.varint != rhs_field->data.varint) {
-          return false;
-        }
-        break;
-      case kUpb_WireType_64Bit:
-        if (lhs_field->data.fixed64 != rhs_field->data.fixed64) {
-          return false;
-        }
-        break;
-      case kUpb_WireType_32Bit:
-        if (lhs_field->data.fixed32 != rhs_field->data.fixed32) {
-          return false;
-        }
-        break;
-      case kUpb_WireType_Delimited:
-        if (!cel_StringView_Equals(
-                cel_StringView_FromArray(lhs_field->data.delimited.data,
-                                         lhs_field->data.delimited.size),
-                cel_StringView_FromArray(rhs_field->data.delimited.data,
-                                         rhs_field->data.delimited.size))) {
-          return false;
-        }
-        break;
-      case kUpb_WireType_StartGroup:
-        if (!_cel_UnknownFields_Equals(state, lhs_field->data.group,
-                                       rhs_field->data.group)) {
-          return false;
-        }
-        break;
-      default:
-        CEL_UNREACHABLE();
-    }
-  }
-  return true;
-}
-
-CEL_ATTRIBUTE_NODISCARD
 static bool _cel_MessageEqualityState_UnknownEquals(
     _cel_MessageEqualityState* cel_nonnull state,
     const upb_Message* cel_nonnull lhs, const upb_Message* cel_nonnull rhs) {
-  const bool lhs_has_unknown = upb_Message_HasUnknown(lhs);
-  const bool rhs_has_unknown = upb_Message_HasUnknown(rhs);
-  if (!lhs_has_unknown && !rhs_has_unknown) {
-    return true;
+  upb_UnknownCompareResult result =
+      _upb_Message_UnknownFieldsAreEqual(lhs, rhs, state->depth);
+  switch (result) {
+    case kUpb_UnknownCompareResult_Equal:
+      return true;
+    case kUpb_UnknownCompareResult_NotEqual:
+      return false;
+    case kUpb_UnknownCompareResult_OutOfMemory:
+      _cel_MessageEqualityState_Throw(state, _cel_MessageEquality_kOutOfMemory);
+    case kUpb_UnknownCompareResult_MaxDepthExceeded:
+      _cel_MessageEqualityState_Throw(state,
+                                      _cel_MessageEquality_kMaxDepthExceeded);
+    default:
+      CEL_UNREACHABLE();
   }
-  if (!(lhs_has_unknown && rhs_has_unknown)) {
-    return false;
-  }
-
-  _cel_UnknownFields* lhs_fields = _cel_UnknownFields_FromMessage(state, lhs);
-  _cel_UnknownFields* rhs_fields = _cel_UnknownFields_FromMessage(state, rhs);
-  return _cel_UnknownFields_Equals(state, lhs_fields, rhs_fields);
 }
 
 CEL_ATTRIBUTE_NODISCARD

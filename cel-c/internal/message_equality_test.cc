@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <variant>
 
 #include "google/protobuf/any.pb.h"
 #include "google/protobuf/any.upbdefs.h"
@@ -44,6 +45,8 @@
 #include "cel-c/internal/config.h"
 #include "cel-c/status.h"
 #include "cel-c/well_known_types.h"
+#include "cel/expr/conformance/proto2/test_all_types.upbdefs.h"
+#include "cel/expr/conformance/proto2/test_all_types_extensions.upb_minitable.h"
 #include "cel/expr/conformance/proto3/test_all_types.pb.h"
 #include "cel/expr/conformance/proto3/test_all_types.upbdefs.h"
 #include "google/protobuf/descriptor.h"
@@ -52,6 +55,8 @@
 #include "google/protobuf/unknown_field_set.h"
 #include "upb/message/array.h"
 #include "upb/message/message.h"
+#include "upb/message/unknown_fields_testonly.h"
+#include "upb/mini_table/message.h"
 #include "upb/reflection/def.h"
 #include "upb/reflection/message.h"
 #include "upb/wire/decode.h"
@@ -2542,5 +2547,115 @@ INSTANTIATE_TEST_SUITE_P(
                 .result = _cel_MessageEquality_kNotEqual,
             },
         }));
+
+class MessageEqualityTest_NonCanonical : public ::testing::Test {
+ protected:
+  void SetUp() override {
+    arena_ = cel_Arena_New(cel_DefaultAllocator);
+    def_pool_ = upb_DefPool_New();
+    cel_Status_Construct(&status_);
+    msg_def_ = cel_expr_conformance_proto2_TestAllTypes_getmsgdef(def_pool_);
+    ASSERT_NE(msg_def_, nullptr);
+    ASSERT_TRUE(cel_WellKnownTypes_Initialize(&wkts_, def_pool_, &status_));
+    mt_ = upb_MessageDef_MiniTable(msg_def_);
+  }
+
+  void TearDown() override {
+    cel_Status_Destruct(&status_);
+    upb_DefPool_Free(def_pool_);
+    cel_Arena_Delete(arena_);
+  }
+
+  upb_Message* NewMessage() { return upb_Message_New(mt_, arena_); }
+
+  _cel_MessageEquality CheckEquals(const upb_Message* lhs,
+                                   const upb_Message* rhs) {
+    return _cel_Message_Equals(lhs, rhs, msg_def_, def_pool_, &wkts_,
+                               cel_DefaultAllocator);
+  }
+
+  cel_Arena* arena_;
+  upb_DefPool* def_pool_;
+  cel_Status status_;
+  cel_WellKnownTypes wkts_;
+  const upb_MessageDef* msg_def_;
+  const upb_MiniTable* mt_;
+};
+
+TEST_F(MessageEqualityTest_NonCanonical, EqualSameExtensionAndValue) {
+  upb_Message* msg1 = NewMessage();
+  int32_t val1 = 42;
+  ASSERT_TRUE(upb_Message_SetNonCanonicalExtension(
+      msg1, cel_expr_conformance_proto2_int32_ext_ext, &val1, arena_));
+
+  upb_Message* msg2 = NewMessage();
+  int32_t val2 = 42;
+  ASSERT_TRUE(upb_Message_SetNonCanonicalExtension(
+      msg2, cel_expr_conformance_proto2_int32_ext_ext, &val2, arena_));
+
+  EXPECT_EQ(CheckEquals(msg1, msg2), _cel_MessageEquality_kEqual);
+}
+
+TEST_F(MessageEqualityTest_NonCanonical,
+       EqualUnknownStringViewAndNonCanonicalExtension) {
+  upb_Message* msg1 = NewMessage();
+  std::string bytes = UnknownFields{UnknownField::Varint(1000, 42)};
+  ASSERT_EQ(
+      upb_Decode(bytes.data(), bytes.size(), msg1, mt_, nullptr, 0, arena_),
+      kUpb_DecodeStatus_Ok);
+
+  upb_Message* msg2 = NewMessage();
+  int32_t val2 = 42;
+  ASSERT_TRUE(upb_Message_SetNonCanonicalExtension(
+      msg2, cel_expr_conformance_proto2_int32_ext_ext, &val2, arena_));
+
+  EXPECT_EQ(CheckEquals(msg1, msg2), _cel_MessageEquality_kEqual);
+}
+
+TEST_F(MessageEqualityTest_NonCanonical, NotEqualDifferentValue) {
+  upb_Message* msg1 = NewMessage();
+  int32_t val1 = 42;
+  ASSERT_TRUE(upb_Message_SetNonCanonicalExtension(
+      msg1, cel_expr_conformance_proto2_int32_ext_ext, &val1, arena_));
+
+  upb_Message* msg2 = NewMessage();
+  int32_t val2 = 43;
+  ASSERT_TRUE(upb_Message_SetNonCanonicalExtension(
+      msg2, cel_expr_conformance_proto2_int32_ext_ext, &val2, arena_));
+
+  EXPECT_EQ(CheckEquals(msg1, msg2), _cel_MessageEquality_kNotEqual);
+}
+
+TEST_F(MessageEqualityTest_NonCanonical, NotEqualDifferentExtension) {
+  upb_Message* msg1 = NewMessage();
+  int32_t val1 = 42;
+  ASSERT_TRUE(upb_Message_SetNonCanonicalExtension(
+      msg1, cel_expr_conformance_proto2_int32_ext_ext, &val1, arena_));
+
+  upb_Message* msg2 = NewMessage();
+  const upb_Message* nested_msg = NewMessage();
+  ASSERT_TRUE(upb_Message_SetNonCanonicalExtension(
+      msg2, cel_expr_conformance_proto2_nested_ext_ext, &nested_msg, arena_));
+
+  EXPECT_EQ(CheckEquals(msg1, msg2), _cel_MessageEquality_kNotEqual);
+}
+
+TEST_F(MessageEqualityTest_NonCanonical, EncodeFailureMaxDepth) {
+  upb_Message* msg1 = NewMessage();
+  upb_Message* current = msg1;
+  for (int i = 0; i < 105; ++i) {
+    upb_Message* next = NewMessage();
+    ASSERT_TRUE(upb_Message_SetNonCanonicalExtension(
+        current, cel_expr_conformance_proto2_nested_ext_ext, &next, arena_));
+    current = next;
+  }
+
+  upb_Message* msg2 = NewMessage();
+  int32_t val2 = 42;
+  ASSERT_TRUE(upb_Message_SetNonCanonicalExtension(
+      msg2, cel_expr_conformance_proto2_int32_ext_ext, &val2, arena_));
+
+  EXPECT_EQ(CheckEquals(msg1, msg2), _cel_MessageEquality_kMaxDepthExceeded);
+}
 
 }  // namespace

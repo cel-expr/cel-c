@@ -29,6 +29,7 @@
 #include "cel-c/string_view.h"
 #include "cel-c/string_view_absl.h"
 #include "re2/re2.h"
+#include "re2/stringpiece.h"
 
 CEL_BEGIN_DECLS
 
@@ -42,6 +43,12 @@ CEL_STATIC_ASSERT(alignof(_cel_RegExp) <= cel_kMaxAlign);
 
 namespace {
 
+// The string type used by the RE2 API. Older RE2 releases (e.g. 2022-04-01)
+// use `re2::StringPiece`, which is distinct from `absl::string_view`. Newer
+// releases take `absl::string_view` and define `re2::StringPiece` as an alias
+// of it.
+using Re2StringPiece = re2::StringPiece;
+
 struct RE2CArg final {
   RE2CArg() : string(), arg(&string) {}
 
@@ -50,19 +57,33 @@ struct RE2CArg final {
   RE2CArg& operator=(const RE2CArg&) = delete;
   RE2CArg& operator=(RE2CArg&&) = delete;
 
-  absl::string_view string;
+  Re2StringPiece string;
   RE2::Arg arg;
 };
 
 static_assert(std::is_trivially_destructible_v<RE2CArg>);
 static_assert(alignof(RE2CArg) <= __STDCPP_DEFAULT_NEW_ALIGNMENT__);
 
-using MatchFunction = bool (*)(absl::string_view, const RE2&,
+using MatchFunction = bool (*)(Re2StringPiece, const RE2&,
                                const RE2::Arg* const*, int);
+
+// Wrappers around `RE2::FullMatchN` and `RE2::PartialMatchN` with a fixed
+// signature. Older RE2 releases take the subject as `const StringPiece&` while
+// newer releases take `absl::string_view` by value, so the address of the RE2
+// functions cannot be converted to a single `MatchFunction` type.
+bool Re2FullMatchN(Re2StringPiece subject, const RE2& re2,
+                   const RE2::Arg* const* args, int argc) {
+  return RE2::FullMatchN(subject, re2, args, argc);
+}
+
+bool Re2PartialMatchN(Re2StringPiece subject, const RE2& re2,
+                      const RE2::Arg* const* args, int argc) {
+  return RE2::PartialMatchN(subject, re2, args, argc);
+}
 
 CEL_ATTRIBUTE_NODISCARD
 CEL_ATTRIBUTE_NOINLINE
-bool _cel_RegExp_Match(const RE2& re2, absl::string_view subject,
+bool _cel_RegExp_Match(const RE2& re2, Re2StringPiece subject,
                        MatchFunction cel_nonnull match,
                        cel_Status* cel_nonnull status, size_t argc,
                        va_list argv) {
@@ -98,7 +119,8 @@ bool _cel_RegExp_Match(const RE2& re2, absl::string_view subject,
   for (size_t i = 0; i < argc; ++i) {
     cel_StringView* arg = va_arg(argv, cel_StringView*);
     CEL_ASSERT_NOT_NULL(arg);
-    *arg = cel_StringView_FromAbsl(re2_cargs[i].string);
+    const Re2StringPiece& capture = re2_cargs[i].string;
+    *arg = cel_StringView_FromAbsl(capture);
   }
   return true;
 }
@@ -195,7 +217,7 @@ extern "C" CEL_ATTRIBUTE_NOTHROW bool _cel_RegExp_FullMatch(
   va_start(argv, argc);
   const bool match = _cel_RegExp_Match(
       *std::launder(reinterpret_cast<const RE2*>(&regexp->re2[0])),
-      cel_StringView_ToAbsl(subject), &RE2::FullMatchN, status, argc, argv);
+      cel_StringView_ToAbsl(subject), &Re2FullMatchN, status, argc, argv);
   va_end(argv);
   return match;
 }
@@ -211,7 +233,7 @@ extern "C" CEL_ATTRIBUTE_NOTHROW bool _cel_RegExp_PartialMatch(
   va_start(argv, argc);
   const bool match = _cel_RegExp_Match(
       *std::launder(reinterpret_cast<const RE2*>(&regexp->re2[0])),
-      cel_StringView_ToAbsl(subject), &RE2::PartialMatchN, status, argc, argv);
+      cel_StringView_ToAbsl(subject), &Re2PartialMatchN, status, argc, argv);
   va_end(argv);
   return match;
 }

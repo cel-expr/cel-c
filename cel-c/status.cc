@@ -62,21 +62,16 @@ CEL_STATIC_ASSERT(alignof(_cel_StatusRep) == alignof(cel_Status));
 CEL_STATIC_ASSERT(offsetof(_cel_StatusRep, code) == offsetof(cel_Status, code));
 
 CEL_ATTRIBUTE_NODISCARD
-static CEL_NONNULL(const _cel_StatusRep*)
-    _cel_Status_ConstRep(CEL_NONNULL(const cel_Status*) status) {
+static CEL_INLINE CEL_NONNULL(const _cel_StatusRep*)
+    _cel_Status_Rep(CEL_NONNULL(const cel_Status*) status) {
   return (const _cel_StatusRep*)status;
 }
 
 CEL_ATTRIBUTE_NODISCARD
-static CEL_NONNULL(_cel_StatusRep*)
-    _cel_Status_MutableRep(CEL_NONNULL(cel_Status*) status) {
+static CEL_INLINE CEL_NONNULL(_cel_StatusRep*)
+    _cel_Status_Rep(CEL_NONNULL(cel_Status*) status) {
   return (_cel_StatusRep*)status;
 }
-
-#define _cel_Status_Rep(status)                 \
-  (_Generic((status),                           \
-       const cel_Status*: _cel_Status_ConstRep, \
-       cel_Status*: _cel_Status_MutableRep)((status)))
 
 static void _cel_StatusRepPayload_Construct(CEL_NONNULL(_cel_StatusRepPayload*)
                                                 payload) {

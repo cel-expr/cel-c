@@ -51,7 +51,7 @@ cc_library(
     hdrs = [
         "alloc.h",
     ],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":assert",
         ":config",
@@ -80,7 +80,7 @@ cc_library(
     hdrs = [
         "arena.h",
     ],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":alloc",
         ":assert",
@@ -108,7 +108,7 @@ cc_library(
     name = "assert",
     srcs = ["assert.cc"],
     hdrs = ["assert.h"],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":config",
     ],
@@ -132,7 +132,7 @@ cc_library(
     hdrs = [
         "ast.h",
     ],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":arena",
         ":assert",
@@ -170,7 +170,7 @@ cc_library(
     hdrs = [
         "ast_proto.h",
     ],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":arena",
         ":assert",
@@ -226,7 +226,7 @@ cc_library(
     hdrs = [
         "ast_proto_v1alpha1.h",
     ],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":arena",
         ":assert",
@@ -281,7 +281,7 @@ cc_library(
     hdrs = [
         "ast_traverse.h",
     ],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":alloc",
         ":assert",
@@ -316,7 +316,7 @@ cc_library(
     hdrs = [
         "ast_visitor.h",
     ],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":ast",
         ":config",
@@ -326,14 +326,14 @@ cc_library(
 cc_library(
     name = "config",
     hdrs = ["config.h"],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
 )
 
 cc_library(
     name = "constant",
     srcs = ["constant.cc"],
     hdrs = ["constant.h"],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":assert",
         ":config",
@@ -454,7 +454,7 @@ cc_library(
     hdrs = [
         "cstring_view.h",
     ],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":assert",
         ":config",
@@ -613,7 +613,7 @@ cc_library(
     hdrs = [
         "duration.h",
     ],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":assert",
         ":config",
@@ -691,7 +691,7 @@ cc_library(
     hdrs = [
         "error.h",
     ],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":arena",
         ":assert",
@@ -805,7 +805,7 @@ cc_library(
     hdrs = [
         "error_code.h",
     ],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":assert",
         ":config",
@@ -952,7 +952,7 @@ cc_library(
     hdrs = [
         "hash.h",
     ],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":assert",
         ":config",
@@ -982,7 +982,7 @@ cc_library(
     hdrs = [
         "operators.h",
     ],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":assert",
         ":config",
@@ -1034,7 +1034,7 @@ cc_library(
         "program.h",
         "runtime.h",
     ],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":alloc",
         ":arena",
@@ -1071,7 +1071,7 @@ cc_library(
     hdrs = [
         "ref.h",
     ],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":arena",
         ":assert",
@@ -1176,7 +1176,7 @@ cc_library(
     hdrs = [
         "status.h",
     ],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":alloc",
         ":assert",
@@ -1208,7 +1208,7 @@ cc_library(
     name = "status_absl",
     srcs = ["status_absl.cc"],
     hdrs = ["status_absl.h"],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":assert",
         ":config",
@@ -1287,7 +1287,7 @@ cc_library(
     hdrs = [
         "status_code.h",
     ],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":assert",
         ":config",
@@ -1357,7 +1357,7 @@ cc_library(
     hdrs = [
         "string_view.h",
     ],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":assert",
         ":config",
@@ -1382,7 +1382,7 @@ cc_test(
 cc_library(
     name = "string_view_absl",
     hdrs = ["string_view_absl.h"],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":config",
         ":string_view",
@@ -1409,7 +1409,7 @@ cc_library(
     hdrs = [
         "timestamp.h",
     ],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":assert",
         ":config",
@@ -1484,7 +1484,7 @@ cc_test(
 cc_library(
     name = "trilean",
     hdrs = ["trilean.h"],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":assert",
         ":config",
@@ -1499,7 +1499,7 @@ cc_library(
     hdrs = [
         "type.h",
     ],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":arena",
         ":assert",
@@ -1537,7 +1537,7 @@ cc_test(
 cc_library(
     name = "type_kind",
     hdrs = ["type_kind.h"],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":config",
     ],
@@ -1650,7 +1650,7 @@ cc_library(
     hdrs = [
         "value.h",
     ],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":alloc",
         ":arena",
@@ -1672,7 +1672,7 @@ cc_library(
 cc_library(
     name = "value_kind",
     hdrs = ["value_kind.h"],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":config",
     ],
@@ -1686,7 +1686,7 @@ cc_library(
     hdrs = [
         "well_known_types.h",
     ],
-    visibility = [":friends"],
+    visibility = ["//visibility:public"],
     deps = [
         ":assert",
         ":config",

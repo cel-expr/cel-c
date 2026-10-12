@@ -35,12 +35,12 @@ TEST(NArgs, Correct) {
 
 template <typename Got, typename Want>
 constexpr bool DoTypeOfIsSame() {
-  return std::is_same<cel_typeof(std::declval<Got>()), Want>::value;
+  return std::is_same_v<cel_typeof(std::declval<Got>()), Want>;
 }
 
 template <typename Got, typename Want>
 constexpr bool DoTypeOfUnqualIsSame() {
-  return std::is_same<cel_typeof_unqual(std::declval<Got>()), Want>::value;
+  return std::is_same_v<cel_typeof_unqual(std::declval<Got>()), Want>;
 }
 
 #if defined(__cpp_char8_t) && __cpp_char8_t >= 201811L

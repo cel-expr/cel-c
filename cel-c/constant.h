@@ -47,30 +47,28 @@ typedef enum CEL_ATTRIBUTE_OPEN_ENUM {
 //
 // Represents a constant as specified by the Common Expression Language.
 typedef struct {
-  union {
 #ifdef _MSC_VER
 #pragma pack(push, 4)
 #endif
-    struct {
-      union CEL_ATTRIBUTE_PACKED(4) {
-        bool b;      // bool
-        int64_t i;   // int
-        uint64_t u;  // uint
-        double f;    // double
-        struct CEL_ATTRIBUTE_PACKED(4) {
-          const char* cel_nullability_unknown data;
-          uint32_t size;
-        } s;              // bytes/string
-        cel_Duration d;   // duration
-        cel_Timestamp t;  // timestamp
-      } data;
-      cel_ConstantKind kind;
-    };
+  // `alignas(8)` forces `cel_Constant` to be 8-byte aligned, regardless of
+  // `CEL_ATTRIBUTE_PACKED(4)` and platforms where `int64_t` is only 4-byte
+  // aligned (e.g. 32-bit x86).
+  alignas(8) union CEL_ATTRIBUTE_PACKED(4) {
+    bool b;      // bool
+    int64_t i;   // int
+    uint64_t u;  // uint
+    double f;    // double
+    struct CEL_ATTRIBUTE_PACKED(4) {
+      const char* cel_nullability_unknown data;
+      uint32_t size;
+    } s;              // bytes/string
+    cel_Duration d;   // duration
+    cel_Timestamp t;  // timestamp
+  } data;
+  cel_ConstantKind kind;
 #ifdef _MSC_VER
 #pragma pack(pop)
 #endif
-    alignas(8) char raw[16];
-  };
 } cel_Constant;
 
 CEL_STATIC_ASSERT(sizeof(cel_Constant) == 16);

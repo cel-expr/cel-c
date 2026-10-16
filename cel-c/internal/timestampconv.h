@@ -16,6 +16,7 @@
 #define THIRD_PARTY_CEL_C_INTERNAL_TIMESTAMPCONV_H_
 
 #include <stddef.h>
+#include <stdint.h>
 
 #include "cel-c/arena.h"
 #include "cel-c/internal/config.h"
@@ -41,6 +42,28 @@ CEL_ATTRIBUTE_NODISCARD
 CEL_ATTRIBUTE_NOTHROW
 bool _cel_Timestamp_FromRFC3339(cel_Timestamp* cel_nonnull out,
                                 cel_StringView ts);
+
+// _cel_TimeOfDay
+//
+// The time of day of a timestamp in a particular time zone.
+typedef struct {
+  int32_t hour;         // [0, 23]
+  int32_t minute;       // [0, 59]
+  int32_t second;       // [0, 59]
+  int32_t millisecond;  // [0, 999]
+} _cel_TimeOfDay;
+
+// _cel_Timestamp_ToTimeOfDay
+//
+// Breaks `ts` down into its time of day in the time zone `tz`. `tz` may be
+// empty (UTC), an IANA time zone name (e.g. "America/Los_Angeles"), or a fixed
+// UTC offset of the form `[+-]HH:MM`. Returns true on success, with the result
+// stored in `out`. Returns false if `tz` is not a valid time zone, in which
+// case `out` is unmodified.
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+bool _cel_Timestamp_ToTimeOfDay(cel_Timestamp ts, cel_StringView tz,
+                                _cel_TimeOfDay* cel_nonnull out);
 
 CEL_END_DECLS
 

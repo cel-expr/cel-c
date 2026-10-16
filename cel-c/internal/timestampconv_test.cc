@@ -143,6 +143,53 @@ TEST_F(CelTimestampConvTest, FromRFC3339Valid) {
   EXPECT_EQ(nanos, 0);
 }
 
+TEST_F(CelTimestampConvTest, ToTimeOfDay) {
+  // 2025-12-01T10:20:30.456Z
+  cel_Timestamp ts = cel_Timestamp_FromUnix(1764584430, 456000000);
+  _cel_TimeOfDay time_of_day;
+
+  ASSERT_TRUE(
+      _cel_Timestamp_ToTimeOfDay(ts, cel_StringView_From(""), &time_of_day));
+  EXPECT_EQ(time_of_day.hour, 10);
+  EXPECT_EQ(time_of_day.minute, 20);
+  EXPECT_EQ(time_of_day.second, 30);
+  EXPECT_EQ(time_of_day.millisecond, 456);
+
+  ASSERT_TRUE(_cel_Timestamp_ToTimeOfDay(
+      ts, cel_StringView_From("America/Los_Angeles"), &time_of_day));
+  EXPECT_EQ(time_of_day.hour, 2);
+  EXPECT_EQ(time_of_day.minute, 20);
+  EXPECT_EQ(time_of_day.second, 30);
+  EXPECT_EQ(time_of_day.millisecond, 456);
+
+  ASSERT_TRUE(_cel_Timestamp_ToTimeOfDay(ts, cel_StringView_From("+05:45"),
+                                         &time_of_day));
+  EXPECT_EQ(time_of_day.hour, 16);
+  EXPECT_EQ(time_of_day.minute, 5);
+  EXPECT_EQ(time_of_day.second, 30);
+  EXPECT_EQ(time_of_day.millisecond, 456);
+
+  // 1969-12-31T23:59:58.5Z
+  ts = cel_Timestamp_FromUnix(-2, 500000000);
+  ASSERT_TRUE(
+      _cel_Timestamp_ToTimeOfDay(ts, cel_StringView_From(""), &time_of_day));
+  EXPECT_EQ(time_of_day.hour, 23);
+  EXPECT_EQ(time_of_day.minute, 59);
+  EXPECT_EQ(time_of_day.second, 58);
+  EXPECT_EQ(time_of_day.millisecond, 500);
+}
+
+TEST_F(CelTimestampConvTest, ToTimeOfDayInvalidTimeZone) {
+  cel_Timestamp ts = cel_Timestamp_FromUnix(0, 0);
+  _cel_TimeOfDay time_of_day;
+  EXPECT_FALSE(_cel_Timestamp_ToTimeOfDay(
+      ts, cel_StringView_From("Invalid/Zone"), &time_of_day));
+  EXPECT_FALSE(
+      _cel_Timestamp_ToTimeOfDay(ts, cel_StringView_From("foo"), &time_of_day));
+  EXPECT_FALSE(_cel_Timestamp_ToTimeOfDay(ts, cel_StringView_From("+aa:bb"),
+                                          &time_of_day));
+}
+
 TEST_F(CelTimestampConvTest, FromRFC3339ValidWithOffset) {
   cel_Timestamp ts;
   int64_t seconds;

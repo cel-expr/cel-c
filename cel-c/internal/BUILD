@@ -1112,6 +1112,7 @@ cc_library(
         "//cel-c:string_view",
         "//cel-c:string_view_absl",
         "//cel-c:timestamp",
+        "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/time",
     ],

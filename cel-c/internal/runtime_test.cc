@@ -1159,6 +1159,162 @@ TEST_F(RuntimeTest, StringEquals) {
   EXPECT_TRUE(cel_Value_GetBool(&value));
 }
 
+TEST_F(RuntimeTest, ListEquals) {
+  _cel_ProgramPtr prog = Parse(R"cel([] == [])cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_TRUE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel(['a'] == ['a'])cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_TRUE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel(['a', 'b'] == ['a', 'b'])cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_TRUE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel([1, 2u, 3.0] == [1u, 2.0, 3])cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_TRUE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel([['a']] == [['a']])cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_TRUE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel(['a'] == ['b'])cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_FALSE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel(['a', 'b'] == ['x', 'b'])cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_FALSE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel(['a', 'b'] == ['a', 'x'])cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_FALSE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel([1, 2] == [3, 2])cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_FALSE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel([['a']] == [['b']])cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_FALSE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel([{'a': 1}] == [{'a': 2}])cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_FALSE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel(['a'] == ['a', 'b'])cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_FALSE(cel_Value_GetBool(&value));
+}
+
+TEST_F(RuntimeTest, MapEquals) {
+  _cel_ProgramPtr prog = Parse(R"cel({} == {})cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_TRUE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel({'a': 1} == {'a': 1})cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_TRUE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel({'a': 1, 'b': 2} == {'b': 2, 'a': 1})cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_TRUE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel({'a': 1} == {'a': 1u})cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_TRUE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel({1: 'a'} == {1u: 'a'})cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_TRUE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel({1u: 'a'} == {1: 'a'})cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_TRUE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel({1: 'a', 2u: 'b'} == {1u: 'a', 2: 'b'})cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_TRUE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel({'a': 1} == {'a': 2})cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_FALSE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel({'a': 1, 'b': 2} == {'a': 3, 'b': 2})cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_FALSE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel({'a': 1, 'b': 2} == {'a': 1, 'b': 3})cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_FALSE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel({'a': 1} == {'b': 1})cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_FALSE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel({'a': ['x']} == {'a': ['y']})cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_FALSE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel({'a': {'b': 1}} == {'a': {'b': 2}})cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_FALSE(cel_Value_GetBool(&value));
+}
+
 TEST_F(RuntimeTest, BoolNotEquals) {
   _cel_ProgramPtr prog = Parse(R"cel(true != false)cel");
   _cel_TestingVariableResolver var_resolver;
@@ -1243,6 +1399,36 @@ TEST_F(RuntimeTest, StringNotEquals) {
   EXPECT_TRUE(cel_Value_GetBool(&value));
 
   prog = Parse(R"cel('a' != 'a')cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_FALSE(cel_Value_GetBool(&value));
+}
+
+TEST_F(RuntimeTest, ListNotEquals) {
+  _cel_ProgramPtr prog = Parse(R"cel(['a', 'b'] != ['x', 'b'])cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_TRUE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel(['a'] != ['a'])cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_FALSE(cel_Value_GetBool(&value));
+}
+
+TEST_F(RuntimeTest, MapNotEquals) {
+  _cel_ProgramPtr prog = Parse(R"cel({'a': 1} != {'a': 2})cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_TRUE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel({'a': 1} != {'a': 1})cel");
   act = Activate(prog.get(), &var_resolver);
   value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));

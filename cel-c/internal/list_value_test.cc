@@ -19,6 +19,7 @@
 #include "cel-c/error_code.h"
 #include "cel-c/internal/config.h"
 #include "cel-c/internal/empty_list_value.h"
+#include "cel-c/internal/mutable_list_value.h"
 #include "cel-c/internal/value_testing.h"
 #include "cel-c/status.h"
 #include "cel-c/string_view.h"
@@ -304,6 +305,125 @@ TEST_F(ListValueTest, Equals) {
   EXPECT_TRUE(cel_Value_IsFalse(&result));
   ASSERT_TRUE(cel_ListValue_Equals(&other_list_value, ctx(), &list_value,
                                    &result, status()));
+  EXPECT_TRUE(cel_Value_IsFalse(&result));
+}
+
+// Matches cel-cpp: the first element comparison that is not `true` decides the
+// result. [error, 1] == [0, 2] => error.
+TEST_F(ListValueTest, EqualsErrorBeforeUnequalElement) {
+  cel_Error* error = cel_Error_New(arena());
+  ASSERT_NE(error, nullptr);
+  cel_Error_SetCanonicalCode(error, cel_ErrorCode_kInvalidArgument);
+
+  cel_ListValue lhs;
+  _cel_MutableListValue_Set(&lhs);
+  ASSERT_TRUE(_cel_MutableListValue_Reserve(&lhs, 2, arena()));
+  cel_Value* element = _cel_MutableListValue_Add(&lhs, arena());
+  ASSERT_NE(element, nullptr);
+  cel_Value_SetError(element, error);
+  element = _cel_MutableListValue_Add(&lhs, arena());
+  ASSERT_NE(element, nullptr);
+  cel_Value_SetInt(element, 1);
+
+  cel_ListValue rhs;
+  _cel_MutableListValue_Set(&rhs);
+  ASSERT_TRUE(_cel_MutableListValue_Reserve(&rhs, 2, arena()));
+  element = _cel_MutableListValue_Add(&rhs, arena());
+  ASSERT_NE(element, nullptr);
+  cel_Value_SetInt(element, 0);
+  element = _cel_MutableListValue_Add(&rhs, arena());
+  ASSERT_NE(element, nullptr);
+  cel_Value_SetInt(element, 2);
+
+  cel_Value result;
+  ASSERT_TRUE(cel_ListValue_Equals(&lhs, ctx(), &rhs, &result, status()));
+  ASSERT_TRUE(cel_Value_IsError(&result));
+  EXPECT_EQ(cel_Value_GetError(&result), error);
+}
+
+// Matches cel-cpp: the first element comparison that is not `true` decides the
+// result. [1, error] == [2, 0] => false.
+TEST_F(ListValueTest, EqualsUnequalElementBeforeError) {
+  cel_Error* error = cel_Error_New(arena());
+  ASSERT_NE(error, nullptr);
+  cel_Error_SetCanonicalCode(error, cel_ErrorCode_kInvalidArgument);
+
+  cel_ListValue lhs;
+  _cel_MutableListValue_Set(&lhs);
+  ASSERT_TRUE(_cel_MutableListValue_Reserve(&lhs, 2, arena()));
+  cel_Value* element = _cel_MutableListValue_Add(&lhs, arena());
+  ASSERT_NE(element, nullptr);
+  cel_Value_SetInt(element, 1);
+  element = _cel_MutableListValue_Add(&lhs, arena());
+  ASSERT_NE(element, nullptr);
+  cel_Value_SetError(element, error);
+
+  cel_ListValue rhs;
+  _cel_MutableListValue_Set(&rhs);
+  ASSERT_TRUE(_cel_MutableListValue_Reserve(&rhs, 2, arena()));
+  element = _cel_MutableListValue_Add(&rhs, arena());
+  ASSERT_NE(element, nullptr);
+  cel_Value_SetInt(element, 2);
+  element = _cel_MutableListValue_Add(&rhs, arena());
+  ASSERT_NE(element, nullptr);
+  cel_Value_SetInt(element, 0);
+
+  cel_Value result;
+  ASSERT_TRUE(cel_ListValue_Equals(&lhs, ctx(), &rhs, &result, status()));
+  EXPECT_TRUE(cel_Value_IsFalse(&result));
+}
+
+// [0, 2] == [1, 2] => false.
+TEST_F(ListValueTest, EqualsFirstElementUnequal) {
+  cel_ListValue lhs;
+  _cel_MutableListValue_Set(&lhs);
+  ASSERT_TRUE(_cel_MutableListValue_Reserve(&lhs, 2, arena()));
+  cel_Value* element = _cel_MutableListValue_Add(&lhs, arena());
+  ASSERT_NE(element, nullptr);
+  cel_Value_SetInt(element, 0);
+  element = _cel_MutableListValue_Add(&lhs, arena());
+  ASSERT_NE(element, nullptr);
+  cel_Value_SetInt(element, 2);
+
+  cel_ListValue rhs;
+  _cel_MutableListValue_Set(&rhs);
+  ASSERT_TRUE(_cel_MutableListValue_Reserve(&rhs, 2, arena()));
+  element = _cel_MutableListValue_Add(&rhs, arena());
+  ASSERT_NE(element, nullptr);
+  cel_Value_SetInt(element, 1);
+  element = _cel_MutableListValue_Add(&rhs, arena());
+  ASSERT_NE(element, nullptr);
+  cel_Value_SetInt(element, 2);
+
+  cel_Value result;
+  ASSERT_TRUE(cel_ListValue_Equals(&lhs, ctx(), &rhs, &result, status()));
+  EXPECT_TRUE(cel_Value_IsFalse(&result));
+}
+
+// [1, 2] == [1, 3] => false.
+TEST_F(ListValueTest, EqualsLastElementUnequal) {
+  cel_ListValue lhs;
+  _cel_MutableListValue_Set(&lhs);
+  ASSERT_TRUE(_cel_MutableListValue_Reserve(&lhs, 2, arena()));
+  cel_Value* element = _cel_MutableListValue_Add(&lhs, arena());
+  ASSERT_NE(element, nullptr);
+  cel_Value_SetInt(element, 1);
+  element = _cel_MutableListValue_Add(&lhs, arena());
+  ASSERT_NE(element, nullptr);
+  cel_Value_SetInt(element, 2);
+
+  cel_ListValue rhs;
+  _cel_MutableListValue_Set(&rhs);
+  ASSERT_TRUE(_cel_MutableListValue_Reserve(&rhs, 2, arena()));
+  element = _cel_MutableListValue_Add(&rhs, arena());
+  ASSERT_NE(element, nullptr);
+  cel_Value_SetInt(element, 1);
+  element = _cel_MutableListValue_Add(&rhs, arena());
+  ASSERT_NE(element, nullptr);
+  cel_Value_SetInt(element, 3);
+
+  cel_Value result;
+  ASSERT_TRUE(cel_ListValue_Equals(&lhs, ctx(), &rhs, &result, status()));
   EXPECT_TRUE(cel_Value_IsFalse(&result));
 }
 

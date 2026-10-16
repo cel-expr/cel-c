@@ -815,4 +815,51 @@ TEST_F(MapValueTest, Equals) {
   EXPECT_TRUE(cel_Value_IsFalse(&result));
 }
 
+// Like cel_TestMapValue_Find, but returns a different value for the first
+// iterated key (1u), so that only the first entry compares unequal.
+bool cel_MismatchedTestMapValue_Find(
+    const cel_MapValueVTable* cel_nonnull vtable, cel_ValueContent content,
+    const cel_ValueContext* cel_nonnull context,
+    const cel_MapValueKey* cel_nonnull key, cel_Value* cel_nonnull value,
+    cel_Status* cel_nonnull status) {
+  if (cel_MapValueKey_IsUint(key) && cel_MapValueKey_GetUint(key) == 1) {
+    cel_Value_SetInt(value, 99);
+    return true;
+  }
+  return cel_TestMapValue_Find(vtable, content, context, key, value, status);
+}
+
+const cel_MapValueVTable mismatched_fast_test_map_value_vtable = {
+    .Equals = &cel_TestMapValue_Equals,
+    .FastSize = &cel_TestMapValue_FastSize,
+    .SlowSize = &cel_TestMapValue_SlowSize,
+    .Get = &cel_TestMapValue_Get,
+    .Find = &cel_MismatchedTestMapValue_Find,
+    .Has = &cel_TestMapValue_Has,
+    .NewIterator = &cel_TestMapValue_NewIterator,
+};
+
+TEST_F(MapValueTest, EqualsStopsAtFirstMismatchedValue) {
+  cel_MapValue map_value;
+  cel_MapValue mismatched_map_value;
+  mismatched_map_value.vtable = &mismatched_fast_test_map_value_vtable;
+  cel_Value result;
+
+  // Both sized: iterates `map_value` and looks up in `mismatched_map_value`.
+  map_value.vtable = &fast_test_map_value_vtable;
+  ASSERT_TRUE(cel_MapValue_Equals(&map_value, ctx(), &mismatched_map_value,
+                                  &result, status()));
+  EXPECT_TRUE(cel_Value_IsFalse(&result));
+
+  // Only one sized: iterates the unsized map and looks up in the sized one,
+  // regardless of argument order.
+  map_value.vtable = &slow_test_map_value_vtable;
+  ASSERT_TRUE(cel_MapValue_Equals(&map_value, ctx(), &mismatched_map_value,
+                                  &result, status()));
+  EXPECT_TRUE(cel_Value_IsFalse(&result));
+  ASSERT_TRUE(cel_MapValue_Equals(&mismatched_map_value, ctx(), &map_value,
+                                  &result, status()));
+  EXPECT_TRUE(cel_Value_IsFalse(&result));
+}
+
 }  // namespace

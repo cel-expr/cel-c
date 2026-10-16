@@ -1698,7 +1698,9 @@ static inline void _cel_Interpretable_NotEquals(
     *top = *rhs;
   } else {
     if (cel_Value_Equals(lhs, &interp->context, rhs, top, interp->status)) {
-      cel_Value_SetBool(top, !cel_Value_GetBool(top));
+      if (cel_Value_IsBool(top)) {
+        cel_Value_SetBool(top, !cel_Value_GetBool(top));
+      }
     } else {
       _cel_Interpretable_ThrowIfError(interp);
       cel_Value_SetError(top,

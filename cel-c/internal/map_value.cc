@@ -109,6 +109,11 @@ static bool _cel_MapValue_EqualsFast(
         }
         break;
       }
+      if (!cel_Value_IsTrue(result)) {
+        // Matches cel-cpp: the first value comparison that is not `true`
+        // (either `false` or an error) is the result for the whole map.
+        break;
+      }
     } else {
       ok = cel_Status_Ok(status);
       if (ok) {
@@ -174,6 +179,11 @@ static bool _cel_MapValue_EqualsSlowWithSize(
         if (ok) {
           cel_Value_SetFalse(result);
         }
+        break;
+      }
+      if (!cel_Value_IsTrue(result)) {
+        // Matches cel-cpp: the first value comparison that is not `true`
+        // (either `false` or an error) is the result for the whole map.
         break;
       }
     } else {

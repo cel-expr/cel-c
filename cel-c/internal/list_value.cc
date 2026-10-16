@@ -82,7 +82,7 @@ extern "C" bool cel_ListValue_Equals(
   CEL_ASSERT(cel_Status_Ok(status));
   cel_ListValueIterator* rhs_iter =
       cel_ListValue_NewIterator(other, context, status);
-  if (CEL_UNLIKELY(lhs_iter == cel_nullptr)) {
+  if (CEL_UNLIKELY(rhs_iter == cel_nullptr)) {
     cel_ListValueIterator_Delete(lhs_iter);
     CEL_ASSERT(!cel_Status_Ok(status));
     return false;
@@ -141,12 +141,19 @@ extern "C" bool cel_ListValue_Equals(
       break;
     }
     if (!cel_Value_Equals(&lhs_ele, context, &rhs_ele, result, status)) {
-      if (!cel_Status_Ok(status)) {
-        ok = false;
-        break;
+      ok = cel_Status_Ok(status);
+      if (ok) {
+        cel_Value_SetFalse(result);
       }
+      break;
     }
-    CEL_ASSERT(cel_Status_Ok(status));
+    if (!cel_Value_IsTrue(result)) {
+      // Matches cel-cpp: the first element comparison that is not `true`
+      // (either `false` or an error) is the result for the whole list.
+      // `ok` only reports status failures.
+      ok = true;
+      break;
+    }
   }
   cel_ListValueIterator_Delete(rhs_iter);
   cel_ListValueIterator_Delete(lhs_iter);

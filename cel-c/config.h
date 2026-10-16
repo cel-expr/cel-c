@@ -357,6 +357,21 @@ CEL_STATIC_ASSERT(sizeof(unsigned char) == 1);
 #define CEL_ATTRIBUTE_FALLTHROUGH
 #endif
 
+#ifdef CEL_ATTRIBUTE_DEPRECATED
+#error CEL_ATTRIBUTE_DEPRECATED cannot be directly set
+#endif
+
+// CEL_ATTRIBUTE_DEPRECATED
+//
+// Marks a function, struct, class, or enum as deprecated.
+#if CEL_HAVE_CPP_ATTRIBUTE(deprecated)
+#define CEL_ATTRIBUTE_DEPRECATED [[deprecated]]
+#elif CEL_HAVE_ATTRIBUTE(deprecated)
+#define CEL_ATTRIBUTE_DEPRECATED __attribute__((deprecated))
+#else
+#define CEL_ATTRIBUTE_DEPRECATED
+#endif
+
 #ifdef CEL_ATTRIBUTE_FORMAT
 #error CEL_ATTRIBUTE_FORMAT cannot be directly set
 #endif

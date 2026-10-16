@@ -21,6 +21,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <memory>
+
 #include "cel-c/alloc.h"
 #include "cel-c/assert.h"
 #include "cel-c/config.h"
@@ -97,7 +99,7 @@ static void _cel_StatusRep_ResetPayloads(CEL_NONNULL(_cel_StatusRep*)
     _cel_StatusRepPayload_Destruct(
         _cel_Array_MutableAt(&status_rep->payloads, i));
   }
-  _cel_Array_Reset(&status_rep->payloads, cel_DefaultAllocator);
+  _cel_Array_Reset(&status_rep->payloads);
 }
 
 CEL_ATTRIBUTE_NODISCARD
@@ -113,7 +115,7 @@ extern "C" void cel_Status_Construct(CEL_NONNULL(cel_Status*) status) {
   memset(status_rep, '\0', sizeof(*status_rep));
   status_rep->space = cel_CanonicalErrorSpace;
   _cel_String_Construct(&status_rep->message);
-  _cel_Array_Construct(&status_rep->payloads);
+  std::construct_at(&status_rep->payloads);
 }
 
 extern "C" void cel_Status_Destruct(CEL_NONNULL(cel_Status*) status) {
@@ -125,7 +127,7 @@ extern "C" void cel_Status_Destruct(CEL_NONNULL(cel_Status*) status) {
     _cel_StatusRepPayload_Destruct(
         _cel_Array_MutableAt(&status_rep->payloads, i));
   }
-  _cel_Array_Destruct(&status_rep->payloads, cel_DefaultAllocator);
+  std::destroy_at(&status_rep->payloads);
   _cel_String_Destruct(&status_rep->message, cel_DefaultAllocator);
 }
 
@@ -315,7 +317,7 @@ extern "C" bool cel_Status_SetPayload(CEL_NONNULL(cel_Status*) status,
   }
 
   CEL_NULLABLE(_cel_StatusRepPayload*)
-  payload = _cel_Array_Push(&status_rep->payloads, cel_DefaultAllocator);
+  payload = _cel_Array_Push(&status_rep->payloads);
   if (payload == cel_nullptr) {
     cel_OutOfMemoryStatus(status, file, line);
     return false;

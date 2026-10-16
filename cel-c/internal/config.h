@@ -278,4 +278,26 @@ struct _cel_types_compatible<T[], T[N]> : _cel_types_compatible<T[], T[]> {};
 #define _CEL_TYPES_COMPATIBLE(type1, type2) true
 #endif
 
+#if CEL_HAVE_CPP_ATTRIBUTE(clang::annotate) && !defined(__NVCC__)
+#define CEL_ATTRIBUTE_INLINE_ME                                         \
+  _Pragma("clang diagnostic push")                                      \
+      _Pragma("clang diagnostic ignored \"-Wcxx-attribute-extension\"") \
+          [[clang::annotate("inline-me")]] _Pragma("clang diagnostic pop")
+#else
+#define CEL_ATTRIBUTE_INLINE_ME
+#endif
+
+#define CEL_DEPRECATE_AND_INLINE \
+  CEL_ATTRIBUTE_DEPRECATED CEL_ATTRIBUTE_INLINE_ME
+
+#if CEL_HAVE_CPP_ATTRIBUTE(clang::lifetimebound)
+#define CEL_ATTRIBUTE_LIFETIME_BOUND [[clang::lifetimebound]]
+#elif CEL_HAVE_CPP_ATTRIBUTE(msvc::lifetimebound)
+#define CEL_ATTRIBUTE_LIFETIME_BOUND [[msvc::lifetimebound]]
+#elif CEL_HAVE_ATTRIBUTE(lifetimebound)
+#define CEL_ATTRIBUTE_LIFETIME_BOUND __attribute__((lifetimebound))
+#else
+#define CEL_ATTRIBUTE_LIFETIME_BOUND
+#endif
+
 #endif  // THIRD_PARTY_CEL_C_INTERNAL_CONFIG_H_

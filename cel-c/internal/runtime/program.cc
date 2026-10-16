@@ -17,6 +17,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <memory>
+
 #include "cel-c/alloc.h"
 #include "cel-c/assert.h"
 #include "cel-c/internal/arc.h"
@@ -63,12 +65,9 @@ _cel_Program_New(const cel_Runtime* cel_nonnull rt) {
   if (CEL_UNLIKELY(prog == cel_nullptr)) {
     return cel_nullptr;
   }
-  memset(prog, 0, sizeof(*prog));
+  std::construct_at(prog);
   prog->rt = _cel_Runtime_ConstRef(rt);
   _cel_AtomicRefCount_Initialize(&prog->rc);
-  _cel_Array_Construct(&prog->instrs);
-  _cel_Array_Construct(&prog->strings_table);
-  _cel_Array_Construct(&prog->candidate_names_table);
   return prog;
 }
 
@@ -79,21 +78,12 @@ extern "C" void _cel_Program_Delete(cel_Program* cel_nonnull prog) {
 
   const cel_Runtime* rt = prog->rt;
   cel_Allocator* alloc = rt->alloc;
-  _cel_CandidateNames* candidate_names_ptr =
-      _cel_Array_MutableData(&prog->candidate_names_table);
-  size_t candidate_names_len = _cel_Array_Size(&prog->candidate_names_table);
-  for (; candidate_names_len > 0;
-       ++candidate_names_ptr, --candidate_names_len) {
-    _cel_CandidateNames_Destruct(candidate_names_ptr, alloc);
-  }
-  _cel_Array_Destruct(&prog->candidate_names_table, alloc);
   _cel_String* string_ptr = _cel_Array_MutableData(&prog->strings_table);
   size_t string_len = _cel_Array_Size(&prog->strings_table);
   for (; string_len > 0; ++string_ptr, --string_len) {
     _cel_String_Destruct(string_ptr, alloc);
   }
-  _cel_Array_Destruct(&prog->strings_table, alloc);
-  _cel_Array_Destruct(&prog->instrs, alloc);
+  std::destroy_at(prog);
   cel_Allocator_FreeSized(alloc, prog, sizeof(*prog));
   _cel_Runtime_Unref(rt);
 }

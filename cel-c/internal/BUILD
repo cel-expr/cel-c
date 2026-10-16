@@ -217,7 +217,10 @@ cc_library(
     deps = [
         ":config",
         ":generic_array",
+        ":trivial_relocation",
         "//cel-c:alloc",
+        "//cel-c:assert",
+        "//cel-c:config",
     ],
 )
 
@@ -870,6 +873,12 @@ cc_test(
         "//cel-c:trilean",
         "@googletest//:gtest_main",
     ],
+)
+
+cc_library(
+    name = "trivial_relocation",
+    hdrs = ["trivial_relocation.hpp"],
+    deps = [":config"],
 )
 
 cc_library(

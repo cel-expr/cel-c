@@ -74,6 +74,7 @@ cc_library(
         "//cel-c/internal:setjmp",
         "//cel-c/internal:string",
         "//cel-c/internal:timestampconv",
+        "//cel-c/internal:trivial_relocation",
         "//cel-c/internal:utf8",
         "//cel-c/internal:value",
         "@protobuf//upb/reflection",

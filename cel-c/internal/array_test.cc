@@ -18,7 +18,6 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "cel-c/alloc.h"
 #include "cel-c/internal/config.h"
 
 namespace {
@@ -29,14 +28,7 @@ using ::testing::NotNull;
 using ::testing::Test;
 
 class ArrayTest : public Test {
- public:
-  void SetUp() override { _cel_Array_Construct(&array_); }
-
-  void TearDown() override { _cel_Array_Destruct(&array_, alloc()); }
-
  protected:
-  CEL_NONNULL(cel_Allocator*) alloc() { return cel_DefaultAllocator; }
-
   auto* array() { return &array_; }
 
  private:
@@ -52,7 +44,7 @@ TEST_F(ArrayTest, Empty) {
 }
 
 TEST_F(ArrayTest, PushPop) {
-  auto* pushed = _cel_Array_Push(array(), alloc());
+  auto* pushed = _cel_Array_Push(array());
   ASSERT_THAT(pushed, NotNull());
   *pushed = 1;
 
@@ -66,7 +58,7 @@ TEST_F(ArrayTest, PushPop) {
   EXPECT_EQ(_cel_Array_Front(array()), pushed);
   EXPECT_EQ(_cel_Array_MutableFront(array()), pushed);
 
-  _cel_Array_ShrinkToFit(array(), alloc());
+  _cel_Array_ShrinkToFit(array());
   EXPECT_EQ(_cel_Array_Size(array()), 1);
   EXPECT_FALSE(_cel_Array_Empty(array()));
   EXPECT_GE(_cel_Array_Capacity(array()), _cel_Array_Size(array()));
@@ -78,22 +70,22 @@ TEST_F(ArrayTest, PushPop) {
   EXPECT_THAT(_cel_Array_Data(array()), NotNull());
   EXPECT_EQ(_cel_Array_MutableData(array()), _cel_Array_Data(array()));
 
-  _cel_Array_ShrinkToFit(array(), alloc());
+  _cel_Array_ShrinkToFit(array());
   EXPECT_EQ(_cel_Array_Size(array()), 0);
   EXPECT_TRUE(_cel_Array_Empty(array()));
   EXPECT_GE(_cel_Array_Capacity(array()), _cel_Array_Size(array()));
 }
 
 TEST_F(ArrayTest, Erase) {
-  auto* pushed = _cel_Array_Push(array(), alloc());
+  auto* pushed = _cel_Array_Push(array());
   ASSERT_THAT(pushed, NotNull());
   *pushed = 1;
 
-  pushed = _cel_Array_Push(array(), alloc());
+  pushed = _cel_Array_Push(array());
   ASSERT_THAT(pushed, NotNull());
   *pushed = 2;
 
-  pushed = _cel_Array_Push(array(), alloc());
+  pushed = _cel_Array_Push(array());
   ASSERT_THAT(pushed, NotNull());
   *pushed = 3;
 
@@ -105,7 +97,7 @@ TEST_F(ArrayTest, Erase) {
 }
 
 TEST_F(ArrayTest, Append) {
-  auto* appended = _cel_Array_Append(array(), alloc(), 150);
+  auto* appended = _cel_Array_Append(array(), 150);
   ASSERT_THAT(appended, NotNull());
   for (size_t i = 0; i < 150; ++i) {
     appended[i] = static_cast<int>(i);
@@ -130,7 +122,7 @@ TEST_F(ArrayTest, Append) {
   EXPECT_EQ(begin, _cel_Array_Data(array()));
   EXPECT_EQ(end - begin, _cel_Array_Size(array()));
 
-  appended = _cel_Array_Append(array(), alloc(), 150);
+  appended = _cel_Array_Append(array(), 150);
   ASSERT_THAT(appended, NotNull());
   for (size_t i = 0; i < 150; ++i) {
     appended[i] = static_cast<int>(i + 150);
@@ -153,11 +145,11 @@ TEST_F(ArrayTest, Append) {
 }
 
 TEST_F(ArrayTest, ReserveResize) {
-  ASSERT_TRUE(_cel_Array_Reserve(array(), alloc(), 150));
+  ASSERT_TRUE(_cel_Array_Reserve(array(), 150));
   EXPECT_GE(_cel_Array_Capacity(array()), 150);
   EXPECT_TRUE(_cel_Array_Empty(array()));
 
-  auto* resized = _cel_Array_Resize(array(), alloc(), 300);
+  auto* resized = _cel_Array_Resize(array(), 300);
   ASSERT_THAT(resized, NotNull());
   for (size_t i = 0; i < 300; ++i) {
     resized[i] = static_cast<int>(i);
@@ -167,7 +159,7 @@ TEST_F(ArrayTest, ReserveResize) {
   EXPECT_GE(_cel_Array_Capacity(array()), _cel_Array_Size(array()));
   EXPECT_FALSE(_cel_Array_Empty(array()));
 
-  _cel_Array_Reset(array(), alloc());
+  _cel_Array_Reset(array());
   EXPECT_EQ(_cel_Array_Size(array()), 0);
   EXPECT_TRUE(_cel_Array_Empty(array()));
 }

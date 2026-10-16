@@ -77,14 +77,12 @@ static bool _cel_StructValue_EqualsSlow(
     }
   }
   _cel_Array(_cel_StructValueField) lhs_fields;
-  _cel_Array_Construct(&lhs_fields);
   if (lhs_has_size) {
-    _cel_Array_Reserve(&lhs_fields, context->alloc, lhs_size);
+    _cel_Array_Reserve(&lhs_fields, lhs_size);
   }
   _cel_Array(_cel_StructValueField) rhs_fields;
-  _cel_Array_Construct(&rhs_fields);
   if (rhs_has_size) {
-    _cel_Array_Reserve(&rhs_fields, context->alloc, rhs_size);
+    _cel_Array_Reserve(&rhs_fields, rhs_size);
   }
   bool ok = true;
   bool lhs_next = true;
@@ -100,8 +98,7 @@ static bool _cel_StructValue_EqualsSlow(
         break;
       }
       if (lhs_next) {
-        _cel_StructValueField* lhs_field_ptr =
-            _cel_Array_Push(&lhs_fields, context->alloc);
+        _cel_StructValueField* lhs_field_ptr = _cel_Array_Push(&lhs_fields);
         if (CEL_UNLIKELY(lhs_field_ptr == cel_nullptr)) {
           cel_OutOfMemoryStatus(status);
           ok = false;
@@ -131,8 +128,7 @@ static bool _cel_StructValue_EqualsSlow(
         break;
       }
       if (rhs_next) {
-        _cel_StructValueField* rhs_field_ptr =
-            _cel_Array_Push(&rhs_fields, context->alloc);
+        _cel_StructValueField* rhs_field_ptr = _cel_Array_Push(&rhs_fields);
         if (CEL_UNLIKELY(rhs_field_ptr == cel_nullptr)) {
           cel_OutOfMemoryStatus(status);
           ok = false;
@@ -195,8 +191,6 @@ static bool _cel_StructValue_EqualsSlow(
     }
   }
 done:
-  _cel_Array_Destruct(&rhs_fields, context->alloc);
-  _cel_Array_Destruct(&lhs_fields, context->alloc);
   cel_StructValueIterator_Delete(rhs_iter);
   cel_StructValueIterator_Delete(lhs_iter);
   return ok;

@@ -18,6 +18,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <type_traits>
+
 #include "cel-c/alloc.h"
 #include "cel-c/assert.h"
 #include "cel-c/ast.h"
@@ -35,6 +37,7 @@
 #include "cel-c/internal/runtime/runtime.h"
 #include "cel-c/internal/setjmp.h"
 #include "cel-c/internal/string.h"
+#include "cel-c/internal/trivial_relocation.hpp"
 #include "cel-c/operators.h"
 #include "cel-c/ref.h"
 #include "cel-c/status.h"
@@ -43,77 +46,85 @@
 #include "cel-c/well_known_types.h"
 #include "upb/reflection/def.h"
 
-typedef struct {
-  const cel_IdentExpr* cel_nullability_unknown expr;
+struct _cel_InterpreterNspaceVarIdent {
+  const cel_IdentExpr* cel_nullability_unknown expr = nullptr;
   // Starting PC.
-  uint32_t start_pc;
-} _cel_InterpreterNspaceVarIdent;
+  uint32_t start_pc = 0;
+};
 
-typedef struct {
-  const cel_SelectExpr* cel_nonnull expr;
+struct _cel_InterpreterNspaceVarSelect {
+  const cel_SelectExpr* cel_nullability_unknown expr = nullptr;
   // Starting PC.
-  uint32_t ident_pc;
-  uint32_t select_pc;
-} _cel_InterpreterNspaceVarSelect;
+  uint32_t ident_pc = 0;
+  uint32_t select_pc = 0;
+};
 
-typedef struct {
+struct _cel_InterpreterNspaceVar {
   _cel_InterpreterNspaceVarIdent ident;
   _cel_Array(_cel_InterpreterNspaceVarSelect) selects;
   _cel_String name;
-} _cel_InterpreterNspaceVar;
+};
 
 static void _cel_InterpreterNspaceVar_Construct(
     _cel_InterpreterNspaceVar* cel_nonnull nspace_var) {
-  memset(nspace_var, 0, sizeof(*nspace_var));
-  _cel_Array_Construct(&nspace_var->selects);
   _cel_String_Construct(&nspace_var->name);
 }
 
 static void _cel_InterpreterNspaceVar_Destruct(
     _cel_InterpreterNspaceVar* cel_nonnull nspace_var,
     cel_Allocator* cel_nonnull alloc) {
-  _cel_Array_Destruct(&nspace_var->selects, alloc);
   _cel_String_Destruct(&nspace_var->name, alloc);
 }
 
-typedef struct {
-  const cel_BinaryExpr* cel_nonnull node;
-  uint32_t pc;
-  bool cond;
-} _cel_InterpreterBinaryCond;
+struct _cel_InterpreterBinaryCond {
+  const cel_BinaryExpr* cel_nullability_unknown node = nullptr;
+  uint32_t pc = 0;
+  bool cond = false;
+};
 
-typedef struct {
-  const cel_TernaryExpr* cel_nonnull node;
-  uint32_t trilean_jump_pc;
-  uint32_t jump_pc;
-} _cel_InterpreterTernaryCond;
+struct _cel_InterpreterTernaryCond {
+  const cel_TernaryExpr* cel_nullability_unknown node = nullptr;
+  uint32_t trilean_jump_pc = 0;
+  uint32_t jump_pc = 0;
+};
 
-typedef struct {
+struct _cel_InterpreterCond {
   // cel_BinaryExpr or cel_TernaryExpr
+  _cel_InterpreterCond() {}
+
+  _cel_InterpreterCond(const _cel_InterpreterCond&) = default;
+  _cel_InterpreterCond& operator=(const _cel_InterpreterCond&) = default;
+
   union {
     struct {
-      const cel_Expr* cel_nonnull node;
+      const cel_Expr* cel_nullability_unknown node;
     };
     _cel_InterpreterBinaryCond binary;
     _cel_InterpreterTernaryCond ternary;
   };
-} _cel_InterpreterCond;
+};
 
-typedef struct {
+struct _cel_InterpreterList {
   // One for each element of the list. Each is an _cel_ErrorJumpInstr.
   _cel_Array(uint32_t) pcs;
-} _cel_InterpreterList;
+};
 
-typedef struct {
+template <>
+struct cel_IsTriviallyRelocatable<_cel_InterpreterList> : std::true_type {};
+
+struct _cel_InterpreterMap {
   // One for each key and value of the map. The key is an _cel_Foo and the value
   // is an _cel_ErrorJumpInstr.
   _cel_Array(uint32_t) pcs;
-} _cel_InterpreterMap;
+};
 
-typedef struct {
-  uint32_t current;
-  uint32_t max;
-} _cel_InterpreterValueStackBounds;
+template <>
+struct cel_IsTriviallyRelocatable<_cel_InterpreterMap> : std::true_type {};
+
+struct _cel_InterpreterValueStackBounds {
+  uint32_t current = 0;
+  uint32_t max = 0;
+};
 
 static CEL_INLINE void _cel_InterpreterValueStackBounds_Construct(
     _cel_InterpreterValueStackBounds* cel_nonnull bounds) {
@@ -149,34 +160,39 @@ static CEL_INLINE void _cel_InterpreterValueStackBounds_Decrement(
   _cel_InterpreterValueStackBounds_Subtract(bounds, 1);
 }
 
-typedef struct {
+struct _cel_InterpreterSlot {
   // Name of the bound variable.
-  cel_StringView name;
+  cel_StringView name = {};
   // When variable names shadow each other, we need to know the prev slot index
   // so we can restore it in _cel_Interpreter::slot_map.
-  int32_t prev_slot;
+  int32_t prev_slot = 0;
   // The slot index, also the index into _cel_Interpreter::slots.
-  uint32_t index;
+  uint32_t index = 0;
   // PC for the jump we insert before assembling the subexpression. It is filled
   // in to jump over the subexpression.
-  uint32_t guard_pc;
+  uint32_t guard_pc = 0;
   // PC for the first instruction in the subexpression.
-  uint32_t pc;
+  uint32_t pc = 0;
   // Current value stack size for the initExpr of this comprehension.
   _cel_InterpreterValueStackBounds value_stack_bounds;
-} _cel_InterpreterSlot;
+};
 
-typedef struct {
+struct _cel_Interpreter {
+  _cel_Interpreter(const cel_Runtime* cel_nonnull rt,
+                   cel_Status* cel_nonnull status);
+
+  ~_cel_Interpreter();
+
   cel_AstVisitor visitor;
 
-  cel_AstTraverser* cel_nonnull traverser;
+  cel_AstTraverser* cel_nullability_unknown traverser;
   const cel_Runtime* cel_nonnull rt;
   cel_Allocator* cel_nonnull alloc;
   const upb_DefPool* cel_nonnull def_pool;
   const cel_WellKnownTypes* cel_nonnull wkts;
   cel_Status* cel_nonnull status;
 
-  cel_Program* cel_nullable prog;
+  cel_Program* cel_nullable prog = nullptr;
 
   // Mapping between strings, bytes, idents and their index in
   // `prog->string_pool`.
@@ -196,14 +212,14 @@ typedef struct {
   _cel_FlatHashMap(cel_StringView, uint32_t) slot_map;
   _cel_Array(uint32_t) slot_stack;
 
-  const cel_ComprehensionExpr* cel_nullable root_bind;
+  const cel_ComprehensionExpr* cel_nullable root_bind = nullptr;
 
   _cel_InterpreterValueStackBounds value_stack_bounds;
   _cel_Array(_cel_InterpreterValueStackBounds* cel_nonnull)
       value_stack_bounds_stack;
 
   _cel_jmp_buf jmp;
-} _cel_Interpreter;
+};
 
 CEL_ATTRIBUTE_NODISCARD
 static uint32_t _cel_Interpreter_PC(const _cel_Interpreter* cel_nonnull interp,
@@ -232,8 +248,7 @@ _cel_Interpreter_FromAstVisitor(cel_AstVisitor* cel_nonnull visitor) {
 CEL_ATTRIBUTE_NODISCARD
 static _cel_Instr* cel_nonnull _cel_Interpreter_AppendInstrN(
     _cel_Interpreter* cel_nonnull interp, size_t count) {
-  _cel_Instr* instr =
-      _cel_Array_Append(&interp->prog->instrs, interp->alloc, count);
+  _cel_Instr* instr = _cel_Array_Append(&interp->prog->instrs, count);
   if (CEL_UNLIKELY(instr == cel_nullptr)) {
     cel_OutOfMemoryStatus(interp->status);
     _cel_longjmp(interp->jmp);
@@ -250,7 +265,7 @@ _cel_Interpreter_AppendInstr(_cel_Interpreter* cel_nonnull interp) {
 CEL_ATTRIBUTE_NODISCARD
 static _cel_InterpreterCond* cel_nonnull
 _cel_Interpreter_PushCond(_cel_Interpreter* cel_nonnull interp) {
-  _cel_InterpreterCond* cond = _cel_Array_Push(&interp->conds, interp->alloc);
+  _cel_InterpreterCond* cond = _cel_Array_Push(&interp->conds);
   if (CEL_UNLIKELY(cond == cel_nullptr)) {
     cel_OutOfMemoryStatus(interp->status);
     _cel_longjmp(interp->jmp);
@@ -290,7 +305,7 @@ static void _cel_Interpreter_PopCond(_cel_Interpreter* cel_nonnull interp) {
 CEL_ATTRIBUTE_NODISCARD
 static _cel_InterpreterList* cel_nonnull
 _cel_Interpreter_PushList(_cel_Interpreter* cel_nonnull interp) {
-  _cel_InterpreterList* list = _cel_Array_Push(&interp->lists, interp->alloc);
+  _cel_InterpreterList* list = _cel_Array_Push(&interp->lists);
   if (CEL_UNLIKELY(list == cel_nullptr)) {
     cel_OutOfMemoryStatus(interp->status);
     _cel_longjmp(interp->jmp);
@@ -321,7 +336,7 @@ static void _cel_Interpreter_PopList(_cel_Interpreter* cel_nonnull interp) {
 CEL_ATTRIBUTE_NODISCARD
 static _cel_InterpreterMap* cel_nonnull
 _cel_Interpreter_PushMap(_cel_Interpreter* cel_nonnull interp) {
-  _cel_InterpreterMap* list = _cel_Array_Push(&interp->maps, interp->alloc);
+  _cel_InterpreterMap* list = _cel_Array_Push(&interp->maps);
   if (CEL_UNLIKELY(list == cel_nullptr)) {
     cel_OutOfMemoryStatus(interp->status);
     _cel_longjmp(interp->jmp);
@@ -373,7 +388,7 @@ static _cel_InterpreterSlot* cel_nonnull _cel_Interpreter_NewSlot(
 
 static void _cel_Interpreter_PushSlot(_cel_Interpreter* cel_nonnull interp,
                                       _cel_InterpreterSlot* cel_nonnull slot) {
-  uint32_t* index = _cel_Array_Push(&interp->slot_stack, interp->alloc);
+  uint32_t* index = _cel_Array_Push(&interp->slot_stack);
   if (CEL_UNLIKELY(slot == cel_nullptr)) {
     cel_OutOfMemoryStatus(interp->status);
     _cel_longjmp(interp->jmp);
@@ -406,7 +421,7 @@ static void _cel_Interpreter_PushValueStackBounds(
     _cel_Interpreter* cel_nonnull interp,
     _cel_InterpreterValueStackBounds* cel_nonnull bounds) {
   _cel_InterpreterValueStackBounds** bounds_ptr =
-      _cel_Array_Push(&interp->value_stack_bounds_stack, interp->alloc);
+      _cel_Array_Push(&interp->value_stack_bounds_stack);
   if (CEL_UNLIKELY(bounds_ptr == cel_nullptr)) {
     cel_OutOfMemoryStatus(interp->status);
     _cel_longjmp(interp->jmp);
@@ -535,8 +550,7 @@ static uint32_t _cel_Interpreter_InternString(
       _cel_FlatHashMap_Find(&interp->string_pool_indices, &string);
   if (node == cel_nullptr) {
     uint32_t index = (uint32_t)_cel_Array_Size(&interp->prog->strings_table);
-    _cel_String* string_ptr =
-        _cel_Array_Push(&interp->prog->strings_table, interp->alloc);
+    _cel_String* string_ptr = _cel_Array_Push(&interp->prog->strings_table);
     if (CEL_UNLIKELY(string_ptr == cel_nullptr)) {
       cel_OutOfMemoryStatus(interp->status);
       _cel_longjmp(interp->jmp);
@@ -623,7 +637,7 @@ static void _cel_Interpreter_PlanIdent(_cel_Interpreter* cel_nonnull interp,
       candidate_names_index =
           (uint32_t)_cel_Array_Size(&interp->prog->candidate_names_table);
       _cel_CandidateNames* candidate_names =
-          _cel_Array_Push(&interp->prog->candidate_names_table, interp->alloc);
+          _cel_Array_Push(&interp->prog->candidate_names_table);
       if (CEL_UNLIKELY(candidate_names == cel_nullptr)) {
         cel_OutOfMemoryStatus(interp->status);
         _cel_longjmp(interp->jmp);
@@ -814,7 +828,7 @@ static void _cel_Intepreter_CollectNspaceVarSelects(
     const cel_SelectExpr* cel_nonnull expr) {
   {
     _cel_InterpreterNspaceVarSelect* select =
-        _cel_Array_Push(&interp->nspace_var.selects, interp->alloc);
+        _cel_Array_Push(&interp->nspace_var.selects);
     if (CEL_UNLIKELY(select == cel_nullptr)) {
       cel_OutOfMemoryStatus(interp->status);
       _cel_longjmp(interp->jmp);
@@ -831,7 +845,7 @@ static void _cel_Intepreter_CollectNspaceVarSelects(
         return;
       case cel_ExprKind_kSelect: {
         _cel_InterpreterNspaceVarSelect* select =
-            _cel_Array_Push(&interp->nspace_var.selects, interp->alloc);
+            _cel_Array_Push(&interp->nspace_var.selects);
         if (CEL_UNLIKELY(select == cel_nullptr)) {
           cel_OutOfMemoryStatus(interp->status);
           _cel_longjmp(interp->jmp);
@@ -865,7 +879,7 @@ static bool _cel_Interpreter_GetNspaceVar(_cel_Interpreter* cel_nonnull interp,
         _cel_Array_Clear(&interp->nspace_var.selects);
         interp->nspace_var.ident.expr = select_ident_expr.ident;
         interp->nspace_var.ident.start_pc = 0;
-        _cel_Array_Reserve(&interp->nspace_var.selects, interp->alloc,
+        _cel_Array_Reserve(&interp->nspace_var.selects,
                            select_ident_expr.select_depth + 1);
         _cel_Intepreter_CollectNspaceVarSelects(interp, expr);
         return true;
@@ -1359,8 +1373,7 @@ static void _cel_Interpreter_PreVisitListExpr(
     _cel_longjmp(interp->jmp);
   }
   _cel_InterpreterList* list = _cel_Interpreter_PushList(interp);
-  _cel_Array_Construct(&list->pcs);
-  if (!_cel_Array_Reserve(&list->pcs, interp->alloc, num_elements)) {
+  if (!_cel_Array_Reserve(&list->pcs, num_elements)) {
     cel_OutOfMemoryStatus(interp->status);
     _cel_longjmp(interp->jmp);
   }
@@ -1383,7 +1396,6 @@ static void _cel_Interpreter_PostVisitListExpr(
                                        _cel_Interpreter_PC(interp, error_jump);
     error_jump->data.error_jump.pop = (uint32_t)i;
   }
-  _cel_Array_Destruct(&list->pcs, interp->alloc);
   _cel_Interpreter_PopList(interp);
   if (element_count > 0) {
     _cel_Interpreter_DecrementValueStackSizeN(interp, element_count - 1);
@@ -1421,7 +1433,7 @@ static void _cel_Interpreter_PostVisitListElementExpr(
   // Set in _cel_Interpreter_PostVisitListExpr.
   instr->data.error_jump.jump = 0;
   instr->data.error_jump.pop = 0;
-  uint32_t* pc = _cel_Array_Push(&list->pcs, interp->alloc);
+  uint32_t* pc = _cel_Array_Push(&list->pcs);
   if (pc == cel_nullptr) {
     cel_OutOfMemoryStatus(interp->status);
     _cel_longjmp(interp->jmp);
@@ -1441,8 +1453,7 @@ static void _cel_Interpreter_PreVisitMapExpr(
     _cel_longjmp(interp->jmp);
   }
   _cel_InterpreterMap* map = _cel_Interpreter_PushMap(interp);
-  _cel_Array_Construct(&map->pcs);
-  if (!_cel_Array_Reserve(&map->pcs, interp->alloc, num_entries * 2)) {
+  if (!_cel_Array_Reserve(&map->pcs, num_entries * 2)) {
     cel_OutOfMemoryStatus(interp->status);
     _cel_longjmp(interp->jmp);
   }
@@ -1471,7 +1482,6 @@ static void _cel_Interpreter_PostVisitMapExpr(
                                        _cel_Interpreter_PC(interp, error_jump);
     error_jump->data.error_jump.pop = (uint32_t)(i * 2 + 1);
   }
-  _cel_Array_Destruct(&map->pcs, interp->alloc);
   _cel_Interpreter_PopMap(interp);
   if (entries_count > 0) {
     _cel_Interpreter_DecrementValueStackSizeN(interp, entries_count * 2 - 1);
@@ -1514,7 +1524,7 @@ static void _cel_Interpreter_PostVisitMapEntryExprKey(
   // Set in _cel_Interpreter_PostVisitMapExpr.
   instr->data.key_jump.jump = 0;
   instr->data.key_jump.pop = 0;
-  uint32_t* pc = _cel_Array_Push(&map->pcs, interp->alloc);
+  uint32_t* pc = _cel_Array_Push(&map->pcs);
   if (pc == cel_nullptr) {
     cel_OutOfMemoryStatus(interp->status);
     _cel_longjmp(interp->jmp);
@@ -1531,7 +1541,7 @@ static void _cel_Interpreter_PostVisitMapEntryExprValue(
   // Set in _cel_Interpreter_PostVisitMapExpr.
   instr->data.key_jump.jump = 0;
   instr->data.key_jump.pop = 0;
-  uint32_t* pc = _cel_Array_Push(&map->pcs, interp->alloc);
+  uint32_t* pc = _cel_Array_Push(&map->pcs);
   if (pc == cel_nullptr) {
     cel_OutOfMemoryStatus(interp->status);
     _cel_longjmp(interp->jmp);
@@ -1894,59 +1904,37 @@ static bool _cel_Interpreter_StringViewEqualer(const void* cel_nonnull lhs,
                                *(const cel_StringView*)rhs);
 }
 
-static void _cel_Interpreter_Construct(_cel_Interpreter* cel_nonnull interp,
-                                       const cel_Runtime* cel_nonnull rt,
-                                       cel_Status* cel_nonnull status) {
-  memset(interp, 0, sizeof(*interp));
-  interp->visitor.vtable = &_cel_InterpreterVTable;
-  interp->rt = _cel_Runtime_ConstRef(rt);
-  interp->alloc = rt->alloc;
-  interp->def_pool = rt->def_pool;
-  interp->wkts = &rt->wkts;
-  interp->status = status;
-  interp->root_bind = cel_nullptr;
-  _cel_FlatHashMap_Construct(&interp->string_pool_indices,
+_cel_Interpreter::_cel_Interpreter(const cel_Runtime* cel_nonnull rt,
+                                   cel_Status* cel_nonnull status)
+    : rt(_cel_Runtime_ConstRef(rt)),
+      alloc(rt->alloc),
+      def_pool(rt->def_pool),
+      wkts(&rt->wkts),
+      status(status) {
+  visitor.vtable = &_cel_InterpreterVTable;
+  _cel_FlatHashMap_Construct(&string_pool_indices,
                              &_cel_Interpreter_StringViewHasher,
                              &_cel_Interpreter_StringViewEqualer);
-  _cel_FlatHashMap_Construct(&interp->candidate_names_indices,
+  _cel_FlatHashMap_Construct(&candidate_names_indices,
                              &_cel_Interpreter_StringViewHasher,
                              &_cel_Interpreter_StringViewEqualer);
-  _cel_InterpreterNspaceVar_Construct(&interp->nspace_var);
-  _cel_Array_Construct(&interp->conds);
-  _cel_Array_Construct(&interp->lists);
-  _cel_Array_Construct(&interp->maps);
-  _cel_Deque_Construct(&interp->slots);
-  _cel_FlatHashMap_Construct(&interp->slot_map,
-                             &_cel_Interpreter_StringViewHasher,
+  _cel_InterpreterNspaceVar_Construct(&nspace_var);
+  _cel_Deque_Construct(&slots);
+  _cel_FlatHashMap_Construct(&slot_map, &_cel_Interpreter_StringViewHasher,
                              &_cel_Interpreter_StringViewEqualer);
-  _cel_Array_Construct(&interp->slot_stack);
-  _cel_Array_Construct(&interp->value_stack_bounds_stack);
 }
 
-static void _cel_Interpreter_Destruct(_cel_Interpreter* cel_nonnull interp) {
-  cel_AstTraverser_Delete(interp->traverser);
-  _cel_Array_Destruct(&interp->value_stack_bounds_stack, interp->alloc);
-  _cel_Array_Destruct(&interp->slot_stack, interp->alloc);
-  _cel_FlatHashMap_Destruct(&interp->slot_map, interp->alloc);
-  _cel_Deque_Destruct(&interp->slots, interp->alloc);
-  _cel_Array_Destruct(&interp->conds, interp->alloc);
-  for (size_t i = 0; i < _cel_Array_Size(&interp->lists); ++i) {
-    _cel_Array_Destruct(&_cel_Array_MutableAt(&interp->lists, i)->pcs,
-                        interp->alloc);
-  }
-  _cel_Array_Destruct(&interp->lists, interp->alloc);
-  for (size_t i = 0; i < _cel_Array_Size(&interp->maps); ++i) {
-    _cel_Array_Destruct(&_cel_Array_MutableAt(&interp->maps, i)->pcs,
-                        interp->alloc);
-  }
-  _cel_Array_Destruct(&interp->maps, interp->alloc);
-  _cel_InterpreterNspaceVar_Destruct(&interp->nspace_var, interp->alloc);
-  _cel_FlatHashMap_Destruct(&interp->candidate_names_indices, interp->alloc);
-  _cel_FlatHashMap_Destruct(&interp->string_pool_indices, interp->alloc);
+_cel_Interpreter::~_cel_Interpreter() {
+  cel_AstTraverser_Delete(traverser);
+  _cel_FlatHashMap_Destruct(&slot_map, alloc);
+  _cel_Deque_Destruct(&slots, alloc);
+  _cel_InterpreterNspaceVar_Destruct(&nspace_var, alloc);
+  _cel_FlatHashMap_Destruct(&candidate_names_indices, alloc);
+  _cel_FlatHashMap_Destruct(&string_pool_indices, alloc);
   // interp->prog is only non-null when planning failed, call cel_Program_Delete
   // to avoid hitting a debug assert as we hold the only reference
-  cel_Program_Delete(interp->prog);
-  _cel_Runtime_Unref(interp->rt);
+  cel_Program_Delete(prog);
+  _cel_Runtime_Unref(rt);
 }
 
 static void _cel_Interpreter_DirectInstrs(
@@ -2002,14 +1990,12 @@ extern "C" cel_Program* cel_nullable _cel_Interpreter_Compile(
     return cel_nullptr;
   }
 
-  _cel_Interpreter interp;
+  _cel_Interpreter interp(rt, status);
   _cel_Interpreter* volatile interp_ptr = &interp;
-  _cel_Interpreter_Construct(&interp, rt, status);
 
   cel_Program* prog = _cel_Program_New(rt);
   if (CEL_UNLIKELY(prog == cel_nullptr)) {
     cel_OutOfMemoryStatus(status);
-    _cel_Interpreter_Destruct(&interp);
     return cel_nullptr;
   }
   interp.prog = prog;
@@ -2017,13 +2003,11 @@ extern "C" cel_Program* cel_nullable _cel_Interpreter_Compile(
   cel_AstTraverser* traverser = cel_AstTraverser_New(ast, &interp.visitor);
   if (CEL_UNLIKELY(traverser == cel_nullptr)) {
     cel_OutOfMemoryStatus(status);
-    _cel_Interpreter_Destruct(&interp);
     return cel_nullptr;
   }
   interp.traverser = traverser;
   if (_cel_setjmp(interp_ptr->jmp)) {
     CEL_ASSERT_NOT(cel_Status_Ok(interp_ptr->status));
-    _cel_Interpreter_Destruct(&interp);
     return cel_nullptr;
   }
 
@@ -2037,13 +2021,12 @@ extern "C" cel_Program* cel_nullable _cel_Interpreter_Compile(
     prog->max_stack_size = interp.value_stack_bounds.max;
     _cel_Instr* instr = _cel_Interpreter_AppendInstr(&interp);
     if (CEL_UNLIKELY(instr == cel_nullptr)) {
-      _cel_Interpreter_Destruct(&interp);
       return cel_nullptr;
     }
     instr->kind = _cel_InstrKind_kExit;
-    _cel_Array_ShrinkToFit(&prog->instrs, interp.alloc);
-    _cel_Array_ShrinkToFit(&prog->strings_table, interp.alloc);
-    _cel_Array_ShrinkToFit(&prog->candidate_names_table, interp.alloc);
+    _cel_Array_ShrinkToFit(&prog->instrs);
+    _cel_Array_ShrinkToFit(&prog->strings_table);
+    _cel_Array_ShrinkToFit(&prog->candidate_names_table);
     // We only needed pointer stability for strings in the string pool with
     // _cel_Interpreter. Now that planning is complete, we can forgo pointer
     // stability in the name of less memory usage.
@@ -2060,6 +2043,5 @@ extern "C" cel_Program* cel_nullable _cel_Interpreter_Compile(
   } else {
     prog = cel_nullptr;
   }
-  _cel_Interpreter_Destruct(&interp);
   return prog;
 }

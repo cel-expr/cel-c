@@ -238,13 +238,11 @@ static bool _cel_MapValue_EqualsSlow(
   }
   _cel_Array(_cel_MapValueEntry) lhs_entries;
   _cel_Array(_cel_MapValueEntry) rhs_entries;
-  _cel_Array_Construct(&lhs_entries);
   if (lhs_has_size) {
-    _cel_Array_Reserve(&lhs_entries, context->alloc, lhs_size);
+    _cel_Array_Reserve(&lhs_entries, lhs_size);
   }
-  _cel_Array_Construct(&rhs_entries);
   if (rhs_has_size) {
-    _cel_Array_Reserve(&rhs_entries, context->alloc, rhs_size);
+    _cel_Array_Reserve(&rhs_entries, rhs_size);
   }
   bool ok = true;
   bool lhs_next = true;
@@ -259,8 +257,7 @@ static bool _cel_MapValue_EqualsSlow(
         break;
       }
       if (lhs_next) {
-        _cel_MapValueEntry* lhs_entry_ptr =
-            _cel_Array_Push(&lhs_entries, context->alloc);
+        _cel_MapValueEntry* lhs_entry_ptr = _cel_Array_Push(&lhs_entries);
         if (CEL_UNLIKELY(lhs_entry_ptr == cel_nullptr)) {
           cel_OutOfMemoryStatus(status);
           ok = false;
@@ -278,8 +275,7 @@ static bool _cel_MapValue_EqualsSlow(
         break;
       }
       if (rhs_next) {
-        _cel_MapValueEntry* rhs_entry_ptr =
-            _cel_Array_Push(&rhs_entries, context->alloc);
+        _cel_MapValueEntry* rhs_entry_ptr = _cel_Array_Push(&rhs_entries);
         if (CEL_UNLIKELY(rhs_entry_ptr == cel_nullptr)) {
           cel_OutOfMemoryStatus(status);
           ok = false;
@@ -330,8 +326,6 @@ static bool _cel_MapValue_EqualsSlow(
     }
   }
 done:
-  _cel_Array_Destruct(&rhs_entries, context->alloc);
-  _cel_Array_Destruct(&lhs_entries, context->alloc);
   cel_MapValueIterator_Delete(rhs_iter);
   cel_MapValueIterator_Delete(lhs_iter);
   return ok;

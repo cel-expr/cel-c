@@ -2743,7 +2743,20 @@ static inline void _cel_Interpretable_CallSize(
     case cel_ValueKind_kBytes:
       cel_Value_SetInt(top, cel_StringView_Size(cel_Value_GetBytes(top)));
       break;
-    // TODO: Add support for other types.
+    case cel_ValueKind_kList: {
+      const cel_ListValue list_value = *cel_Value_GetList(top);
+      if (!cel_ListValue_Size(&list_value, &interp->context, top,
+                              interp->status)) {
+        _cel_Interpretable_Throw(interp);
+      }
+    } break;
+    case cel_ValueKind_kMap: {
+      const cel_MapValue map_value = *cel_Value_GetMap(top);
+      if (!cel_MapValue_Size(&map_value, &interp->context, top,
+                             interp->status)) {
+        _cel_Interpretable_Throw(interp);
+      }
+    } break;
     default:
       cel_Value_SetError(top,
                          _cel_Interpretable_NewNoSuchOverloadError(interp));

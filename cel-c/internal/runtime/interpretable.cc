@@ -1524,7 +1524,7 @@ static inline void _cel_Interpretable_Negate(
     case cel_ValueKind_kInt: {
       // -(int) -> -int
       int64_t result;
-      if (_cel_ckd_sub(&result, 0, cel_Value_GetInt(val))) {
+      if (_cel_ckd_sub(&result, int64_t{0}, cel_Value_GetInt(val))) {
         cel_Value_SetError(top, _cel_Interpretable_NewIntOverflowError(interp));
         break;
       }

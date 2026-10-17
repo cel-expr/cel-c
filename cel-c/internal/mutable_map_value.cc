@@ -25,10 +25,10 @@
 #include "cel-c/assert.h"
 #include "cel-c/error.h"
 #include "cel-c/error_code.h"
-#include "cel-c/hash.h"
 #include "cel-c/internal/bit.h"
 #include "cel-c/internal/config.h"
 #include "cel-c/internal/empty_map_value.h"
+#include "cel-c/internal/hash.h"
 #include "cel-c/internal/map_value.h"
 #include "cel-c/status.h"
 #include "cel-c/string_view.h"
@@ -140,8 +140,8 @@ static bool _cel_MutableMapValue_Get(
             content.ptr[_cel_MutableMapValueContent_kPtrOffset];
     const size_t mask =
         (size_t)content.u32[_cel_MutableMapValueContent_kCapOffset] - 1;
-    size_t bit = cel_HashState_Finalize(
-                     _cel_MapValueKey_Hash(key, cel_HashState_Initialize())) &
+    size_t bit = _cel_HashState_Finalize(
+                     _cel_MapValueKey_Hash(key, _cel_HashState_Initialize())) &
                  mask;
     _cel_MutableMapValueEntry* ent;
     for (ent = ents[bit]; ent != cel_nullptr; ent = ents[(++bit) & mask]) {
@@ -185,8 +185,8 @@ static bool _cel_MutableMapValue_Find(
             content.ptr[_cel_MutableMapValueContent_kPtrOffset];
     const size_t mask =
         (size_t)content.u32[_cel_MutableMapValueContent_kCapOffset] - 1;
-    size_t bit = cel_HashState_Finalize(
-                     _cel_MapValueKey_Hash(key, cel_HashState_Initialize())) &
+    size_t bit = _cel_HashState_Finalize(
+                     _cel_MapValueKey_Hash(key, _cel_HashState_Initialize())) &
                  mask;
     _cel_MutableMapValueEntry* ent;
     for (ent = ents[bit]; ent != cel_nullptr; ent = ents[(++bit) & mask]) {
@@ -222,8 +222,8 @@ static bool _cel_MutableMapValue_Has(
             content.ptr[_cel_MutableMapValueContent_kPtrOffset];
     const size_t mask =
         (size_t)content.u32[_cel_MutableMapValueContent_kCapOffset] - 1;
-    size_t bit = cel_HashState_Finalize(
-                     _cel_MapValueKey_Hash(key, cel_HashState_Initialize())) &
+    size_t bit = _cel_HashState_Finalize(
+                     _cel_MapValueKey_Hash(key, _cel_HashState_Initialize())) &
                  mask;
     _cel_MutableMapValueEntry* ent;
     for (ent = ents[bit]; ent != cel_nullptr; ent = ents[(++bit) & mask]) {
@@ -243,7 +243,7 @@ static void _cel_MutableMapValue_Rehash(_cel_MutableMapValueEntry** new_ents,
                                         _cel_MutableMapValueEntry** old_ents,
                                         size_t old_cap, size_t len) {
   const size_t new_mask = new_cap - 1;
-  const cel_HashState state = cel_HashState_Initialize();
+  const _cel_HashState state = _cel_HashState_Initialize();
   size_t old_bit;
   for (old_bit = 0; len > 0; ++old_bit) {
     _cel_MutableMapValueEntry* ent = old_ents[old_bit];
@@ -251,7 +251,7 @@ static void _cel_MutableMapValue_Rehash(_cel_MutableMapValueEntry** new_ents,
       continue;
     }
     size_t new_bit =
-        cel_HashState_Finalize(_cel_MapValueKey_Hash(&ent->key, state)) &
+        _cel_HashState_Finalize(_cel_MapValueKey_Hash(&ent->key, state)) &
         new_mask;
     for (; new_ents[new_bit] != cel_nullptr;
          new_bit = (new_bit + 1) & new_mask) {
@@ -341,8 +341,8 @@ extern "C" _cel_MutableMapValueInsertResult _cel_MutableMapValue_Insert(
   const size_t mask =
       (size_t)map_value->content.u32[_cel_MutableMapValueContent_kCapOffset] -
       1;
-  size_t bit = cel_HashState_Finalize(
-                   _cel_MapValueKey_Hash(key, cel_HashState_Initialize())) &
+  size_t bit = _cel_HashState_Finalize(
+                   _cel_MapValueKey_Hash(key, _cel_HashState_Initialize())) &
                mask;
   _cel_MutableMapValueEntry* ent;
   for (ent = ents[bit]; ent != cel_nullptr; ent = ents[(++bit) & mask]) {

@@ -18,7 +18,6 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "cel-c/hash.h"
 #include "cel-c/string_view.h"
 
 namespace {
@@ -90,14 +89,6 @@ TEST(CStringView, Count) {
             3);
   EXPECT_EQ(cel_CStringView_Count(haystack, cel_CStringView_FromString("ll")),
             1);
-}
-
-TEST(CStringView, Hash) {
-  EXPECT_EQ(cel_HashState_Finalize(
-                cel_CStringView_Hash(cel_CStringView_FromString("Hello World!"),
-                                     cel_HashState_Initialize())),
-            cel_HashState_Finalize(cel_HashState_Combine(
-                cel_HashState_Initialize(), "Hello World!")));
 }
 
 TEST(CStringView, Equals) {

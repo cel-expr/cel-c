@@ -263,10 +263,10 @@ cc_test(
 
 cc_library(
     name = "bit",
-    srcs = ["bit.cc"],
     hdrs = ["bit.h"],
     deps = [
         ":config",
+        "@abseil-cpp//absl/numeric:bits",
     ],
 )
 

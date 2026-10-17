@@ -263,10 +263,10 @@ cc_test(
 
 cc_library(
     name = "bit",
-    srcs = ["bit.cc"],
     hdrs = ["bit.h"],
     deps = [
         ":config",
+        "@abseil-cpp//absl/numeric:bits",
     ],
 )
 
@@ -886,25 +886,6 @@ cc_library(
     hdrs = ["uchar.h"],
     deps = [
         ":config",
-    ],
-)
-
-cc_library(
-    name = "uint128",
-    hdrs = ["uint128.h"],
-    deps = [
-        ":config",
-        ":endian",
-        "//cel-c:assert",
-    ],
-)
-
-cc_test(
-    name = "uint128_test",
-    srcs = ["uint128_test.cc"],
-    deps = [
-        ":uint128",
-        "@googletest//:gtest_main",
     ],
 )
 

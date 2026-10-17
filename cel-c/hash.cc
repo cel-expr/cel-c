@@ -14,14 +14,14 @@
 
 #include "cel-c/hash.h"
 
-#include <math.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
 
+#include "absl/numeric/int128.h"
 #include "cel-c/assert.h"
 #include "cel-c/internal/bit.h"
 #include "cel-c/internal/config.h"
-#include "cel-c/internal/uint128.h"
 #include "cel-c/internal/unaligned.h"
 
 static CEL_NONNULL(const void*) const _cel_kHashSeed = &_cel_kHashSeed;
@@ -90,10 +90,10 @@ static uint32_t _cel_HashRead1To3(const uint8_t* cel_nonnull p, size_t n) {
 
 CEL_ATTRIBUTE_NODISCARD
 static uint64_t _cel_HashMix(uint64_t a, uint64_t b) {
-  _cel_Uint128 m = _cel_Uint128_From(a + b);
-  m = _cel_Uint128_Mul(m, _cel_Uint128_From(UINT64_C(0x9ddfea08eb382d69)));
-  m = _cel_Uint128_Xor(m, _cel_Uint128_ShiftRight(m, 64));
-  return _cel_Uint128_To(uint64_t, m);
+  absl::uint128 m = a + b;
+  m *= UINT64_C(0x9ddfea08eb382d69);
+  m ^= m >> 64;
+  return static_cast<uint64_t>(m);
 }
 
 static const uint64_t _cel_kHashSalt[5] = {
@@ -104,10 +104,9 @@ static const uint64_t _cel_kHashSalt[5] = {
 
 CEL_ATTRIBUTE_NODISCARD
 static uint64_t _cel_LowLevelHashMix(uint64_t a, uint64_t b) {
-  _cel_Uint128 m = _cel_Uint128_From(a);
-  m = _cel_Uint128_Mul(m, _cel_Uint128_From(b));
-  return _cel_Uint128_To(uint64_t, m) ^
-         _cel_Uint128_To(uint64_t, _cel_Uint128_ShiftRight(m, 64));
+  absl::uint128 m = a;
+  m *= b;
+  return static_cast<uint64_t>(m) ^ static_cast<uint64_t>(m >> 64);
 }
 
 CEL_ATTRIBUTE_NODISCARD
@@ -201,10 +200,10 @@ extern "C" cel_HashState cel_HashState_CombineN(cel_HashState state,
     state.val *= UINT64_C(0x9ddfea08eb382d69);
     lo += state.val;
     state.val ^= hi;
-    _cel_Uint128 m = _cel_Uint128_From(state.val);
-    m = _cel_Uint128_Mul(m, _cel_Uint128_From(lo));
-    m = _cel_Uint128_Xor(m, _cel_Uint128_ShiftRight(m, 64));
-    return ((cel_HashState){_cel_Uint128_To(uint64_t, m)});
+    absl::uint128 m = state.val;
+    m *= lo;
+    m ^= m >> 64;
+    return ((cel_HashState){static_cast<uint64_t>(m)});
   } else if (size > 3) {
     v = _cel_HashRead4To8(reinterpret_cast<const uint8_t*>(data), size);
   } else if (size > 0) {

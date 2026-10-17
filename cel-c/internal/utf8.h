@@ -22,7 +22,6 @@
 #include <stdint.h>
 
 #include "cel-c/internal/config.h"
-#include "cel-c/internal/uchar.h"  // IWYU pragma: keep
 #include "upb/base/string_view.h"
 
 CEL_BEGIN_DECLS

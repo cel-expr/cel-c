@@ -21,9 +21,9 @@
 #include "gtest/gtest.h"
 #include "cel-c/error.h"
 #include "cel-c/error_code.h"
-#include "cel-c/hash.h"
 #include "cel-c/internal/config.h"
 #include "cel-c/internal/empty_map_value.h"
+#include "cel-c/internal/hash.h"
 #include "cel-c/internal/value_testing.h"
 #include "cel-c/status.h"
 #include "cel-c/string_view.h"
@@ -310,10 +310,10 @@ TEST_F(MapValueKeyTest, Hash_Bool) {
   cel_MapValueKey key;
 
   cel_MapValueKey_SetBool(&key, true);
-  EXPECT_EQ(cel_HashState_Finalize(
-                _cel_MapValueKey_Hash(&key, cel_HashState_Initialize())),
-            cel_HashState_Finalize(
-                _cel_MapValueKey_Hash(&key, cel_HashState_Initialize())));
+  EXPECT_EQ(_cel_HashState_Finalize(
+                _cel_MapValueKey_Hash(&key, _cel_HashState_Initialize())),
+            _cel_HashState_Finalize(
+                _cel_MapValueKey_Hash(&key, _cel_HashState_Initialize())));
 }
 
 TEST_F(MapValueKeyTest, Hash_Int) {
@@ -322,20 +322,20 @@ TEST_F(MapValueKeyTest, Hash_Int) {
 
   cel_MapValueKey_SetInt(&int_key, 1);
   cel_MapValueKey_SetUint(&uint_key, 1);
-  EXPECT_EQ(cel_HashState_Finalize(
-                _cel_MapValueKey_Hash(&int_key, cel_HashState_Initialize())),
-            cel_HashState_Finalize(
-                _cel_MapValueKey_Hash(&uint_key, cel_HashState_Initialize())));
+  EXPECT_EQ(_cel_HashState_Finalize(
+                _cel_MapValueKey_Hash(&int_key, _cel_HashState_Initialize())),
+            _cel_HashState_Finalize(
+                _cel_MapValueKey_Hash(&uint_key, _cel_HashState_Initialize())));
 }
 
 TEST_F(MapValueKeyTest, Hash_String) {
   cel_MapValueKey key;
 
   cel_MapValueKey_SetString(&key, cel_StringView_FromString("foo"));
-  EXPECT_EQ(cel_HashState_Finalize(
-                _cel_MapValueKey_Hash(&key, cel_HashState_Initialize())),
-            cel_HashState_Finalize(
-                _cel_MapValueKey_Hash(&key, cel_HashState_Initialize())));
+  EXPECT_EQ(_cel_HashState_Finalize(
+                _cel_MapValueKey_Hash(&key, _cel_HashState_Initialize())),
+            _cel_HashState_Finalize(
+                _cel_MapValueKey_Hash(&key, _cel_HashState_Initialize())));
 }
 
 TEST_F(MapValueKeyTest, ToMessageValue_Bool) {

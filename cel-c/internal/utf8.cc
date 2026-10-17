@@ -20,7 +20,6 @@
 
 #include "cel-c/assert.h"
 #include "cel-c/internal/config.h"
-#include "cel-c/internal/uchar.h"  // IWYU pragma: keep
 #include "cel-c/internal/unicode.h"
 #include "upb/base/string_view.h"
 

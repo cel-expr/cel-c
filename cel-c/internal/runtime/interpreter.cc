@@ -26,12 +26,12 @@
 #include "cel-c/ast_traverse.h"
 #include "cel-c/ast_visitor.h"
 #include "cel-c/constant.h"
-#include "cel-c/hash.h"
 #include "cel-c/internal/array.h"
 #include "cel-c/internal/config.h"
 #include "cel-c/internal/container.h"
 #include "cel-c/internal/deque.h"
 #include "cel-c/internal/flat_hash_map.h"
+#include "cel-c/internal/hash.h"
 #include "cel-c/internal/runtime/instr.h"
 #include "cel-c/internal/runtime/program.h"
 #include "cel-c/internal/runtime/runtime.h"
@@ -1833,8 +1833,8 @@ static const cel_AstVisitorVTable _cel_InterpreterVTable = {
 };
 
 static size_t _cel_Interpreter_StringViewHasher(const void* cel_nonnull key) {
-  return cel_HashState_Finalize(cel_HashState_Combine(
-      cel_HashState_Initialize(), *(const cel_StringView*)key));
+  return _cel_HashState_Finalize(_cel_HashState_Combine(
+      _cel_HashState_Initialize(), *(const cel_StringView*)key));
 }
 
 static bool _cel_Interpreter_StringViewEqualer(const void* cel_nonnull lhs,

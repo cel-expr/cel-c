@@ -12,37 +12,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "cel-c/hash.h"
+#include "cel-c/internal/hash.h"
 
 #include <limits>
 
 #include "gtest/gtest.h"
+#include "cel-c/cstring_view.h"
+#include "cel-c/string_view.h"
 #include "upb/base/string_view.h"
 
 // NOLINTBEGIN(runtime/int)
 // NOLINTBEGIN(google-runtime-int)
 
-inline bool operator==(cel_HashState lhs, cel_HashState rhs) {
+inline bool operator==(_cel_HashState lhs, _cel_HashState rhs) {
   return lhs.val == rhs.val;
 }
 
-inline bool operator!=(cel_HashState lhs, cel_HashState rhs) {
+inline bool operator!=(_cel_HashState lhs, _cel_HashState rhs) {
   return !operator==(lhs, rhs);
 }
 
 namespace {
 
 TEST(Hash, Empty) {
-  EXPECT_EQ(cel_HashState_Initialize(), cel_HashState_Initialize());
-  EXPECT_EQ(cel_HashState_Finalize(cel_HashState_Initialize()),
-            cel_HashState_Finalize(cel_HashState_Initialize()));
+  EXPECT_EQ(_cel_HashState_Initialize(), _cel_HashState_Initialize());
+  EXPECT_EQ(_cel_HashState_Finalize(_cel_HashState_Initialize()),
+            _cel_HashState_Finalize(_cel_HashState_Initialize()));
 }
 
 TEST(Hash, Bool) {
-  EXPECT_EQ(cel_HashState_Combine(cel_HashState_Initialize(), false),
-            cel_HashState_Combine(cel_HashState_Initialize(), false));
-  EXPECT_EQ(cel_HashState_Combine(cel_HashState_Initialize(), true),
-            cel_HashState_Combine(cel_HashState_Initialize(), true));
+  EXPECT_EQ(_cel_HashState_Combine(_cel_HashState_Initialize(), false),
+            _cel_HashState_Combine(_cel_HashState_Initialize(), false));
+  EXPECT_EQ(_cel_HashState_Combine(_cel_HashState_Initialize(), true),
+            _cel_HashState_Combine(_cel_HashState_Initialize(), true));
 }
 
 template <typename T>
@@ -57,18 +59,18 @@ TYPED_TEST_SUITE(HashIntTest, HashIntTestTypes);
 
 TYPED_TEST(HashIntTest, Hash) {
   using TypeParamLimits = std::numeric_limits<TypeParam>;
-  EXPECT_EQ(cel_HashState_Combine(cel_HashState_Initialize(), TypeParam{0}),
-            cel_HashState_Combine(cel_HashState_Initialize(), TypeParam{0}));
-  EXPECT_EQ(cel_HashState_Combine(cel_HashState_Initialize(), TypeParam{1}),
-            cel_HashState_Combine(cel_HashState_Initialize(), TypeParam{1}));
-  EXPECT_EQ(
-      cel_HashState_Combine(cel_HashState_Initialize(), TypeParamLimits::min()),
-      cel_HashState_Combine(cel_HashState_Initialize(),
-                            TypeParamLimits::min()));
-  EXPECT_EQ(
-      cel_HashState_Combine(cel_HashState_Initialize(), TypeParamLimits::max()),
-      cel_HashState_Combine(cel_HashState_Initialize(),
-                            TypeParamLimits::max()));
+  EXPECT_EQ(_cel_HashState_Combine(_cel_HashState_Initialize(), TypeParam{0}),
+            _cel_HashState_Combine(_cel_HashState_Initialize(), TypeParam{0}));
+  EXPECT_EQ(_cel_HashState_Combine(_cel_HashState_Initialize(), TypeParam{1}),
+            _cel_HashState_Combine(_cel_HashState_Initialize(), TypeParam{1}));
+  EXPECT_EQ(_cel_HashState_Combine(_cel_HashState_Initialize(),
+                                   TypeParamLimits::min()),
+            _cel_HashState_Combine(_cel_HashState_Initialize(),
+                                   TypeParamLimits::min()));
+  EXPECT_EQ(_cel_HashState_Combine(_cel_HashState_Initialize(),
+                                   TypeParamLimits::max()),
+            _cel_HashState_Combine(_cel_HashState_Initialize(),
+                                   TypeParamLimits::max()));
 }
 
 template <typename T>
@@ -80,40 +82,44 @@ TYPED_TEST_SUITE(HashFloatTest, HashFloatTestTypes);
 
 TYPED_TEST(HashFloatTest, Hash) {
   using Limits = std::numeric_limits<TypeParam>;
-  EXPECT_EQ(cel_HashState_Combine(cel_HashState_Initialize(), TypeParam{0.0}),
-            cel_HashState_Combine(cel_HashState_Initialize(), TypeParam{0.0}));
   EXPECT_EQ(
-      cel_HashState_Combine(cel_HashState_Initialize(), Limits::infinity()),
-      cel_HashState_Combine(cel_HashState_Initialize(), Limits::infinity()));
+      _cel_HashState_Combine(_cel_HashState_Initialize(), TypeParam{0.0}),
+      _cel_HashState_Combine(_cel_HashState_Initialize(), TypeParam{0.0}));
   EXPECT_EQ(
-      cel_HashState_Combine(cel_HashState_Initialize(), -Limits::infinity()),
-      cel_HashState_Combine(cel_HashState_Initialize(), -Limits::infinity()));
+      _cel_HashState_Combine(_cel_HashState_Initialize(), Limits::infinity()),
+      _cel_HashState_Combine(_cel_HashState_Initialize(), Limits::infinity()));
   EXPECT_EQ(
-      cel_HashState_Combine(cel_HashState_Initialize(), Limits::quiet_NaN()),
-      cel_HashState_Combine(cel_HashState_Initialize(), Limits::quiet_NaN()));
-  EXPECT_EQ(cel_HashState_Combine(cel_HashState_Initialize(), TypeParam{-0.0}),
-            cel_HashState_Combine(cel_HashState_Initialize(), TypeParam{0.0}));
-  EXPECT_EQ(cel_HashState_Combine(cel_HashState_Initialize(), TypeParam{1.0}),
-            cel_HashState_Combine(cel_HashState_Initialize(), TypeParam{1.0}));
+      _cel_HashState_Combine(_cel_HashState_Initialize(), -Limits::infinity()),
+      _cel_HashState_Combine(_cel_HashState_Initialize(), -Limits::infinity()));
+  EXPECT_EQ(
+      _cel_HashState_Combine(_cel_HashState_Initialize(), Limits::quiet_NaN()),
+      _cel_HashState_Combine(_cel_HashState_Initialize(), Limits::quiet_NaN()));
+  EXPECT_EQ(
+      _cel_HashState_Combine(_cel_HashState_Initialize(), TypeParam{-0.0}),
+      _cel_HashState_Combine(_cel_HashState_Initialize(), TypeParam{0.0}));
+  EXPECT_EQ(
+      _cel_HashState_Combine(_cel_HashState_Initialize(), TypeParam{1.0}),
+      _cel_HashState_Combine(_cel_HashState_Initialize(), TypeParam{1.0}));
 }
 
 TEST(Hash, Str) {
-  EXPECT_EQ(cel_HashState_Combine(cel_HashState_Initialize(), "Hello World!"),
-            cel_HashState_Combine(cel_HashState_Initialize(), "Hello World!"));
-  EXPECT_EQ(cel_HashState_Combine(cel_HashState_Initialize(), "Hello World!"),
-            cel_HashState_Combine(cel_HashState_Initialize(),
-                                  upb_StringView_FromString("Hello World!")));
   EXPECT_EQ(
-      cel_HashState_Combine(cel_HashState_Initialize(), (const char*)nullptr),
-      cel_HashState_Combine(cel_HashState_Initialize(), ""));
+      _cel_HashState_Combine(_cel_HashState_Initialize(), "Hello World!"),
+      _cel_HashState_Combine(_cel_HashState_Initialize(), "Hello World!"));
+  EXPECT_EQ(_cel_HashState_Combine(_cel_HashState_Initialize(), "Hello World!"),
+            _cel_HashState_Combine(_cel_HashState_Initialize(),
+                                   upb_StringView_FromString("Hello World!")));
+  EXPECT_EQ(
+      _cel_HashState_Combine(_cel_HashState_Initialize(), (const char*)nullptr),
+      _cel_HashState_Combine(_cel_HashState_Initialize(), ""));
 }
 
 TEST(Hash, Mem) {
   upb_StringView small = upb_StringView_FromString("Hello World!");
-  EXPECT_EQ(cel_HashState_Combine(cel_HashState_Initialize(), small),
-            cel_HashState_Combine(cel_HashState_Initialize(), small));
-  EXPECT_EQ(cel_HashState_Combine(cel_HashState_Initialize(), small),
-            cel_HashState_Combine(cel_HashState_Initialize(), small));
+  EXPECT_EQ(_cel_HashState_Combine(_cel_HashState_Initialize(), small),
+            _cel_HashState_Combine(_cel_HashState_Initialize(), small));
+  EXPECT_EQ(_cel_HashState_Combine(_cel_HashState_Initialize(), small),
+            _cel_HashState_Combine(_cel_HashState_Initialize(), small));
   upb_StringView large = upb_StringView_FromString(
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus "
       "condimentum rhoncus est volutpat venenatis. Fusce semper, sapien ut "
@@ -149,10 +155,26 @@ TEST(Hash, Mem) {
       "ipsum. Suspendisse sagittis pellentesque molestie. Duis at venenatis "
       "erat. Quisque congue turpis id erat egestas pellentesque. Nulla "
       "fermentum ac massa nec sollicitudin. Fusce sed ultrices tellus.");
-  EXPECT_EQ(cel_HashState_Combine(cel_HashState_Initialize(), large),
-            cel_HashState_Combine(cel_HashState_Initialize(), large));
-  EXPECT_EQ(cel_HashState_Combine(cel_HashState_Initialize(), large),
-            cel_HashState_Combine(cel_HashState_Initialize(), large));
+  EXPECT_EQ(_cel_HashState_Combine(_cel_HashState_Initialize(), large),
+            _cel_HashState_Combine(_cel_HashState_Initialize(), large));
+  EXPECT_EQ(_cel_HashState_Combine(_cel_HashState_Initialize(), large),
+            _cel_HashState_Combine(_cel_HashState_Initialize(), large));
+}
+
+TEST(StringView, Hash) {
+  EXPECT_EQ(_cel_HashState_Finalize(
+                cel_StringView_Hash(cel_StringView_FromString("Hello World!"),
+                                    _cel_HashState_Initialize())),
+            _cel_HashState_Finalize(_cel_HashState_Combine(
+                _cel_HashState_Initialize(), "Hello World!")));
+}
+
+TEST(CStringView, Hash) {
+  EXPECT_EQ(_cel_HashState_Finalize(
+                cel_CStringView_Hash(cel_CStringView_FromString("Hello World!"),
+                                     _cel_HashState_Initialize())),
+            _cel_HashState_Finalize(_cel_HashState_Combine(
+                _cel_HashState_Initialize(), "Hello World!")));
 }
 
 }  // namespace

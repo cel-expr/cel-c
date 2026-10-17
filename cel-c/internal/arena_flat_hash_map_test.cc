@@ -21,8 +21,8 @@
 #include "absl/log/die_if_null.h"
 #include "cel-c/alloc.h"
 #include "cel-c/arena.h"
-#include "cel-c/hash.h"
 #include "cel-c/internal/config.h"
+#include "cel-c/internal/hash.h"
 
 namespace {
 
@@ -47,9 +47,9 @@ class ArenaFlatHashMapTest : public Test {
 };
 
 size_t IntHasher(CEL_NONNULL(const int*) ent) {
-  cel_HashState state = cel_HashState_Initialize();
-  state = cel_HashState_Combine(state, *ent);
-  return cel_HashState_Finalize(state);
+  _cel_HashState state = _cel_HashState_Initialize();
+  state = _cel_HashState_Combine(state, *ent);
+  return _cel_HashState_Finalize(state);
 }
 
 bool IntEqualer(CEL_NONNULL(const int*) lhs, CEL_NONNULL(const int*) rhs) {

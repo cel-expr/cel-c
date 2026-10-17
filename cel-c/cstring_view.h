@@ -23,7 +23,6 @@
 
 #include "cel-c/assert.h"
 #include "cel-c/config.h"
-#include "cel-c/hash.h"
 
 CEL_BEGIN_DECLS
 
@@ -174,13 +173,6 @@ cel_CStringView_Tokenize(cel_CStringView subject, cel_CStringView delim) {
   tokenizer.delim_len = 0;
   tokenizer.done = false;
   return tokenizer;
-}
-
-CEL_ATTRIBUTE_NODISCARD
-static CEL_INLINE cel_HashState cel_CStringView_Hash(cel_CStringView str,
-                                                     cel_HashState state) {
-  return cel_HashState_CombineN(state, cel_CStringView_Data(str),
-                                cel_CStringView_Size(str));
 }
 
 CEL_ATTRIBUTE_NODISCARD

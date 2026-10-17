@@ -17,8 +17,8 @@
 
 #include <stdint.h>
 
-#include "cel-c/hash.h"
 #include "cel-c/internal/config.h"
+#include "cel-c/internal/hash.h"
 #include "cel-c/string_view.h"
 #include "cel-c/value.h"
 #include "upb/base/descriptor_constants.h"
@@ -193,31 +193,31 @@ static inline bool _cel_MapValueKey_Equals(
 }
 
 CEL_ATTRIBUTE_NODISCARD
-static inline cel_HashState _cel_MapValueKey_Hash(
-    const cel_MapValueKey* cel_nonnull map_value_key, cel_HashState state) {
+static inline _cel_HashState _cel_MapValueKey_Hash(
+    const cel_MapValueKey* cel_nonnull map_value_key, _cel_HashState state) {
   switch (cel_MapValueKey_Kind(map_value_key)) {
     case cel_MapValueKeyKind_kBool:
-      state = cel_HashState_Combine(state, cel_MapValueKeyKind_kBool);
+      state = _cel_HashState_Combine(state, cel_MapValueKeyKind_kBool);
       state =
-          cel_HashState_Combine(state, cel_MapValueKey_GetBool(map_value_key));
+          _cel_HashState_Combine(state, cel_MapValueKey_GetBool(map_value_key));
       break;
     case cel_MapValueKeyKind_kInt: {
       const int64_t value = cel_MapValueKey_GetInt(map_value_key);
       if (value < 0) {
-        state = cel_HashState_Combine(state, cel_MapValueKeyKind_kInt);
-        state = cel_HashState_Combine(state, value);
+        state = _cel_HashState_Combine(state, cel_MapValueKeyKind_kInt);
+        state = _cel_HashState_Combine(state, value);
       } else {
-        state = cel_HashState_Combine(state, cel_MapValueKeyKind_kUint);
-        state = cel_HashState_Combine(state, (uint64_t)value);
+        state = _cel_HashState_Combine(state, cel_MapValueKeyKind_kUint);
+        state = _cel_HashState_Combine(state, (uint64_t)value);
       }
     } break;
     case cel_MapValueKeyKind_kUint:
-      state = cel_HashState_Combine(state, cel_MapValueKeyKind_kUint);
+      state = _cel_HashState_Combine(state, cel_MapValueKeyKind_kUint);
       state =
-          cel_HashState_Combine(state, cel_MapValueKey_GetUint(map_value_key));
+          _cel_HashState_Combine(state, cel_MapValueKey_GetUint(map_value_key));
       break;
     case cel_MapValueKeyKind_kString:
-      state = cel_HashState_Combine(state, cel_MapValueKeyKind_kString);
+      state = _cel_HashState_Combine(state, cel_MapValueKeyKind_kString);
       state =
           cel_StringView_Hash(cel_MapValueKey_GetString(map_value_key), state);
       break;

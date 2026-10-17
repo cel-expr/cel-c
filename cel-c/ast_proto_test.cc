@@ -1038,4 +1038,152 @@ TEST_F(AstFromProtoTest, Comprehension) {
                             cel_StringView_From("__result__")));
 }
 
+TEST_F(AstFromProtoTest, Bind) {
+  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
+                                 source_info: {
+                                   positions { key: 1 value: 1 }
+                                   positions { key: 2 value: 2 }
+                                   positions { key: 3 value: 3 }
+                                   positions { key: 4 value: 4 }
+                                   positions { key: 5 value: 5 }
+                                   positions { key: 6 value: 6 }
+                                 }
+                                 expr: {
+                                   id: 1
+                                   comprehension_expr: {
+                                     iter_range: {
+                                       id: 2
+                                       list_expr: {}
+                                     }
+                                     iter_var: "#unused"
+                                     accu_var: "foo"
+                                     accu_init: {
+                                       id: 3
+                                       ident_expr: { name: "bar" }
+                                     }
+                                     loop_condition: {
+                                       id: 4
+                                       const_expr: { bool_value: false }
+                                     }
+                                     loop_step: {
+                                       id: 5
+                                       ident_expr: { name: "foo" }
+                                     }
+                                     result: {
+                                       id: 6
+                                       ident_expr: { name: "baz" }
+                                     }
+                                   }
+                                 }
+                               )pb"),
+                               arena(), status()));
+  ASSERT_THAT(ast, NotNull());
+  ASSERT_TRUE(cel_Status_Ok(status()));
+  EXPECT_EQ(cel_Ast_MaxId(ast.get()), 6);
+
+  cel_Expr* expr = cel_Ast_Expr(ast.get());
+  ASSERT_THAT(expr, NotNull());
+  ASSERT_EQ(cel_Expr_Kind(expr), cel_ExprKind_kBind);
+  EXPECT_EQ(cel_Expr_SourcePosition(expr), 1);
+
+  cel_BindExpr* bind_expr = cel_BindExpr_DownCast(expr);
+  ASSERT_THAT(bind_expr, NotNull());
+  EXPECT_TRUE(cel_StringView_Equals(cel_BindExpr_Var(bind_expr),
+                                    cel_StringView_From("foo")));
+
+  cel_Expr* binding = cel_BindExpr_Binding(bind_expr);
+  ASSERT_THAT(binding, NotNull());
+  ASSERT_EQ(cel_Expr_Kind(binding), cel_ExprKind_kIdent);
+  EXPECT_EQ(cel_Expr_SourcePosition(binding), 3);
+  EXPECT_TRUE(
+      cel_StringView_Equals(cel_IdentExpr_Name(cel_IdentExpr_DownCast(binding)),
+                            cel_StringView_From("bar")));
+
+  cel_Expr* bound = cel_BindExpr_Bound(bind_expr);
+  ASSERT_THAT(bound, NotNull());
+  ASSERT_EQ(cel_Expr_Kind(bound), cel_ExprKind_kIdent);
+  EXPECT_EQ(cel_Expr_SourcePosition(bound), 6);
+  EXPECT_TRUE(
+      cel_StringView_Equals(cel_IdentExpr_Name(cel_IdentExpr_DownCast(bound)),
+                            cel_StringView_From("baz")));
+}
+
+TEST_F(AstFromProtoTest, BlockIndex) {
+  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
+                                 source_info: { positions { key: 1 value: 1 } }
+                                 expr: {
+                                   id: 1
+                                   ident_expr: { name: "@index1" }
+                                 }
+                               )pb"),
+                               arena(), status()));
+  ASSERT_THAT(ast, NotNull());
+  ASSERT_TRUE(cel_Status_Ok(status()));
+  EXPECT_EQ(cel_Ast_MaxId(ast.get()), 1);
+
+  cel_Expr* expr = cel_Ast_Expr(ast.get());
+  ASSERT_THAT(expr, NotNull());
+  ASSERT_EQ(cel_Expr_Kind(expr), cel_ExprKind_kBlockIndex);
+  EXPECT_EQ(cel_Expr_SourcePosition(expr), 1);
+
+  cel_BlockIndexExpr* block_index_expr = cel_BlockIndexExpr_DownCast(expr);
+  ASSERT_THAT(block_index_expr, NotNull());
+  EXPECT_EQ(cel_BlockIndexExpr_Value(block_index_expr), 1);
+}
+
+TEST_F(AstFromProtoTest, Block) {
+  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
+                                 source_info: {
+                                   positions { key: 1 value: 1 }
+                                   positions { key: 2 value: 2 }
+                                   positions { key: 3 value: 3 }
+                                   positions { key: 4 value: 4 }
+                                 }
+                                 expr: {
+                                   id: 1
+                                   call_expr: {
+                                     function: "cel.@block"
+                                     args {
+                                       id: 2
+                                       list_expr: {
+                                         elements {
+                                           id: 3
+                                           ident_expr: { name: "foo" }
+                                         }
+                                       }
+                                     }
+                                     args {
+                                       id: 4
+                                       ident_expr: { name: "baz" }
+                                     }
+                                   }
+                                 }
+                               )pb"),
+                               arena(), status()));
+  ASSERT_THAT(ast, NotNull());
+  ASSERT_TRUE(cel_Status_Ok(status()));
+  EXPECT_EQ(cel_Ast_MaxId(ast.get()), 4);
+
+  cel_Expr* expr = cel_Ast_Expr(ast.get());
+  ASSERT_THAT(expr, NotNull());
+  ASSERT_EQ(cel_Expr_Kind(expr), cel_ExprKind_kBlock);
+  EXPECT_EQ(cel_Expr_SourcePosition(expr), 1);
+
+  cel_BlockExpr* block_expr = cel_BlockExpr_DownCast(expr);
+  ASSERT_THAT(block_expr, NotNull());
+
+  ASSERT_EQ(cel_BlockExpr_Bindings(block_expr, cel_nullptr, cel_nullptr), 1);
+  cel_BlockBindingExpr* binding = cel_BlockExpr_Binding(block_expr, 0);
+  ASSERT_THAT(binding, NotNull());
+  EXPECT_EQ(cel_Expr_SourcePosition(cel_Expr_UpCast(binding)), 3);
+
+  cel_Expr* bound_expr = cel_BlockExpr_Bound(block_expr);
+  ASSERT_THAT(bound_expr, NotNull());
+  EXPECT_EQ(cel_Expr_SourcePosition(bound_expr), 4);
+  ASSERT_EQ(cel_Expr_Kind(bound_expr), cel_ExprKind_kIdent);
+  EXPECT_TRUE(cel_StringView_Equals(
+      cel_IdentExpr_Name(cel_IdentExpr_DownCast(bound_expr)),
+      cel_StringView_From("baz")));
+}
+
 }  // namespace

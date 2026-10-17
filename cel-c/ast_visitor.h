@@ -194,6 +194,44 @@ typedef void cel_AstVisitorVTable_PreVisitComprehensionExprResult(
 typedef void cel_AstVisitorVTable_PostVisitComprehensionExprResult(
     CEL_NONNULL(cel_AstVisitor*), CEL_NONNULL(const cel_Expr*));
 
+typedef void cel_AstVisitorVTable_PreVisitBindExpr(
+    CEL_NONNULL(cel_AstVisitor*), CEL_NONNULL(const cel_BindExpr*));
+typedef void cel_AstVisitorVTable_PostVisitBindExpr(
+    CEL_NONNULL(cel_AstVisitor*), CEL_NONNULL(const cel_BindExpr*));
+
+typedef void cel_AstVisitorVTable_PreVisitBindExprBinding(
+    CEL_NONNULL(cel_AstVisitor*), CEL_NONNULL(const cel_Expr*));
+typedef void cel_AstVisitorVTable_PostVisitBindExprBinding(
+    CEL_NONNULL(cel_AstVisitor*), CEL_NONNULL(const cel_Expr*));
+
+typedef void cel_AstVisitorVTable_PreVisitBindExprBound(
+    CEL_NONNULL(cel_AstVisitor*), CEL_NONNULL(const cel_Expr*));
+typedef void cel_AstVisitorVTable_PostVisitBindExprBound(
+    CEL_NONNULL(cel_AstVisitor*), CEL_NONNULL(const cel_Expr*));
+
+typedef void cel_AstVisitorVTable_VisitBlockIndexExpr(
+    CEL_NONNULL(cel_AstVisitor*), CEL_NONNULL(const cel_BlockIndexExpr*));
+
+typedef void cel_AstVisitorVTable_PreVisitBlockBindingExpr(
+    CEL_NONNULL(cel_AstVisitor*), CEL_NONNULL(const cel_BlockBindingExpr*));
+typedef void cel_AstVisitorVTable_PostVisitBlockBindingExpr(
+    CEL_NONNULL(cel_AstVisitor*), CEL_NONNULL(const cel_BlockBindingExpr*));
+
+typedef void cel_AstVisitorVTable_PreVisitBlockBindingExprBound(
+    CEL_NONNULL(cel_AstVisitor*), CEL_NONNULL(const cel_Expr*));
+typedef void cel_AstVisitorVTable_PostVisitBlockBindingExprBound(
+    CEL_NONNULL(cel_AstVisitor*), CEL_NONNULL(const cel_Expr*));
+
+typedef void cel_AstVisitorVTable_PreVisitBlockExpr(
+    CEL_NONNULL(cel_AstVisitor*), CEL_NONNULL(const cel_BlockExpr*));
+typedef void cel_AstVisitorVTable_PostVisitBlockExpr(
+    CEL_NONNULL(cel_AstVisitor*), CEL_NONNULL(const cel_BlockExpr*));
+
+typedef void cel_AstVisitorVTable_PreVisitBlockExprBound(
+    CEL_NONNULL(cel_AstVisitor*), CEL_NONNULL(const cel_Expr*));
+typedef void cel_AstVisitorVTable_PostVisitBlockExprBound(
+    CEL_NONNULL(cel_AstVisitor*), CEL_NONNULL(const cel_Expr*));
+
 struct cel_AstVisitorVTable {
   // NOLINTBEGIN(google3-readability-class-member-naming)
   CEL_NULLABLE(cel_AstVisitorVTable_PreVisitExpr*) PreVisitExpr;
@@ -339,6 +377,39 @@ struct cel_AstVisitorVTable {
   PreVisitComprehensionExprResult;
   CEL_NULLABLE(cel_AstVisitorVTable_PostVisitComprehensionExprResult*)
   PostVisitComprehensionExprResult;
+
+  cel_AstVisitorVTable_PreVisitBindExpr* cel_nullable PreVisitBindExpr;
+  cel_AstVisitorVTable_PostVisitBindExpr* cel_nullable PostVisitBindExpr;
+
+  cel_AstVisitorVTable_PreVisitBindExprBinding* cel_nullable
+      PreVisitBindExprBinding;
+  cel_AstVisitorVTable_PostVisitBindExprBinding* cel_nullable
+      PostVisitBindExprBinding;
+
+  cel_AstVisitorVTable_PreVisitBindExprBound* cel_nullable
+      PreVisitBindExprBound;
+  cel_AstVisitorVTable_PostVisitBindExprBound* cel_nullable
+      PostVisitBindExprBound;
+
+  cel_AstVisitorVTable_VisitBlockIndexExpr* cel_nullable VisitBlockIndexExpr;
+
+  cel_AstVisitorVTable_PreVisitBlockBindingExpr* cel_nullable
+      PreVisitBlockBindingExpr;
+  cel_AstVisitorVTable_PostVisitBlockBindingExpr* cel_nullable
+      PostVisitBlockBindingExpr;
+
+  cel_AstVisitorVTable_PreVisitBlockBindingExprBound* cel_nullable
+      PreVisitBlockBindingExprBound;
+  cel_AstVisitorVTable_PostVisitBlockBindingExprBound* cel_nullable
+      PostVisitBlockBindingExprBound;
+
+  cel_AstVisitorVTable_PreVisitBlockExpr* cel_nullable PreVisitBlockExpr;
+  cel_AstVisitorVTable_PostVisitBlockExpr* cel_nullable PostVisitBlockExpr;
+
+  cel_AstVisitorVTable_PreVisitBlockExprBound* cel_nullable
+      PreVisitBlockExprBound;
+  cel_AstVisitorVTable_PostVisitBlockExprBound* cel_nullable
+      PostVisitBlockExprBound;
   // NOLINTEND(google3-readability-class-member-naming)
 };
 

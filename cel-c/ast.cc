@@ -31,20 +31,6 @@
 
 typedef struct _cel_ExprLink _cel_ExprLink;
 
-struct _cel_ExprLink {
-  cel_ExprId id;
-  CEL_NONNULL(cel_Ast*) ast;
-  CEL_NULLABLE(cel_Expr*) parent;
-  cel_ExprKind kind;
-  cel_SourceRange range;
-  CEL_NULLABLE(const cel_Ref*) ref;
-  CEL_NULLABLE(cel_Type*) type;
-
-  CEL_NULLABLE(_cel_ExprLink*) left;
-  CEL_NULLABLE(_cel_ExprLink*) right;
-  ptrdiff_t index;
-};
-
 struct cel_UnspecifiedExpr {
   cel_ExprId id;
   CEL_NONNULL(cel_Ast*) ast;
@@ -77,6 +63,21 @@ struct cel_ConstExpr {
   CEL_NULLABLE(cel_Type*) type;
 
   cel_Constant value;
+};
+
+struct cel_SelectQualifierExpr {
+  cel_ExprId id;
+  CEL_NONNULL(cel_Ast*) ast;
+  CEL_NULLABLE(cel_Expr*) parent;
+  cel_ExprKind kind;
+  cel_SourceRange range;
+  CEL_NULLABLE(const cel_Ref*) ref;
+  CEL_NULLABLE(cel_Type*) type;
+
+  CEL_NULLABLE(_cel_ExprLink*) left;
+  CEL_NULLABLE(_cel_ExprLink*) right;
+  cel_StringView name;
+  int64_t number;
 };
 
 struct cel_SelectExpr {
@@ -275,6 +276,85 @@ struct cel_ComprehensionExpr {
   CEL_NULLABLE(cel_Expr*) result;
 };
 
+struct cel_BindExpr {
+  cel_ExprId id;
+  CEL_NONNULL(cel_Ast*) ast;
+  CEL_NULLABLE(cel_Expr*) parent;
+  cel_ExprKind kind;
+  cel_SourceRange range;
+  CEL_NULLABLE(const cel_Ref*) ref;
+  CEL_NULLABLE(cel_Type*) type;
+
+  cel_StringView var;
+  cel_Expr* cel_nullable binding;
+  cel_Expr* cel_nullable bound;
+};
+
+struct cel_BlockBindingExpr {
+  cel_ExprId id;
+  CEL_NONNULL(cel_Ast*) ast;
+  CEL_NULLABLE(cel_Expr*) parent;
+  cel_ExprKind kind;
+  cel_SourceRange range;
+  CEL_NULLABLE(const cel_Ref*) ref;
+  CEL_NULLABLE(cel_Type*) type;
+
+  _cel_ExprLink* cel_nullable left;
+  _cel_ExprLink* cel_nullable right;
+  ptrdiff_t index;
+
+  cel_Expr* cel_nullable bound;
+};
+
+struct cel_BlockIndexExpr {
+  cel_ExprId id;
+  CEL_NONNULL(cel_Ast*) ast;
+  CEL_NULLABLE(cel_Expr*) parent;
+  cel_ExprKind kind;
+  cel_SourceRange range;
+  CEL_NULLABLE(const cel_Ref*) ref;
+  CEL_NULLABLE(cel_Type*) type;
+
+  int64_t value;
+};
+
+struct cel_BlockExpr {
+  cel_ExprId id;
+  CEL_NONNULL(cel_Ast*) ast;
+  CEL_NULLABLE(cel_Expr*) parent;
+  cel_ExprKind kind;
+  cel_SourceRange range;
+  CEL_NULLABLE(const cel_Ref*) ref;
+  CEL_NULLABLE(cel_Type*) type;
+
+  _cel_ExprLink* cel_nullable bindings_head;
+  _cel_ExprLink* cel_nullable bindings_tail;
+  size_t bindings;
+  cel_Expr* cel_nullable bound;
+};
+
+struct _cel_ExprLink {
+  union {
+    struct {
+      cel_ExprId id;
+      CEL_NONNULL(cel_Ast*) ast;
+      CEL_NULLABLE(cel_Expr*) parent;
+      cel_ExprKind kind;
+      cel_SourceRange range;
+      CEL_NULLABLE(const cel_Ref*) ref;
+      CEL_NULLABLE(cel_Type*) type;
+
+      CEL_NULLABLE(_cel_ExprLink*) left;
+      CEL_NULLABLE(_cel_ExprLink*) right;
+      ptrdiff_t index;
+    };
+    cel_ListElementExpr list_element_expr;
+    cel_MapEntryExpr map_entry_expr;
+    cel_StructFieldExpr struct_field_expr;
+    cel_BlockBindingExpr block_binding_expr;
+  };
+};
+
 struct cel_Expr {
   union {
     struct {
@@ -295,13 +375,17 @@ struct cel_Expr {
     cel_UnaryExpr unary_expr;
     cel_BinaryExpr binary_expr;
     cel_TernaryExpr ternary_expr;
-    cel_ListElementExpr optional_expr;
+    cel_ListElementExpr list_element_expr;
     cel_ListExpr list_expr;
     cel_MapEntryExpr map_entry_expr;
     cel_MapExpr map_expr;
     cel_StructFieldExpr struct_field_expr;
     cel_StructExpr struct_expr;
     cel_ComprehensionExpr comprehension_expr;
+    cel_BindExpr bind_expr;
+    cel_BlockBindingExpr block_binding_expr;
+    cel_BlockIndexExpr block_index_expr;
+    cel_BlockExpr block_expr;
   };
 };
 
@@ -1897,4 +1981,305 @@ extern "C" CEL_NULLABLE(cel_Expr*)
   CEL_ASSERT_NOT_NULL(expr);
 
   return _cel_Expr_ReleaseChild(cel_Expr_UpCast(expr), &expr->result);
+}
+
+extern "C" cel_BindExpr* cel_nullable
+cel_BindExpr_New(cel_Ast* cel_nonnull ast) {
+  CEL_ASSERT_NOT_NULL(ast);
+
+  cel_BindExpr* expr = (cel_BindExpr*)cel_Arena_Malloc(
+      ast->arena, sizeof(cel_BindExpr), cel_nullptr);
+  if (expr != cel_nullptr) {
+    memset(expr, 0, sizeof(*expr));
+    expr->ast = ast;
+    expr->kind = cel_ExprKind_kBind;
+    expr->range = cel_SourceRange(-1, -1);
+  }
+  return expr;
+}
+
+extern "C" cel_StringView cel_BindExpr_Var(
+    const cel_BindExpr* cel_nonnull expr) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return expr->var;
+}
+
+extern "C" void cel_BindExpr_SetVar(cel_BindExpr* cel_nonnull expr,
+                                    cel_StringView var) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  expr->var = var;
+}
+
+extern "C" cel_Expr* cel_nullable
+cel_BindExpr_Binding(const cel_BindExpr* cel_nonnull expr) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return expr->binding;
+}
+
+extern "C" cel_Expr* cel_nullable cel_BindExpr_SetBinding(
+    cel_BindExpr* cel_nonnull expr, cel_Expr* cel_nullable binding) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return _cel_Expr_SetChild(cel_Expr_UpCast(expr), (cel_Expr**)&expr->binding,
+                            binding);
+}
+
+extern "C" cel_Expr* cel_nullable
+cel_BindExpr_ReleaseBinding(cel_BindExpr* cel_nonnull expr) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return _cel_Expr_ReleaseChild(cel_Expr_UpCast(expr), &expr->binding);
+}
+
+extern "C" cel_Expr* cel_nullable
+cel_BindExpr_Bound(const cel_BindExpr* cel_nonnull expr) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return expr->bound;
+}
+
+extern "C" cel_Expr* cel_nullable cel_BindExpr_SetBound(
+    cel_BindExpr* cel_nonnull expr, cel_Expr* cel_nullable bound) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return _cel_Expr_SetChild(cel_Expr_UpCast(expr), (cel_Expr**)&expr->bound,
+                            bound);
+}
+
+extern "C" cel_Expr* cel_nullable
+cel_BindExpr_ReleaseBound(cel_BindExpr* cel_nonnull expr) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return _cel_Expr_ReleaseChild(cel_Expr_UpCast(expr), &expr->bound);
+}
+
+extern "C" cel_BlockBindingExpr* cel_nullable
+cel_BlockBindingExpr_New(cel_Ast* cel_nonnull ast) {
+  CEL_ASSERT_NOT_NULL(ast);
+
+  cel_BlockBindingExpr* expr = (cel_BlockBindingExpr*)cel_Arena_Malloc(
+      ast->arena, sizeof(cel_BlockBindingExpr), cel_nullptr);
+  if (expr != cel_nullptr) {
+    memset(expr, 0, sizeof(*expr));
+    expr->ast = ast;
+    expr->kind = cel_ExprKind_kBlockBinding;
+    expr->range = cel_SourceRange(-1, -1);
+    expr->index = -1;
+  }
+  return expr;
+}
+
+extern "C" ptrdiff_t cel_BlockBindingExpr_Index(
+    const cel_BlockBindingExpr* cel_nonnull expr) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return expr->index;
+}
+
+extern "C" cel_BlockExpr* cel_nullable
+cel_BlockBindingExpr_Parent(const cel_BlockBindingExpr* cel_nonnull expr) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return cel_BlockExpr_DownCast(expr->parent);
+}
+
+extern "C" cel_Expr* cel_nullable
+cel_BlockBindingExpr_Bound(const cel_BlockBindingExpr* cel_nonnull expr) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return expr->bound;
+}
+
+extern "C" cel_Expr* cel_nullable cel_BlockBindingExpr_SetBound(
+    cel_BlockBindingExpr* cel_nonnull expr, cel_Expr* cel_nullable bound) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return _cel_Expr_SetChild(cel_Expr_UpCast(expr), &expr->bound, bound);
+}
+
+extern "C" cel_Expr* cel_nullable
+cel_BlockBindingExpr_ReleaseBound(cel_BlockBindingExpr* cel_nonnull expr) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return _cel_Expr_ReleaseChild(cel_Expr_UpCast(expr), &expr->bound);
+}
+
+extern "C" cel_BlockIndexExpr* cel_nullable
+cel_BlockIndexExpr_New(cel_Ast* cel_nonnull ast) {
+  CEL_ASSERT_NOT_NULL(ast);
+
+  cel_BlockIndexExpr* expr = (cel_BlockIndexExpr*)cel_Arena_Malloc(
+      ast->arena, sizeof(cel_BlockIndexExpr), cel_nullptr);
+  if (expr != cel_nullptr) {
+    memset(expr, 0, sizeof(*expr));
+    expr->ast = ast;
+    expr->kind = cel_ExprKind_kBlockIndex;
+    expr->range = cel_SourceRange(-1, -1);
+    expr->value = -1;
+  }
+  return expr;
+}
+
+extern "C" cel_Expr* cel_nullable
+cel_BlockIndexExpr_Parent(const cel_BlockIndexExpr* cel_nonnull expr) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return expr->parent;
+}
+
+extern "C" cel_BlockExpr* cel_nullable
+cel_BlockIndexExpr_Block(const cel_BlockIndexExpr* cel_nonnull expr) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  cel_Expr* parent = expr->parent;
+  while (parent != nullptr && cel_Expr_Kind(parent) != cel_ExprKind_kBlock) {
+    parent = cel_Expr_Parent(parent);
+  }
+  return cel_BlockExpr_DownCast(parent);
+}
+
+extern "C" int64_t cel_BlockIndexExpr_Value(
+    const cel_BlockIndexExpr* cel_nonnull expr) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return expr->value;
+}
+
+extern "C" void cel_BlockIndexExpr_SetValue(
+    cel_BlockIndexExpr* cel_nonnull expr, int64_t value) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  expr->value = value;
+}
+
+extern "C" cel_BlockExpr* cel_nullable cel_BlockExpr_New(CEL_NONNULL(cel_Ast*)
+                                                             ast) {
+  CEL_ASSERT_NOT_NULL(ast);
+
+  cel_BlockExpr* expr = (cel_BlockExpr*)cel_Arena_Malloc(
+      ast->arena, sizeof(cel_BlockExpr), cel_nullptr);
+  if (expr != cel_nullptr) {
+    memset(expr, 0, sizeof(*expr));
+    expr->ast = ast;
+    expr->kind = cel_ExprKind_kBlock;
+    expr->range = cel_SourceRange(-1, -1);
+  }
+  return expr;
+}
+
+extern "C" cel_Expr* cel_nullable
+cel_BlockExpr_Bound(const cel_BlockExpr* cel_nonnull expr) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return expr->bound;
+}
+
+extern "C" cel_Expr* cel_nullable cel_BlockExpr_SetBound(
+    cel_BlockExpr* cel_nonnull expr, cel_Expr* cel_nullable bound) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return _cel_Expr_SetChild(cel_Expr_UpCast(expr), &expr->bound, bound);
+}
+
+extern "C" cel_Expr* cel_nullable
+cel_BlockExpr_ReleaseBound(cel_BlockExpr* cel_nonnull expr) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return _cel_Expr_ReleaseChild(cel_Expr_UpCast(expr), &expr->bound);
+}
+
+extern "C" void cel_BlockExpr_AppendBinding(CEL_NONNULL(cel_BlockExpr*) expr,
+                                            CEL_NONNULL(cel_BlockBindingExpr*)
+                                                binding) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  _cel_Expr_LinkChild(cel_Expr_UpCast(expr), &expr->bindings_head,
+                      &expr->bindings_tail, &expr->bindings, cel_nullptr,
+                      (_cel_ExprLink*)binding);
+}
+
+extern "C" void cel_BlockExpr_PrependBinding(CEL_NONNULL(cel_BlockExpr*) expr,
+                                             CEL_NONNULL(cel_BlockBindingExpr*)
+                                                 binding) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  _cel_Expr_LinkChild(cel_Expr_UpCast(expr), &expr->bindings_head,
+                      &expr->bindings_tail, &expr->bindings,
+                      expr->bindings_head, (_cel_ExprLink*)binding);
+}
+
+extern "C" void cel_BlockExpr_InsertBinding(CEL_NONNULL(cel_BlockExpr*) expr,
+                                            CEL_NULLABLE(cel_BlockBindingExpr*)
+                                                before,
+                                            CEL_NONNULL(cel_BlockBindingExpr*)
+                                                binding) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  _cel_Expr_LinkChild(cel_Expr_UpCast(expr), &expr->bindings_head,
+                      &expr->bindings_tail, &expr->bindings,
+                      (_cel_ExprLink*)before, (_cel_ExprLink*)binding);
+}
+
+extern "C" CEL_NONNULL(cel_BlockBindingExpr*)
+    cel_BlockExpr_ReleaseBinding(CEL_NONNULL(cel_BlockExpr*) expr,
+                                 CEL_NONNULL(cel_BlockBindingExpr*) binding) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  _cel_Expr_UnlinkChild(cel_Expr_UpCast(expr), &expr->bindings_head,
+                        &expr->bindings_tail, &expr->bindings,
+                        (_cel_ExprLink*)binding);
+  return binding;
+}
+
+extern "C" CEL_NONNULL(cel_BlockBindingExpr*)
+    cel_BlockExpr_Binding(CEL_NONNULL(const cel_BlockExpr*) expr,
+                          size_t index) {
+  CEL_ASSERT_NOT_NULL(expr);
+  CEL_ASSERT_LT(index, expr->bindings);
+
+  CEL_NULLABLE(_cel_ExprLink*) arg = expr->bindings_head;
+  for (; index > 0; --index) {
+    CEL_ASSERT_NOT_NULL(arg);
+    arg = arg->right;
+  }
+  CEL_ASSERT_NOT_NULL(arg);
+  CEL_ASSERT(arg->parent == cel_Expr_UpCast(expr));
+  return (cel_BlockBindingExpr*)arg;
+}
+
+extern "C" size_t cel_BlockExpr_Bindings(CEL_NONNULL(const cel_BlockExpr*) expr,
+                                         CEL_NULLABLE(cel_BlockBindingExpr*) *
+                                             cel_nullable head,
+                                         CEL_NULLABLE(cel_BlockBindingExpr*) *
+                                             cel_nullable tail) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  if (head != cel_nullptr) {
+    *head = (cel_BlockBindingExpr*)expr->bindings_head;
+  }
+  if (tail != cel_nullptr) {
+    *tail = (cel_BlockBindingExpr*)expr->bindings_tail;
+  }
+  return expr->bindings;
+}
+
+extern "C" CEL_NULLABLE(cel_BlockBindingExpr*)
+    cel_BlockExpr_PrevBinding(CEL_NULLABLE(const cel_BlockBindingExpr*)
+                                  binding) {
+  if (binding != cel_nullptr) {
+    binding = (cel_BlockBindingExpr*)binding->left;
+  }
+  return (cel_BlockBindingExpr*)binding;
+}
+
+extern "C" CEL_NULLABLE(cel_BlockBindingExpr*)
+    cel_BlockExpr_NextBinding(CEL_NULLABLE(const cel_BlockBindingExpr*)
+                                  binding) {
+  if (binding != cel_nullptr) {
+    binding = (cel_BlockBindingExpr*)binding->right;
+  }
+  return (cel_BlockBindingExpr*)binding;
 }

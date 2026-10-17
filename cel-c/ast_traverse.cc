@@ -69,6 +69,10 @@ typedef enum CEL_ATTRIBUTE_CLOSED_ENUM {
   _cel_AstTraverserRecordKind_kTernaryCondition,
   _cel_AstTraverserRecordKind_kTernaryIfTrue,
   _cel_AstTraverserRecordKind_kTernaryIfFalse,
+  _cel_AstTraverserRecordKind_kBindBinding,
+  _cel_AstTraverserRecordKind_kBindBound,
+  _cel_AstTraverserRecordKind_kBlockBindingBound,
+  _cel_AstTraverserRecordKind_kBlockBound,
 } _cel_AstTraverserRecordKind;
 
 typedef struct {
@@ -122,6 +126,15 @@ struct cel_AstTraverser {
   bool comprehension_loop_condition_callbacks;
   bool comprehension_loop_step_callbacks;
   bool comprehension_result_callbacks;
+  // Is the visitor interested in any {Pre,Post}VisitBindExpr{...} callbacks?
+  bool bind_binding_callbacks;
+  bool bind_bound_callbacks;
+  // Is the visitor interested in any {Pre,Post}VisitBlockBindingExpr{...}
+  // callbacks?
+  bool block_binding_bound_callbacks;
+  // Is the visitor interested in any {Pre,Post}VisitBlockBindingExpr{...}
+  // callbacks?
+  bool block_bound_callbacks;
 };
 
 CEL_ATTRIBUTE_NODISCARD
@@ -276,6 +289,22 @@ static _cel_AstVisitorControl _cel_AstTraverserRecord_PreVisit(
           control = _cel_AstVisitor_Invoke(visitor, PreVisitTernaryExpr,
                                            cel_TernaryExpr_DownCast(expr));
           break;
+        case cel_ExprKind_kBind:
+          control = _cel_AstVisitor_Invoke(visitor, PreVisitBindExpr,
+                                           cel_BindExpr_DownCast(expr));
+          break;
+        case cel_ExprKind_kBlockIndex:
+          control = _cel_AstVisitor_Invoke(visitor, VisitBlockIndexExpr,
+                                           cel_BlockIndexExpr_DownCast(expr));
+          break;
+        case cel_ExprKind_kBlockBinding:
+          control = _cel_AstVisitor_Invoke(visitor, PreVisitBlockBindingExpr,
+                                           cel_BlockBindingExpr_DownCast(expr));
+          break;
+        case cel_ExprKind_kBlock:
+          control = _cel_AstVisitor_Invoke(visitor, PreVisitBlockExpr,
+                                           cel_BlockExpr_DownCast(expr));
+          break;
         default:
           cel_InternalStatus(status,
                              cel_StringView_From("unexpected AST node kind"));
@@ -390,6 +419,23 @@ static _cel_AstVisitorControl _cel_AstTraverserRecord_PreVisit(
           _cel_AstVisitor_Invoke(visitor, PreVisitTernaryExprIfFalse, expr);
       break;
     }
+    case _cel_AstTraverserRecordKind_kBindBinding: {
+      control = _cel_AstVisitor_Invoke(visitor, PreVisitBindExprBinding, expr);
+      break;
+    }
+    case _cel_AstTraverserRecordKind_kBindBound: {
+      control = _cel_AstVisitor_Invoke(visitor, PreVisitBindExprBound, expr);
+      break;
+    }
+    case _cel_AstTraverserRecordKind_kBlockBindingBound: {
+      control =
+          _cel_AstVisitor_Invoke(visitor, PreVisitBlockBindingExprBound, expr);
+      break;
+    }
+    case _cel_AstTraverserRecordKind_kBlockBound: {
+      control = _cel_AstVisitor_Invoke(visitor, PreVisitBlockExprBound, expr);
+      break;
+    }
     default:
       CEL_UNREACHABLE();
   }
@@ -489,6 +535,23 @@ static _cel_AstVisitorControl _cel_AstTraverserRecord_PostVisit(
           case cel_ExprKind_kTernary:
             control = _cel_AstVisitor_Invoke(visitor, PostVisitTernaryExpr,
                                              cel_TernaryExpr_DownCast(expr));
+            break;
+          case cel_ExprKind_kBind:
+            control = _cel_AstVisitor_Invoke(visitor, PostVisitBindExpr,
+                                             cel_BindExpr_DownCast(expr));
+            break;
+          case cel_ExprKind_kBlockIndex:
+            control = _cel_AstVisitor_Invoke(visitor, VisitBlockIndexExpr,
+                                             cel_BlockIndexExpr_DownCast(expr));
+            break;
+          case cel_ExprKind_kBlockBinding:
+            control =
+                _cel_AstVisitor_Invoke(visitor, PostVisitBlockBindingExpr,
+                                       cel_BlockBindingExpr_DownCast(expr));
+            break;
+          case cel_ExprKind_kBlock:
+            control = _cel_AstVisitor_Invoke(visitor, PostVisitBlockExpr,
+                                             cel_BlockExpr_DownCast(expr));
             break;
           default:
             record->data.postvisited = false;
@@ -600,6 +663,23 @@ static _cel_AstVisitorControl _cel_AstTraverserRecord_PostVisit(
     case _cel_AstTraverserRecordKind_kTernaryIfTrue: {
       control =
           _cel_AstVisitor_Invoke(visitor, PostVisitTernaryExprIfTrue, expr);
+      break;
+    }
+    case _cel_AstTraverserRecordKind_kBindBinding: {
+      control = _cel_AstVisitor_Invoke(visitor, PostVisitBindExprBinding, expr);
+      break;
+    }
+    case _cel_AstTraverserRecordKind_kBindBound: {
+      control = _cel_AstVisitor_Invoke(visitor, PostVisitBindExprBound, expr);
+      break;
+    }
+    case _cel_AstTraverserRecordKind_kBlockBindingBound: {
+      control =
+          _cel_AstVisitor_Invoke(visitor, PostVisitBlockBindingExprBound, expr);
+      break;
+    }
+    case _cel_AstTraverserRecordKind_kBlockBound: {
+      control = _cel_AstVisitor_Invoke(visitor, PostVisitBlockExprBound, expr);
       break;
     }
     default:
@@ -915,6 +995,71 @@ static bool _cel_AstTraverser_PushTernaryIfFalse(
 }
 
 CEL_ATTRIBUTE_NODISCARD
+static bool _cel_AstTraverser_PushBindBound(CEL_NONNULL(cel_AstTraverser*)
+                                                traverser,
+                                            CEL_NONNULL(const cel_Expr*) result,
+                                            CEL_NONNULL(cel_Status*) status) {
+  _cel_AstTraverserRecord* record = _cel_AstTraverser_Push(traverser, status);
+  if (CEL_UNLIKELY(record == cel_nullptr)) {
+    return false;
+  }
+  record->data.expr = result;
+  record->kind = traverser->bind_bound_callbacks
+                     ? _cel_AstTraverserRecordKind_kBindBound
+                     : _cel_AstTraverserRecordKind_kExpr;
+  return true;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static bool _cel_AstTraverser_PushBindBinding(CEL_NONNULL(cel_AstTraverser*)
+                                                  traverser,
+                                              CEL_NONNULL(const cel_Expr*)
+                                                  result,
+                                              CEL_NONNULL(cel_Status*) status) {
+  _cel_AstTraverserRecord* record = _cel_AstTraverser_Push(traverser, status);
+  if (CEL_UNLIKELY(record == cel_nullptr)) {
+    return false;
+  }
+  record->data.expr = result;
+  record->kind = traverser->bind_binding_callbacks
+                     ? _cel_AstTraverserRecordKind_kBindBinding
+                     : _cel_AstTraverserRecordKind_kExpr;
+  return true;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static bool _cel_AstTraverser_PushBlockBindingBound(
+    CEL_NONNULL(cel_AstTraverser*) traverser,
+    CEL_NONNULL(const cel_Expr*) result, CEL_NONNULL(cel_Status*) status) {
+  _cel_AstTraverserRecord* record = _cel_AstTraverser_Push(traverser, status);
+  if (CEL_UNLIKELY(record == cel_nullptr)) {
+    return false;
+  }
+  record->data.expr = result;
+  record->kind = traverser->block_binding_bound_callbacks
+                     ? _cel_AstTraverserRecordKind_kBlockBindingBound
+                     : _cel_AstTraverserRecordKind_kExpr;
+  return true;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static bool _cel_AstTraverser_PushBlockBound(CEL_NONNULL(cel_AstTraverser*)
+                                                 traverser,
+                                             CEL_NONNULL(const cel_Expr*)
+                                                 result,
+                                             CEL_NONNULL(cel_Status*) status) {
+  _cel_AstTraverserRecord* record = _cel_AstTraverser_Push(traverser, status);
+  if (CEL_UNLIKELY(record == cel_nullptr)) {
+    return false;
+  }
+  record->data.expr = result;
+  record->kind = traverser->block_bound_callbacks
+                     ? _cel_AstTraverserRecordKind_kBlockBound
+                     : _cel_AstTraverserRecordKind_kExpr;
+  return true;
+}
+
+CEL_ATTRIBUTE_NODISCARD
 static bool _cel_AstTraverser_PushSelectDeps(CEL_NONNULL(cel_AstTraverser*)
                                                  traverser,
                                              const cel_SelectExpr* select_expr,
@@ -1169,6 +1314,65 @@ static bool _cel_AstTraverser_PushTernaryDeps(
 }
 
 CEL_ATTRIBUTE_NODISCARD
+static bool _cel_AstTraverser_PushBindDeps(CEL_NONNULL(cel_AstTraverser*)
+                                               traverser,
+                                           const cel_BindExpr* bind_expr,
+                                           CEL_NONNULL(cel_Status*) status) {
+  CEL_NULLABLE(cel_Expr*) bound = cel_BindExpr_Bound(bind_expr);
+  if (bound != cel_nullptr) {
+    if (!_cel_AstTraverser_PushBindBound(traverser, bound, status)) {
+      return false;
+    }
+  }
+  CEL_NULLABLE(cel_Expr*) binding = cel_BindExpr_Binding(bind_expr);
+  if (binding != cel_nullptr) {
+    if (!_cel_AstTraverser_PushBindBinding(traverser, binding, status)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static bool _cel_AstTraverser_PushBlockBindingDeps(
+    CEL_NONNULL(cel_AstTraverser*) traverser,
+    const cel_BlockBindingExpr* block_binding_expr,
+    CEL_NONNULL(cel_Status*) status) {
+  CEL_NULLABLE(cel_Expr*)
+  bound = cel_BlockBindingExpr_Bound(block_binding_expr);
+  if (bound != cel_nullptr) {
+    if (!_cel_AstTraverser_PushBlockBindingBound(traverser, bound, status)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static bool _cel_AstTraverser_PushBlockDeps(CEL_NONNULL(cel_AstTraverser*)
+                                                traverser,
+                                            const cel_BlockExpr* block_expr,
+                                            CEL_NONNULL(cel_Status*) status) {
+  CEL_NULLABLE(cel_Expr*) bound = cel_BlockExpr_Bound(block_expr);
+  if (bound != cel_nullptr) {
+    if (!_cel_AstTraverser_PushBlockBound(traverser, bound, status)) {
+      return false;
+    }
+  }
+  CEL_NULLABLE(cel_BlockBindingExpr*) binding;
+  size_t binding_size =
+      cel_BlockExpr_Bindings(block_expr, /*head=*/cel_nullptr, &binding);
+  for (size_t i = binding_size; i > 0; --i) {
+    if (!_cel_AstTraverser_PushExpr(traverser, cel_Expr_UpCast(binding),
+                                    status)) {
+      return false;
+    }
+    binding = cel_BlockExpr_PrevBinding(binding);
+  }
+  return true;
+}
+
+CEL_ATTRIBUTE_NODISCARD
 static bool _cel_AstTraverser_PushDeps(CEL_NONNULL(cel_AstTraverser*) traverser,
                                        CEL_NONNULL(_cel_AstTraverserRecord*)
                                            record,
@@ -1222,6 +1426,17 @@ static bool _cel_AstTraverser_PushDeps(CEL_NONNULL(cel_AstTraverser*) traverser,
         case cel_ExprKind_kTernary:
           return _cel_AstTraverser_PushTernaryDeps(
               traverser, cel_TernaryExpr_DownCast(expr), status);
+        case cel_ExprKind_kBind:
+          return _cel_AstTraverser_PushBindDeps(
+              traverser, cel_BindExpr_DownCast(expr), status);
+        case cel_ExprKind_kBlockIndex:
+          break;
+        case cel_ExprKind_kBlockBinding:
+          return _cel_AstTraverser_PushBlockBindingDeps(
+              traverser, cel_BlockBindingExpr_DownCast(expr), status);
+        case cel_ExprKind_kBlock:
+          return _cel_AstTraverser_PushBlockDeps(
+              traverser, cel_BlockExpr_DownCast(expr), status);
         default:
           cel_InternalStatus(status,
                              cel_StringView_From("unexpected AST node kind"));
@@ -1264,6 +1479,14 @@ static bool _cel_AstTraverser_PushDeps(CEL_NONNULL(cel_AstTraverser*) traverser,
     case _cel_AstTraverserRecordKind_kTernaryIfTrue:
       CEL_ATTRIBUTE_FALLTHROUGH;
     case _cel_AstTraverserRecordKind_kTernaryIfFalse:
+      CEL_ATTRIBUTE_FALLTHROUGH;
+    case _cel_AstTraverserRecordKind_kBindBinding:
+      CEL_ATTRIBUTE_FALLTHROUGH;
+    case _cel_AstTraverserRecordKind_kBindBound:
+      CEL_ATTRIBUTE_FALLTHROUGH;
+    case _cel_AstTraverserRecordKind_kBlockBindingBound:
+      CEL_ATTRIBUTE_FALLTHROUGH;
+    case _cel_AstTraverserRecordKind_kBlockBound:
       return _cel_AstTraverser_PushExpr(traverser, expr, status);
     default:
       CEL_UNREACHABLE();
@@ -1314,6 +1537,14 @@ static void _cel_AstTraverser_Construct(CEL_NONNULL(cel_AstTraverser*)
       _cel_AstVisitor_HasVisit(visitor, ComprehensionExprLoopStep);
   traverser->comprehension_result_callbacks =
       _cel_AstVisitor_HasVisit(visitor, ComprehensionExprResult);
+  traverser->bind_binding_callbacks =
+      _cel_AstVisitor_HasVisit(visitor, BindExprBinding);
+  traverser->bind_bound_callbacks =
+      _cel_AstVisitor_HasVisit(visitor, BindExprBound);
+  traverser->block_binding_bound_callbacks =
+      _cel_AstVisitor_HasVisit(visitor, BlockBindingExprBound);
+  traverser->block_bound_callbacks =
+      _cel_AstVisitor_HasVisit(visitor, BlockExprBound);
 }
 
 static void _cel_AstTraverser_Destruct(CEL_NONNULL(cel_AstTraverser*)

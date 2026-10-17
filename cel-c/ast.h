@@ -48,6 +48,10 @@ typedef enum CEL_ATTRIBUTE_OPEN_ENUM {
   cel_ExprKind_kStructField,
   cel_ExprKind_kStruct,
   cel_ExprKind_kComprehension,
+  cel_ExprKind_kBind,
+  cel_ExprKind_kBlock,
+  cel_ExprKind_kBlockBinding,
+  cel_ExprKind_kBlockIndex,
 } cel_ExprKind;
 
 typedef int64_t cel_ExprId;
@@ -71,6 +75,10 @@ typedef struct cel_MapExpr cel_MapExpr;
 typedef struct cel_StructFieldExpr cel_StructFieldExpr;
 typedef struct cel_StructExpr cel_StructExpr;
 typedef struct cel_ComprehensionExpr cel_ComprehensionExpr;
+typedef struct cel_BindExpr cel_BindExpr;
+typedef struct cel_BlockIndexExpr cel_BlockIndexExpr;
+typedef struct cel_BlockBindingExpr cel_BlockBindingExpr;
+typedef struct cel_BlockExpr cel_BlockExpr;
 
 // cel_Ast
 
@@ -1421,43 +1429,348 @@ static CEL_INLINE CEL_NULLABILITY_UNKNOWN(const cel_ComprehensionExpr*)
   return (CEL_NULLABILITY_UNKNOWN(const cel_ComprehensionExpr*))expr;
 }
 
+// cel_BindExpr
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_BindExpr* cel_nullable
+cel_BindExpr_New(cel_Ast* cel_nonnull ast);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_StringView
+cel_BindExpr_Var(const cel_BindExpr* cel_nonnull expr);
+
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN void cel_BindExpr_SetVar(cel_BindExpr* cel_nonnull expr,
+                                    cel_StringView var);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_Expr* cel_nullable
+cel_BindExpr_Binding(const cel_BindExpr* cel_nonnull expr);
+
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_Expr* cel_nullable cel_BindExpr_SetBinding(
+    cel_BindExpr* cel_nonnull expr, cel_Expr* cel_nullable binding);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_Expr* cel_nullable
+cel_BindExpr_ReleaseBinding(cel_BindExpr* cel_nonnull expr);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_Expr* cel_nullable
+cel_BindExpr_Bound(const cel_BindExpr* cel_nonnull expr);
+
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_Expr* cel_nullable cel_BindExpr_SetBound(
+    cel_BindExpr* cel_nonnull expr, cel_Expr* cel_nullable bound);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_Expr* cel_nullable
+cel_BindExpr_ReleaseBound(cel_BindExpr* cel_nonnull expr);
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(cel_Expr*)
+    cel_BindExpr_MutableUpCast(CEL_NULLABILITY_UNKNOWN(cel_BindExpr*) expr) {
+  return (CEL_NULLABILITY_UNKNOWN(cel_Expr*))expr;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(const cel_Expr*)
+    cel_BindExpr_ConstUpCast(CEL_NULLABILITY_UNKNOWN(const cel_BindExpr*)
+                                 expr) {
+  return (CEL_NULLABILITY_UNKNOWN(const cel_Expr*))expr;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(cel_BindExpr*)
+    cel_BindExpr_MutableDownCast(CEL_NULLABILITY_UNKNOWN(cel_Expr*) expr) {
+  CEL_ASSERT(expr == cel_nullptr || cel_Expr_Kind(expr) == cel_ExprKind_kBind);
+
+  return (CEL_NULLABILITY_UNKNOWN(cel_BindExpr*))expr;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(const cel_BindExpr*)
+    cel_BindExpr_ConstDownCast(CEL_NULLABILITY_UNKNOWN(const cel_Expr*) expr) {
+  CEL_ASSERT(expr == cel_nullptr || cel_Expr_Kind(expr) == cel_ExprKind_kBind);
+
+  return (CEL_NULLABILITY_UNKNOWN(const cel_BindExpr*))expr;
+}
+
+// cel_BlockBindingExpr
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_BlockBindingExpr* cel_nullable
+cel_BlockBindingExpr_New(cel_Ast* cel_nonnull ast);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN ptrdiff_t
+cel_BlockBindingExpr_Index(const cel_BlockBindingExpr* cel_nonnull expr);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_BlockExpr* cel_nullable
+cel_BlockBindingExpr_Parent(const cel_BlockBindingExpr* cel_nonnull expr);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_Expr* cel_nullable
+cel_BlockBindingExpr_Bound(const cel_BlockBindingExpr* cel_nonnull expr);
+
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_Expr* cel_nullable cel_BlockBindingExpr_SetBound(
+    cel_BlockBindingExpr* cel_nonnull expr, cel_Expr* cel_nullable bound);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_Expr* cel_nullable
+cel_BlockBindingExpr_ReleaseBound(cel_BlockBindingExpr* cel_nonnull expr);
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(cel_Expr*)
+    cel_BlockBindingExpr_MutableUpCast(
+        CEL_NULLABILITY_UNKNOWN(cel_BlockBindingExpr*) expr) {
+  return (CEL_NULLABILITY_UNKNOWN(cel_Expr*))expr;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(const cel_Expr*)
+    cel_BlockBindingExpr_ConstUpCast(
+        CEL_NULLABILITY_UNKNOWN(const cel_BlockBindingExpr*) expr) {
+  return (CEL_NULLABILITY_UNKNOWN(const cel_Expr*))expr;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(cel_BlockBindingExpr*)
+    cel_BlockBindingExpr_MutableDownCast(CEL_NULLABILITY_UNKNOWN(cel_Expr*)
+                                             expr) {
+  CEL_ASSERT(expr == cel_nullptr ||
+             cel_Expr_Kind(expr) == cel_ExprKind_kBlockBinding);
+
+  return (CEL_NULLABILITY_UNKNOWN(cel_BlockBindingExpr*))expr;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(const cel_BlockBindingExpr*)
+    cel_BlockBindingExpr_ConstDownCast(CEL_NULLABILITY_UNKNOWN(const cel_Expr*)
+                                           expr) {
+  CEL_ASSERT(expr == cel_nullptr ||
+             cel_Expr_Kind(expr) == cel_ExprKind_kBlockBinding);
+
+  return (CEL_NULLABILITY_UNKNOWN(const cel_BlockBindingExpr*))expr;
+}
+
+// cel_BlockIndexExpr
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_BlockIndexExpr* cel_nullable
+cel_BlockIndexExpr_New(cel_Ast* cel_nonnull ast);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_Expr* cel_nullable
+cel_BlockIndexExpr_Parent(const cel_BlockIndexExpr* cel_nonnull expr);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_BlockExpr* cel_nullable
+cel_BlockIndexExpr_Block(const cel_BlockIndexExpr* cel_nonnull expr);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN int64_t
+cel_BlockIndexExpr_Value(const cel_BlockIndexExpr* cel_nonnull expr);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN void cel_BlockIndexExpr_SetValue(
+    cel_BlockIndexExpr* cel_nonnull expr, int64_t value);
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(cel_Expr*)
+    cel_BlockIndexExpr_MutableUpCast(
+        CEL_NULLABILITY_UNKNOWN(cel_BlockIndexExpr*) expr) {
+  return (CEL_NULLABILITY_UNKNOWN(cel_Expr*))expr;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(const cel_Expr*)
+    cel_BlockIndexExpr_ConstUpCast(
+        CEL_NULLABILITY_UNKNOWN(const cel_BlockIndexExpr*) expr) {
+  return (CEL_NULLABILITY_UNKNOWN(const cel_Expr*))expr;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(cel_BlockIndexExpr*)
+    cel_BlockIndexExpr_MutableDownCast(CEL_NULLABILITY_UNKNOWN(cel_Expr*)
+                                           expr) {
+  CEL_ASSERT(expr == cel_nullptr ||
+             cel_Expr_Kind(expr) == cel_ExprKind_kBlockIndex);
+
+  return (CEL_NULLABILITY_UNKNOWN(cel_BlockIndexExpr*))expr;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(const cel_BlockIndexExpr*)
+    cel_BlockIndexExpr_ConstDownCast(CEL_NULLABILITY_UNKNOWN(const cel_Expr*)
+                                         expr) {
+  CEL_ASSERT(expr == cel_nullptr ||
+             cel_Expr_Kind(expr) == cel_ExprKind_kBlockIndex);
+
+  return (CEL_NULLABILITY_UNKNOWN(const cel_BlockIndexExpr*))expr;
+}
+
+// cel_BlockExpr
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_BlockExpr* cel_nullable cel_BlockExpr_New(CEL_NONNULL(cel_Ast*)
+                                                             ast);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_Expr* cel_nullable
+cel_BlockExpr_Bound(const cel_BlockExpr* cel_nonnull expr);
+
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_Expr* cel_nullable cel_BlockExpr_SetBound(
+    cel_BlockExpr* cel_nonnull expr, cel_Expr* cel_nullable bound);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_Expr* cel_nullable
+cel_BlockExpr_ReleaseBound(cel_BlockExpr* cel_nonnull expr);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN void cel_BlockExpr_AppendBinding(CEL_NONNULL(cel_BlockExpr*) expr,
+                                            CEL_NONNULL(cel_BlockBindingExpr*)
+                                                binding);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN void cel_BlockExpr_PrependBinding(CEL_NONNULL(cel_BlockExpr*) expr,
+                                             CEL_NONNULL(cel_BlockBindingExpr*)
+                                                 binding);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN void cel_BlockExpr_InsertBinding(CEL_NONNULL(cel_BlockExpr*) expr,
+                                            CEL_NULLABLE(cel_BlockBindingExpr*)
+                                                before,
+                                            CEL_NONNULL(cel_BlockBindingExpr*)
+                                                binding);
+
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN CEL_NONNULL(cel_BlockBindingExpr*)
+    cel_BlockExpr_ReleaseBinding(CEL_NONNULL(cel_BlockExpr*) expr,
+                                 CEL_NONNULL(cel_BlockBindingExpr*) binding);
+
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN CEL_NONNULL(cel_BlockBindingExpr*)
+    cel_BlockExpr_Binding(CEL_NONNULL(const cel_BlockExpr*) expr, size_t index);
+
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN size_t cel_BlockExpr_Bindings(CEL_NONNULL(const cel_BlockExpr*) expr,
+                                         CEL_NULLABLE(cel_BlockBindingExpr*) *
+                                             cel_nullable head,
+                                         CEL_NULLABLE(cel_BlockBindingExpr*) *
+                                             cel_nullable tail);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN CEL_NULLABLE(cel_BlockBindingExpr*)
+    cel_BlockExpr_PrevBinding(CEL_NULLABLE(const cel_BlockBindingExpr*)
+                                  binding);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN CEL_NULLABLE(cel_BlockBindingExpr*)
+    cel_BlockExpr_NextBinding(CEL_NULLABLE(const cel_BlockBindingExpr*)
+                                  binding);
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(cel_Expr*)
+    cel_BlockExpr_MutableUpCast(CEL_NULLABILITY_UNKNOWN(cel_BlockExpr*) expr) {
+  return (CEL_NULLABILITY_UNKNOWN(cel_Expr*))expr;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(const cel_Expr*)
+    cel_BlockExpr_ConstUpCast(CEL_NULLABILITY_UNKNOWN(const cel_BlockExpr*)
+                                  expr) {
+  return (CEL_NULLABILITY_UNKNOWN(const cel_Expr*))expr;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(cel_BlockExpr*)
+    cel_BlockExpr_MutableDownCast(CEL_NULLABILITY_UNKNOWN(cel_Expr*) expr) {
+  CEL_ASSERT(expr == cel_nullptr || cel_Expr_Kind(expr) == cel_ExprKind_kBlock);
+
+  return (CEL_NULLABILITY_UNKNOWN(cel_BlockExpr*))expr;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(const cel_BlockExpr*)
+    cel_BlockExpr_ConstDownCast(CEL_NULLABILITY_UNKNOWN(const cel_Expr*) expr) {
+  CEL_ASSERT(expr == cel_nullptr || cel_Expr_Kind(expr) == cel_ExprKind_kBlock);
+
+  return (CEL_NULLABILITY_UNKNOWN(const cel_BlockExpr*))expr;
+}
+
 CEL_END_DECLS
 
 #ifndef __cplusplus
-#define cel_Expr_UpCast(expr)                                       \
-  (_Generic((expr),                                                 \
-       cel_UnspecifiedExpr*: cel_UnspecifiedExpr_MutableUpCast,     \
-       const cel_UnspecifiedExpr*: cel_UnspecifiedExpr_ConstUpCast, \
-       cel_IdentExpr*: cel_IdentExpr_MutableUpCast,                 \
-       const cel_IdentExpr*: cel_IdentExpr_ConstUpCast,             \
-       cel_ConstExpr*: cel_ConstExpr_MutableUpCast,                 \
-       const cel_ConstExpr*: cel_ConstExpr_ConstUpCast,             \
-       cel_SelectExpr*: cel_SelectExpr_MutableUpCast,               \
-       const cel_SelectExpr*: cel_SelectExpr_ConstUpCast,           \
-       cel_CallExpr*: cel_CallExpr_MutableUpCast,                   \
-       const cel_CallExpr*: cel_CallExpr_ConstUpCast,               \
-       cel_CallArgExpr*: cel_CallArgExpr_MutableUpCast,             \
-       const cel_CallArgExpr*: cel_CallArgExpr_ConstUpCast,         \
-       cel_UnaryExpr*: cel_UnaryExpr_MutableUpCast,                 \
-       const cel_UnaryExpr*: cel_UnaryExpr_ConstUpCast,             \
-       cel_BinaryExpr*: cel_BinaryExpr_MutableUpCast,               \
-       const cel_BinaryExpr*: cel_BinaryExpr_ConstUpCast,           \
-       cel_TernaryExpr*: cel_TernaryExpr_MutableUpCast,             \
-       const cel_TernaryExpr*: cel_TernaryExpr_ConstUpCast,         \
-       cel_ListElementExpr*: cel_ListElementExpr_MutableUpCast,     \
-       const cel_ListElementExpr*: cel_ListElementExpr_ConstUpCast, \
-       cel_ListExpr*: cel_ListExpr_MutableUpCast,                   \
-       const cel_ListExpr*: cel_ListExpr_ConstUpCast,               \
-       cel_MapEntryExpr*: cel_MapEntryExpr_MutableUpCast,           \
-       const cel_MapEntryExpr*: cel_MapEntryExpr_ConstUpCast,       \
-       cel_MapExpr*: cel_MapExpr_MutableUpCast,                     \
-       const cel_MapExpr*: cel_MapExpr_ConstUpCast,                 \
-       cel_StructFieldExpr*: cel_StructFieldExpr_MutableUpCast,     \
-       const cel_StructFieldExpr*: cel_StructFieldExpr_ConstUpCast, \
-       cel_StructExpr*: cel_StructExpr_MutableUpCast,               \
-       const cel_StructExpr*: cel_StructExpr_ConstUpCast,           \
-       cel_ComprehensionExpr*: cel_ComprehensionExpr_MutableUpCast, \
-       const cel_ComprehensionExpr*: cel_ComprehensionExpr_ConstUpCast)(expr))
+#define cel_Expr_UpCast(expr)                                           \
+  (_Generic((expr),                                                     \
+       cel_UnspecifiedExpr*: cel_UnspecifiedExpr_MutableUpCast,         \
+       const cel_UnspecifiedExpr*: cel_UnspecifiedExpr_ConstUpCast,     \
+       cel_IdentExpr*: cel_IdentExpr_MutableUpCast,                     \
+       const cel_IdentExpr*: cel_IdentExpr_ConstUpCast,                 \
+       cel_ConstExpr*: cel_ConstExpr_MutableUpCast,                     \
+       const cel_ConstExpr*: cel_ConstExpr_ConstUpCast,                 \
+       cel_SelectExpr*: cel_SelectExpr_MutableUpCast,                   \
+       const cel_SelectExpr*: cel_SelectExpr_ConstUpCast,               \
+       cel_CallExpr*: cel_CallExpr_MutableUpCast,                       \
+       const cel_CallExpr*: cel_CallExpr_ConstUpCast,                   \
+       cel_CallArgExpr*: cel_CallArgExpr_MutableUpCast,                 \
+       const cel_CallArgExpr*: cel_CallArgExpr_ConstUpCast,             \
+       cel_UnaryExpr*: cel_UnaryExpr_MutableUpCast,                     \
+       const cel_UnaryExpr*: cel_UnaryExpr_ConstUpCast,                 \
+       cel_BinaryExpr*: cel_BinaryExpr_MutableUpCast,                   \
+       const cel_BinaryExpr*: cel_BinaryExpr_ConstUpCast,               \
+       cel_TernaryExpr*: cel_TernaryExpr_MutableUpCast,                 \
+       const cel_TernaryExpr*: cel_TernaryExpr_ConstUpCast,             \
+       cel_ListElementExpr*: cel_ListElementExpr_MutableUpCast,         \
+       const cel_ListElementExpr*: cel_ListElementExpr_ConstUpCast,     \
+       cel_ListExpr*: cel_ListExpr_MutableUpCast,                       \
+       const cel_ListExpr*: cel_ListExpr_ConstUpCast,                   \
+       cel_MapEntryExpr*: cel_MapEntryExpr_MutableUpCast,               \
+       const cel_MapEntryExpr*: cel_MapEntryExpr_ConstUpCast,           \
+       cel_MapExpr*: cel_MapExpr_MutableUpCast,                         \
+       const cel_MapExpr*: cel_MapExpr_ConstUpCast,                     \
+       cel_StructFieldExpr*: cel_StructFieldExpr_MutableUpCast,         \
+       const cel_StructFieldExpr*: cel_StructFieldExpr_ConstUpCast,     \
+       cel_StructExpr*: cel_StructExpr_MutableUpCast,                   \
+       const cel_StructExpr*: cel_StructExpr_ConstUpCast,               \
+       cel_ComprehensionExpr*: cel_ComprehensionExpr_MutableUpCast,     \
+       const cel_ComprehensionExpr*: cel_ComprehensionExpr_ConstUpCast, \
+       cel_BindExpr*: cel_BindExpr_MutableUpCast,                       \
+       const cel_BindExpr*: cel_BindExpr_ConstUpCast,                   \
+       cel_BlockBindingExpr*: cel_BlockBindingExpr_MutableUpCast,       \
+       const cel_BlockBindingExpr*: cel_BlockBindingExpr_ConstUpCast,   \
+       cel_BlockIndexExpr*: cel_BlockIndexExpr_MutableUpCast,           \
+       const cel_BlockIndexExpr*: cel_BlockIndexExpr_ConstUpCast,       \
+       cel_BlockExpr*: cel_BlockExpr_MutableUpCast,                     \
+       const cel_BlockExpr*: cel_BlockExpr_ConstUpCast)(expr))
 #define cel_UnspecifiedExpr_DownCast(expr)             \
   (_Generic((expr),                                    \
        cel_Expr*: cel_UnspecifiedExpr_MutableDownCast, \
@@ -1518,10 +1831,22 @@ CEL_END_DECLS
   (_Generic((expr),                               \
        cel_Expr*: cel_StructExpr_MutableDownCast, \
        const cel_Expr*: cel_StructExpr_ConstDownCast)(expr))
-#define cel_ComprehensionExpr_DownCast(expr)             \
-  (_Generic((expr),                                      \
-       cel_Expr*: cel_ComprehensionExpr_MutableDownCast, \
-       const cel_Expr*: cel_ComprehensionExpr_ConstDownCast)(expr))
+#define cel_BindExpr_DownCast(expr)             \
+  (_Generic((expr),                             \
+       cel_Expr*: cel_BindExpr_MutableDownCast, \
+       const cel_Expr*: cel_BindExpr_ConstDownCast)(expr))
+#define cel_BlockBindingExpr_DownCast(expr)             \
+  (_Generic((expr),                                     \
+       cel_Expr*: cel_BlockBindingExpr_MutableDownCast, \
+       const cel_Expr*: cel_BlockBindingExpr_ConstDownCast)(expr))
+#define cel_BlockIndexExpr_DownCast(expr)             \
+  (_Generic((expr),                                   \
+       cel_Expr*: cel_BlockIndexExpr_MutableDownCast, \
+       const cel_Expr*: cel_BlockIndexExpr_ConstDownCast)(expr))
+#define cel_BlockExpr_DownCast(expr)             \
+  (_Generic((expr),                              \
+       cel_Expr*: cel_BlockExpr_MutableDownCast, \
+       const cel_Expr*: cel_BlockExpr_ConstDownCast)(expr))
 #else
 CEL_ATTRIBUTE_NODISCARD
 CEL_INLINE const cel_Expr* cel_nullability_unknown
@@ -1684,6 +2009,46 @@ cel_Expr_UpCast(cel_ComprehensionExpr* cel_nullability_unknown expr) {
   return cel_ComprehensionExpr_MutableUpCast(expr);
 }
 CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE const cel_Expr* cel_nullability_unknown
+cel_Expr_UpCast(const cel_BindExpr* cel_nullability_unknown expr) {
+  return cel_BindExpr_ConstUpCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE cel_Expr* cel_nullability_unknown
+cel_Expr_UpCast(cel_BindExpr* cel_nullability_unknown expr) {
+  return cel_BindExpr_MutableUpCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE const cel_Expr* cel_nullability_unknown
+cel_Expr_UpCast(const cel_BlockBindingExpr* cel_nullability_unknown expr) {
+  return cel_BlockBindingExpr_ConstUpCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE cel_Expr* cel_nullability_unknown
+cel_Expr_UpCast(cel_BlockBindingExpr* cel_nullability_unknown expr) {
+  return cel_BlockBindingExpr_MutableUpCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE const cel_Expr* cel_nullability_unknown
+cel_Expr_UpCast(const cel_BlockIndexExpr* cel_nullability_unknown expr) {
+  return cel_BlockIndexExpr_ConstUpCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE cel_Expr* cel_nullability_unknown
+cel_Expr_UpCast(cel_BlockIndexExpr* cel_nullability_unknown expr) {
+  return cel_BlockIndexExpr_MutableUpCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE const cel_Expr* cel_nullability_unknown
+cel_Expr_UpCast(const cel_BlockExpr* cel_nullability_unknown expr) {
+  return cel_BlockExpr_ConstUpCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE cel_Expr* cel_nullability_unknown
+cel_Expr_UpCast(cel_BlockExpr* cel_nullability_unknown expr) {
+  return cel_BlockExpr_MutableUpCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
 CEL_INLINE const cel_UnspecifiedExpr* cel_nullability_unknown
 cel_UnspecifiedExpr_DownCast(const cel_Expr* cel_nullability_unknown expr) {
   return cel_UnspecifiedExpr_ConstDownCast(expr);
@@ -1842,6 +2207,46 @@ CEL_ATTRIBUTE_NODISCARD
 CEL_INLINE cel_ComprehensionExpr* cel_nullability_unknown
 cel_ComprehensionExpr_DownCast(cel_Expr* cel_nullability_unknown expr) {
   return cel_ComprehensionExpr_MutableDownCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE const cel_BindExpr* cel_nullability_unknown
+cel_BindExpr_DownCast(const cel_Expr* cel_nullability_unknown expr) {
+  return cel_BindExpr_ConstDownCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE cel_BindExpr* cel_nullability_unknown
+cel_BindExpr_DownCast(cel_Expr* cel_nullability_unknown expr) {
+  return cel_BindExpr_MutableDownCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE const cel_BlockBindingExpr* cel_nullability_unknown
+cel_BlockBindingExpr_DownCast(const cel_Expr* cel_nullability_unknown expr) {
+  return cel_BlockBindingExpr_ConstDownCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE cel_BlockBindingExpr* cel_nullability_unknown
+cel_BlockBindingExpr_DownCast(cel_Expr* cel_nullability_unknown expr) {
+  return cel_BlockBindingExpr_MutableDownCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE const cel_BlockIndexExpr* cel_nullability_unknown
+cel_BlockIndexExpr_DownCast(const cel_Expr* cel_nullability_unknown expr) {
+  return cel_BlockIndexExpr_ConstDownCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE cel_BlockIndexExpr* cel_nullability_unknown
+cel_BlockIndexExpr_DownCast(cel_Expr* cel_nullability_unknown expr) {
+  return cel_BlockIndexExpr_MutableDownCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE const cel_BlockExpr* cel_nullability_unknown
+cel_BlockExpr_DownCast(const cel_Expr* cel_nullability_unknown expr) {
+  return cel_BlockExpr_ConstDownCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE cel_BlockExpr* cel_nullability_unknown
+cel_BlockExpr_DownCast(cel_Expr* cel_nullability_unknown expr) {
+  return cel_BlockExpr_MutableDownCast(expr);
 }
 #endif
 

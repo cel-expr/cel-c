@@ -26,6 +26,7 @@
 #include "cel-c/ast.h"
 #include "cel-c/config.h"
 #include "cel-c/constant_proto.h"
+#include "cel-c/internal/charconv.h"
 #include "cel-c/internal/malloc.h"
 #include "cel-c/internal/setjmp.h"
 #include "cel-c/operators.h"
@@ -44,6 +45,105 @@ typedef struct {
   CEL_NULLABLE(const cel_expr_SourceInfo*) source_info;
   _cel_jmp_buf jmp;
 } _cel_AstFromProtoState;
+
+static bool _cel_AstFromProto_IsBlockIndex(
+    CEL_NONNULL(const cel_expr_Expr_Ident*) expr,
+    int64_t* cel_nonnull index) {
+  cel_StringView name = cel_expr_Expr_Ident_name(expr);
+  if (!cel_StringView_StartsWith(name, cel_StringView_From("@index"))) {
+    return false;
+  }
+  _cel_FromCharsResult result = _cel_FromChars(
+      cel_StringView_Data(name) + 6,
+      cel_StringView_Data(name) + cel_StringView_Size(name), index, 10);
+  if (result.ec != 0 ||
+      result.ptr != cel_StringView_Data(name) + cel_StringView_Size(name) ||
+      *index < 0) {
+    return false;
+  }
+  return true;
+}
+
+static bool _cel_AstFromProto_IsBind(
+    CEL_NONNULL(const cel_expr_Expr_Comprehension*) expr) {
+  if (!cel_StringView_Equals(cel_expr_Expr_Comprehension_iter_var(expr),
+                             cel_StringView_From("#unused"))) {
+    return false;
+  }
+  if (!cel_StringView_Empty(
+          cel_expr_Expr_Comprehension_iter_var2(expr))) {
+    return false;
+  }
+  cel_StringView accu_var = cel_expr_Expr_Comprehension_accu_var(expr);
+  if (cel_StringView_Empty(accu_var)) {
+    return false;
+  }
+  const cel_expr_Expr* iter_range =
+      cel_expr_Expr_Comprehension_iter_range(expr);
+  if (iter_range == cel_nullptr ||
+      !cel_expr_Expr_has_list_expr(iter_range)) {
+    return false;
+  }
+  const cel_expr_Expr* loop_condition =
+      cel_expr_Expr_Comprehension_loop_condition(expr);
+  if (loop_condition == cel_nullptr ||
+      !cel_expr_Expr_has_const_expr(loop_condition)) {
+    return false;
+  }
+  const cel_expr_Constant* loop_condition_constant =
+      cel_expr_Expr_const_expr(loop_condition);
+  if (loop_condition_constant == nullptr ||
+      !cel_expr_Constant_has_bool_value(loop_condition_constant) ||
+      cel_expr_Constant_bool_value(loop_condition_constant)) {
+    return false;
+  }
+  const cel_expr_Expr* loop_step =
+      cel_expr_Expr_Comprehension_loop_step(expr);
+  if (loop_step == cel_nullptr ||
+      !cel_expr_Expr_has_ident_expr(loop_step) ||
+      !cel_StringView_Equals(cel_expr_Expr_Ident_name(
+                                 cel_expr_Expr_ident_expr(loop_step)),
+                             accu_var)) {
+    return false;
+  }
+  return true;
+}
+
+static bool _cel_AstFromProto_IsBlock(
+    CEL_NONNULL(const cel_expr_Expr_Call*) expr) {
+  if (!cel_StringView_Equals(cel_expr_Expr_Call_function(expr),
+                             cel_StringView_From("cel.@block"))) {
+    return false;
+  }
+  if (cel_expr_Expr_Call_has_target(expr)) {
+    return false;
+  }
+  size_t args_size = 0;
+  const cel_expr_Expr* const* args =
+      cel_expr_Expr_Call_args(expr, &args_size);
+  if (args_size != 2) {
+    return false;
+  }
+  if (args[0] == nullptr || args[1] == nullptr) {
+    return false;
+  }
+  if (!cel_expr_Expr_has_list_expr(args[0])) {
+    return false;
+  }
+  size_t elems_size = 0;
+  cel_expr_Expr_CreateList_elements(
+      cel_expr_Expr_list_expr(args[0]), &elems_size);
+  if (elems_size == 0) {
+    return false;
+  }
+  size_t opts_size = 0;
+  cel_expr_Expr_CreateList_optional_indices(
+      cel_expr_Expr_list_expr(args[0]), &opts_size);
+  if (opts_size != 0) {
+    return false;
+  }
+  return true;
+}
 
 static int64_t _cel_AstFromProto_CheckId(CEL_NONNULL(_cel_AstFromProtoState*)
                                              state,
@@ -154,6 +254,20 @@ static CEL_NONNULL(cel_Expr*)
                                 CEL_NONNULL(const cel_expr_Expr_Ident*)
                                     in) {
   _cel_AstFromProto_CheckId(state, id);
+  int64_t index = -1;
+  if (_cel_AstFromProto_IsBlockIndex(in, &index)) {
+    cel_BlockIndexExpr* expr = cel_BlockIndexExpr_New(state->ast);
+    if (CEL_UNLIKELY(expr == cel_nullptr)) {
+      cel_OutOfMemoryStatus(state->status);
+      _cel_longjmp(state->jmp);
+    }
+    cel_Expr_SetId(cel_Expr_UpCast(expr), id);
+    _cel_AstFromProto_UpdatePosition(state, cel_Expr_UpCast(expr));
+    _cel_AstFromProto_SetType(state, cel_Expr_UpCast(expr));
+    _cel_AstFromProto_SetRef(state, cel_Expr_UpCast(expr));
+    cel_BlockIndexExpr_SetValue(expr, index);
+    return cel_Expr_UpCast(expr);
+  }
   CEL_NULLABLE(cel_IdentExpr*) expr = cel_IdentExpr_New(state->ast);
   if (CEL_UNLIKELY(expr == cel_nullptr)) {
     cel_OutOfMemoryStatus(state->status);
@@ -288,6 +402,36 @@ static CEL_NONNULL(cel_Expr*)
   size_t in_args_len = 0;
   const cel_expr_Expr* const* in_args =
       cel_expr_Expr_Call_args(in, &in_args_len);
+  if (_cel_AstFromProto_IsBlock(in)) {
+    _cel_AstFromProto_CheckId(state, id);
+    cel_BlockExpr* expr = cel_BlockExpr_New(state->ast);
+    if (CEL_UNLIKELY(expr == cel_nullptr)) {
+      cel_OutOfMemoryStatus(state->status);
+      _cel_longjmp(state->jmp);
+    }
+    cel_Expr_SetId(cel_Expr_UpCast(expr), id);
+    _cel_AstFromProto_UpdatePosition(state, cel_Expr_UpCast(expr));
+    _cel_AstFromProto_SetType(state, cel_Expr_UpCast(expr));
+    _cel_AstFromProto_SetRef(state, cel_Expr_UpCast(expr));
+    size_t in_elems_size;
+    const cel_expr_Expr* const* in_elems =
+        cel_expr_Expr_CreateList_elements(
+            cel_expr_Expr_list_expr(in_args[0]), &in_elems_size);
+    for (size_t i = 0; i < in_elems_size; ++i) {
+      cel_BlockBindingExpr* binding_expr = cel_BlockBindingExpr_New(state->ast);
+      if (CEL_UNLIKELY(binding_expr == cel_nullptr)) {
+        cel_OutOfMemoryStatus(state->status);
+        _cel_longjmp(state->jmp);
+      }
+      cel_Expr* bound_expr = _cel_AstFromProto_Expr(state, in_elems[i]);
+      cel_Expr_SetSourceRange(cel_Expr_UpCast(binding_expr),
+                              cel_Expr_SourceRange(bound_expr));
+      cel_BlockBindingExpr_SetBound(binding_expr, bound_expr);
+      cel_BlockExpr_AppendBinding(expr, binding_expr);
+    }
+    cel_BlockExpr_SetBound(expr, _cel_AstFromProto_Expr(state, in_args[1]));
+    return cel_Expr_UpCast(expr);
+  }
   cel_StringView function = cel_expr_Expr_Call_function(in);
   if (!cel_StringView_Empty(function) &&
       !cel_expr_Expr_Call_has_target(in)) {
@@ -520,6 +664,27 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProto_ComprehensionExpr(
     CEL_NONNULL(_cel_AstFromProtoState*) state, int64_t id,
     CEL_NONNULL(const cel_expr_Expr_Comprehension*) in) {
   _cel_AstFromProto_CheckId(state, id);
+  if (_cel_AstFromProto_IsBind(in)) {
+    cel_BindExpr* expr = cel_BindExpr_New(state->ast);
+    if (CEL_UNLIKELY(expr == cel_nullptr)) {
+      cel_OutOfMemoryStatus(state->status);
+      _cel_longjmp(state->jmp);
+    }
+    cel_Expr_SetId(cel_Expr_UpCast(expr), id);
+    _cel_AstFromProto_UpdatePosition(state, cel_Expr_UpCast(expr));
+    _cel_AstFromProto_SetType(state, cel_Expr_UpCast(expr));
+    _cel_AstFromProto_SetRef(state, cel_Expr_UpCast(expr));
+    cel_BindExpr_SetVar(
+        expr, _cel_AstFromProto_StrDup(
+                  state, cel_expr_Expr_Comprehension_accu_var(in)));
+    cel_BindExpr_SetBinding(
+        expr, _cel_AstFromProto_Expr(
+                  state, cel_expr_Expr_Comprehension_accu_init(in)));
+    cel_BindExpr_SetBound(
+        expr, _cel_AstFromProto_Expr(
+                  state, cel_expr_Expr_Comprehension_result(in)));
+    return cel_Expr_UpCast(expr);
+  }
   CEL_NULLABLE(cel_ComprehensionExpr*)
   expr = cel_ComprehensionExpr_New(state->ast);
   if (CEL_UNLIKELY(expr == cel_nullptr)) {

@@ -212,7 +212,7 @@ struct _cel_Interpreter {
   _cel_FlatHashMap(cel_StringView, uint32_t) slot_map;
   _cel_Array(uint32_t) slot_stack;
 
-  const cel_ComprehensionExpr* cel_nullable root_bind = nullptr;
+  const cel_BindExpr* cel_nullable root_bind = nullptr;
 
   _cel_InterpreterValueStackBounds value_stack_bounds;
   _cel_Array(_cel_InterpreterValueStackBounds* cel_nonnull)
@@ -515,6 +515,8 @@ static void _cel_Interpreter_PreVisitExpr(cel_AstVisitor* cel_nonnull visitor,
     case cel_ExprKind_kCall:
       CEL_ATTRIBUTE_FALLTHROUGH;
     case cel_ExprKind_kComprehension:
+      CEL_ATTRIBUTE_FALLTHROUGH;
+    case cel_ExprKind_kBind:
       break;
     default:
       // For now, reject other AST node kinds.
@@ -1640,46 +1642,6 @@ static void _cel_Interpreter_PostVisitCallExpr(
   }
 }
 
-CEL_ATTRIBUTE_NODISCARD
-static bool _cel_Interpreter_IsBind(
-    const cel_ComprehensionExpr* cel_nonnull expr) {
-  if (!cel_StringView_Equals(cel_ComprehensionExpr_IterVar(expr),
-                             cel_StringView_From("#unused"))) {
-    return false;
-  }
-  if (!cel_StringView_Empty(cel_ComprehensionExpr_IterVar2(expr))) {
-    return false;
-  }
-  cel_StringView accu_var = cel_ComprehensionExpr_AccuVar(expr);
-  if (cel_StringView_Empty(accu_var)) {
-    return false;
-  }
-  const cel_Expr* iter_range = cel_ComprehensionExpr_IterRange(expr);
-  if (iter_range == cel_nullptr ||
-      cel_Expr_Kind(iter_range) != cel_ExprKind_kList) {
-    return false;
-  }
-  const cel_Expr* loop_condition = cel_ComprehensionExpr_LoopCondition(expr);
-  if (loop_condition == cel_nullptr ||
-      cel_Expr_Kind(loop_condition) != cel_ExprKind_kConst) {
-    return false;
-  }
-  const cel_Constant* loop_condition_constant =
-      cel_ConstExpr_Value(cel_ConstExpr_DownCast(loop_condition));
-  if (cel_Constant_Kind(loop_condition_constant) != cel_ConstantKind_kBool ||
-      cel_Constant_GetBool(loop_condition_constant)) {
-    return false;
-  }
-  const cel_Expr* loop_step = cel_ComprehensionExpr_LoopStep(expr);
-  if (loop_step == cel_nullptr ||
-      cel_Expr_Kind(loop_step) != cel_ExprKind_kIdent ||
-      !cel_StringView_Equals(
-          cel_IdentExpr_Name(cel_IdentExpr_DownCast(loop_step)), accu_var)) {
-    return false;
-  }
-  return true;
-}
-
 static void _cel_Interpreter_PreVisitComprehensionExpr(
     cel_AstVisitor* cel_nonnull visitor,
     const cel_ComprehensionExpr* cel_nonnull expr) {
@@ -1728,14 +1690,18 @@ static void _cel_Interpreter_PreVisitComprehensionExpr(
     _cel_longjmp(interp->jmp);
   }
 
-  // We only support cel.bind comprehensions currently.
-  if (!_cel_Interpreter_IsBind(expr)) {
-    cel_InvalidArgumentStatusF(
-        interp->status,
-        "cel: comprehension expr does not resemble cel.bind: %" PRId64,
-        cel_Expr_Id(cel_Expr_UpCast(expr)));
-    _cel_longjmp(interp->jmp);
-  }
+  cel_InvalidArgumentStatusF(
+      interp->status, "cel: comprehension expr is not yet supported: %" PRId64,
+      cel_Expr_Id(cel_Expr_UpCast(expr)));
+  _cel_longjmp(interp->jmp);
+}
+
+static void _cel_Interpreter_PostVisitComprehensionExpr(
+    cel_AstVisitor* cel_nonnull, const cel_ComprehensionExpr* cel_nonnull) {}
+
+static void _cel_Interpreter_PreVisitBindExpr(
+    cel_AstVisitor* cel_nonnull visitor, const cel_BindExpr* cel_nonnull expr) {
+  _cel_Interpreter* interp = _cel_Interpreter_FromAstVisitor(visitor);
 
   // Keep track of the outer most cel.bind.
   if (interp->root_bind == cel_nullptr) {
@@ -1743,13 +1709,12 @@ static void _cel_Interpreter_PreVisitComprehensionExpr(
   }
 
   _cel_InterpreterSlot* slot =
-      _cel_Interpreter_NewSlot(interp, cel_ComprehensionExpr_AccuVar(expr));
+      _cel_Interpreter_NewSlot(interp, cel_BindExpr_Var(expr));
   _cel_Interpreter_PushSlot(interp, slot);
 }
 
-static void _cel_Interpreter_PostVisitComprehensionExpr(
-    cel_AstVisitor* cel_nonnull visitor,
-    const cel_ComprehensionExpr* cel_nonnull expr) {
+static void _cel_Interpreter_PostVisitBindExpr(
+    cel_AstVisitor* cel_nonnull visitor, const cel_BindExpr* cel_nonnull expr) {
   _cel_Interpreter* interp = _cel_Interpreter_FromAstVisitor(visitor);
   _cel_Interpreter_PopSlot(interp);
   if (interp->root_bind == expr) {
@@ -1764,13 +1729,7 @@ static void _cel_Interpreter_PostVisitComprehensionExpr(
   }
 }
 
-static void _cel_Interpreter_PreVisitComprehensionExprIterRange(
-    cel_AstVisitor* cel_nonnull visitor, const cel_Expr* cel_nonnull expr) {
-  _cel_Interpreter* interp = _cel_Interpreter_FromAstVisitor(visitor);
-  cel_AstTraverser_StepOut(interp->traverser);
-}
-
-static void _cel_Interpreter_PreVisitComprehensionExprAccuInit(
+static void _cel_Interpreter_PreVisitBindExprBinding(
     cel_AstVisitor* cel_nonnull visitor, const cel_Expr* cel_nonnull expr) {
   _cel_Interpreter* interp = _cel_Interpreter_FromAstVisitor(visitor);
   _cel_InterpreterSlot* slot = _cel_Interpreter_TopSlot(interp);
@@ -1782,7 +1741,7 @@ static void _cel_Interpreter_PreVisitComprehensionExprAccuInit(
   _cel_Interpreter_PushValueStackBounds(interp, &slot->value_stack_bounds);
 }
 
-static void _cel_Interpreter_PostVisitComprehensionExprAccuInit(
+static void _cel_Interpreter_PostVisitBindExprBinding(
     cel_AstVisitor* cel_nonnull visitor, const cel_Expr* cel_nonnull expr) {
   _cel_Interpreter* interp = _cel_Interpreter_FromAstVisitor(visitor);
   _cel_InterpreterSlot* slot = _cel_Interpreter_TopSlot(interp);
@@ -1795,19 +1754,7 @@ static void _cel_Interpreter_PostVisitComprehensionExprAccuInit(
   _cel_Interpreter_PopValueStackBounds(interp);
 }
 
-static void _cel_Interpreter_PreVisitComprehensionExprLoopCondition(
-    cel_AstVisitor* cel_nonnull visitor, const cel_Expr* cel_nonnull expr) {
-  _cel_Interpreter* interp = _cel_Interpreter_FromAstVisitor(visitor);
-  cel_AstTraverser_StepOut(interp->traverser);
-}
-
-static void _cel_Interpreter_PreVisitComprehensionExprLoopStep(
-    cel_AstVisitor* cel_nonnull visitor, const cel_Expr* cel_nonnull expr) {
-  _cel_Interpreter* interp = _cel_Interpreter_FromAstVisitor(visitor);
-  cel_AstTraverser_StepOut(interp->traverser);
-}
-
-static void _cel_Interpreter_PreVisitComprehensionExprResult(
+static void _cel_Interpreter_PreVisitBindExprBound(
     cel_AstVisitor* cel_nonnull visitor, const cel_Expr* cel_nonnull expr) {
   _cel_Interpreter* interp = _cel_Interpreter_FromAstVisitor(visitor);
   _cel_InterpreterSlot* slot = _cel_Interpreter_TopSlot(interp);
@@ -1833,7 +1780,7 @@ static void _cel_Interpreter_PreVisitComprehensionExprResult(
 #endif
 }
 
-static void _cel_Interpreter_PostVisitComprehensionExprResult(
+static void _cel_Interpreter_PostVisitBindExprBound(
     cel_AstVisitor* cel_nonnull visitor, const cel_Expr* cel_nonnull expr) {
   _cel_Interpreter* interp = _cel_Interpreter_FromAstVisitor(visitor);
   _cel_InterpreterSlot* slot = _cel_Interpreter_TopSlot(interp);
@@ -1877,20 +1824,12 @@ static const cel_AstVisitorVTable _cel_InterpreterVTable = {
     .PostVisitMapExpr = &_cel_Interpreter_PostVisitMapExpr,
     .PreVisitComprehensionExpr = &_cel_Interpreter_PreVisitComprehensionExpr,
     .PostVisitComprehensionExpr = &_cel_Interpreter_PostVisitComprehensionExpr,
-    .PreVisitComprehensionExprIterRange =
-        &_cel_Interpreter_PreVisitComprehensionExprIterRange,
-    .PreVisitComprehensionExprAccuInit =
-        &_cel_Interpreter_PreVisitComprehensionExprAccuInit,
-    .PostVisitComprehensionExprAccuInit =
-        &_cel_Interpreter_PostVisitComprehensionExprAccuInit,
-    .PreVisitComprehensionExprLoopCondition =
-        &_cel_Interpreter_PreVisitComprehensionExprLoopCondition,
-    .PreVisitComprehensionExprLoopStep =
-        &_cel_Interpreter_PreVisitComprehensionExprLoopStep,
-    .PreVisitComprehensionExprResult =
-        &_cel_Interpreter_PreVisitComprehensionExprResult,
-    .PostVisitComprehensionExprResult =
-        &_cel_Interpreter_PostVisitComprehensionExprResult,
+    .PreVisitBindExpr = &_cel_Interpreter_PreVisitBindExpr,
+    .PostVisitBindExpr = &_cel_Interpreter_PostVisitBindExpr,
+    .PreVisitBindExprBinding = &_cel_Interpreter_PreVisitBindExprBinding,
+    .PostVisitBindExprBinding = &_cel_Interpreter_PostVisitBindExprBinding,
+    .PreVisitBindExprBound = &_cel_Interpreter_PreVisitBindExprBound,
+    .PostVisitBindExprBound = &_cel_Interpreter_PostVisitBindExprBound,
 };
 
 static size_t _cel_Interpreter_StringViewHasher(const void* cel_nonnull key) {

@@ -15,89 +15,82 @@
 #ifndef THIRD_PARTY_CEL_C_INTERNAL_CTYPE_H_
 #define THIRD_PARTY_CEL_C_INTERNAL_CTYPE_H_
 
-#include <stdbool.h>
-
+#include "absl/strings/ascii.h"
 #include "cel-c/internal/config.h"
 
-CEL_BEGIN_DECLS
-
-CEL_EXTERN const unsigned char _cel_CType_kProperties[256];
-CEL_EXTERN const char _cel_CType_kToLower[256];
-CEL_EXTERN const char _cel_CType_kToUpper[256];
-
-CEL_ATTRIBUTE_NODISCARD
-static CEL_INLINE bool _cel_isalpha(unsigned char c) {
-  return (_cel_CType_kProperties[c] & 0x01u) != 0;
+[[nodiscard]]
+CEL_DEPRECATE_AND_INLINE CEL_INLINE bool _cel_isalpha(unsigned char c) {
+  return absl::ascii_isalpha(c);
 }
 
-CEL_ATTRIBUTE_NODISCARD
-static CEL_INLINE bool _cel_isalnum(unsigned char c) {
-  return (_cel_CType_kProperties[c] & 0x04u) != 0;
+[[nodiscard]]
+CEL_DEPRECATE_AND_INLINE CEL_INLINE bool _cel_isalnum(unsigned char c) {
+  return absl::ascii_isalnum(c);
 }
 
-CEL_ATTRIBUTE_NODISCARD
-static CEL_INLINE bool _cel_isspace(unsigned char c) {
-  return (_cel_CType_kProperties[c] & 0x08u) != 0;
+[[nodiscard]]
+CEL_DEPRECATE_AND_INLINE CEL_INLINE bool _cel_isspace(unsigned char c) {
+  return absl::ascii_isspace(c);
 }
 
-CEL_ATTRIBUTE_NODISCARD
-static CEL_INLINE bool _cel_ispunct(unsigned char c) {
-  return (_cel_CType_kProperties[c] & 0x10u) != 0;
+[[nodiscard]]
+CEL_DEPRECATE_AND_INLINE CEL_INLINE bool _cel_ispunct(unsigned char c) {
+  return absl::ascii_ispunct(c);
 }
 
-CEL_ATTRIBUTE_NODISCARD
-static CEL_INLINE bool _cel_isblank(unsigned char c) {
-  return (_cel_CType_kProperties[c] & 0x20u) != 0;
+[[nodiscard]]
+CEL_DEPRECATE_AND_INLINE CEL_INLINE bool _cel_isblank(unsigned char c) {
+  return absl::ascii_isblank(c);
 }
 
-CEL_ATTRIBUTE_NODISCARD
-static CEL_INLINE bool _cel_iscntrl(unsigned char c) {
-  return (_cel_CType_kProperties[c] & 0x40u) != 0;
+[[nodiscard]]
+CEL_DEPRECATE_AND_INLINE CEL_INLINE bool _cel_iscntrl(unsigned char c) {
+  return absl::ascii_iscntrl(c);
 }
 
-CEL_ATTRIBUTE_NODISCARD
-static CEL_INLINE bool _cel_isxdigit(unsigned char c) {
-  return (_cel_CType_kProperties[c] & 0x80u) != 0;
+[[nodiscard]]
+CEL_DEPRECATE_AND_INLINE CEL_INLINE bool _cel_isxdigit(unsigned char c) {
+  return absl::ascii_isxdigit(c);
 }
 
-CEL_ATTRIBUTE_NODISCARD
-static CEL_INLINE bool _cel_isdigit(unsigned char c) {
-  return c >= '0' && c <= '9';
+[[nodiscard]]
+CEL_DEPRECATE_AND_INLINE CEL_INLINE bool _cel_isdigit(unsigned char c) {
+  return absl::ascii_isdigit(c);
 }
 
-CEL_ATTRIBUTE_NODISCARD
-static CEL_INLINE bool _cel_isprint(unsigned char c) {
-  return c >= 32u && c < 127u;
+[[nodiscard]]
+CEL_DEPRECATE_AND_INLINE CEL_INLINE bool _cel_isprint(unsigned char c) {
+  return absl::ascii_isprint(c);
 }
 
-CEL_ATTRIBUTE_NODISCARD
-static CEL_INLINE bool _cel_isgraph(unsigned char c) {
-  return c > 32u && c < 127u;
+[[nodiscard]]
+CEL_DEPRECATE_AND_INLINE CEL_INLINE bool _cel_isgraph(unsigned char c) {
+  return absl::ascii_isgraph(c);
 }
 
-CEL_ATTRIBUTE_NODISCARD
-static CEL_INLINE bool _cel_islower(unsigned char c) {
-  return c >= 'a' && c <= 'z';
+[[nodiscard]]
+CEL_DEPRECATE_AND_INLINE CEL_INLINE bool _cel_islower(unsigned char c) {
+  return absl::ascii_islower(c);
 }
 
-CEL_ATTRIBUTE_NODISCARD
-static CEL_INLINE bool _cel_isupper(unsigned char c) {
-  return c >= 'A' && c <= 'Z';
+[[nodiscard]]
+CEL_DEPRECATE_AND_INLINE CEL_INLINE bool _cel_isupper(unsigned char c) {
+  return absl::ascii_isupper(c);
 }
 
-CEL_ATTRIBUTE_NODISCARD
-static CEL_INLINE bool _cel_isascii(unsigned char c) { return c < 128u; }
-
-CEL_ATTRIBUTE_NODISCARD
-static CEL_INLINE char _cel_tolower(unsigned char c) {
-  return _cel_CType_kToLower[c];
+[[nodiscard]]
+CEL_DEPRECATE_AND_INLINE CEL_INLINE bool _cel_isascii(unsigned char c) {
+  return absl::ascii_isascii(c);
 }
 
-CEL_ATTRIBUTE_NODISCARD
-static CEL_INLINE char _cel_toupper(unsigned char c) {
-  return _cel_CType_kToUpper[c];
+[[nodiscard]]
+CEL_DEPRECATE_AND_INLINE CEL_INLINE char _cel_tolower(unsigned char c) {
+  return absl::ascii_tolower(c);
 }
 
-CEL_END_DECLS
+[[nodiscard]]
+CEL_DEPRECATE_AND_INLINE CEL_INLINE char _cel_toupper(unsigned char c) {
+  return absl::ascii_toupper(c);
+}
 
 #endif  // THIRD_PARTY_CEL_C_INTERNAL_CTYPE_H_

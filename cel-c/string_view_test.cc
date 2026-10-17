@@ -17,7 +17,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "cel-c/cstring_view.h"
-#include "cel-c/hash.h"
 
 namespace {
 
@@ -133,14 +132,6 @@ TEST(StringView, Count) {
 
   EXPECT_EQ(cel_StringView_Count(haystack, cel_StringView_FromString("l")), 3);
   EXPECT_EQ(cel_StringView_Count(haystack, cel_StringView_FromString("ll")), 1);
-}
-
-TEST(StringView, Hash) {
-  EXPECT_EQ(cel_HashState_Finalize(
-                cel_StringView_Hash(cel_StringView_FromString("Hello World!"),
-                                    cel_HashState_Initialize())),
-            cel_HashState_Finalize(cel_HashState_Combine(
-                cel_HashState_Initialize(), "Hello World!")));
 }
 
 TEST(StringView, Equals) {

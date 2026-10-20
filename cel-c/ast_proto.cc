@@ -84,6 +84,9 @@ static bool _cel_AstFromProto_IsBind(
       !cel_expr_Expr_has_list_expr(iter_range)) {
     return false;
   }
+  if (!cel_expr_Expr_Comprehension_has_accu_init(expr)) {
+    return false;
+  }
   const cel_expr_Expr* loop_condition =
       cel_expr_Expr_Comprehension_loop_condition(expr);
   if (loop_condition == cel_nullptr ||
@@ -104,6 +107,9 @@ static bool _cel_AstFromProto_IsBind(
       !cel_StringView_Equals(cel_expr_Expr_Ident_name(
                                  cel_expr_Expr_ident_expr(loop_step)),
                              accu_var)) {
+    return false;
+  }
+  if (!cel_expr_Expr_Comprehension_has_result(expr)) {
     return false;
   }
   return true;

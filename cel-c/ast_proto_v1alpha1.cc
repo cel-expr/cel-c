@@ -86,6 +86,9 @@ static bool _cel_AstFromProtoV1Alpha1_IsBind(
       !google_api_expr_v1alpha1_Expr_has_list_expr(iter_range)) {
     return false;
   }
+  if (!google_api_expr_v1alpha1_Expr_Comprehension_has_accu_init(expr)) {
+    return false;
+  }
   const google_api_expr_v1alpha1_Expr* loop_condition =
       google_api_expr_v1alpha1_Expr_Comprehension_loop_condition(expr);
   if (loop_condition == cel_nullptr ||
@@ -108,6 +111,9 @@ static bool _cel_AstFromProtoV1Alpha1_IsBind(
           google_api_expr_v1alpha1_Expr_Ident_name(
               google_api_expr_v1alpha1_Expr_ident_expr(loop_step)),
           accu_var)) {
+    return false;
+  }
+  if (!google_api_expr_v1alpha1_Expr_Comprehension_has_result(expr)) {
     return false;
   }
   return true;

@@ -798,14 +798,6 @@ cc_library(
 )
 
 cc_library(
-    name = "uchar",
-    hdrs = ["uchar.h"],
-    deps = [
-        ":config",
-    ],
-)
-
-cc_library(
     name = "unaligned",
     hdrs = ["unaligned.h"],
     deps = [
@@ -828,7 +820,6 @@ cc_library(
     hdrs = ["unicode.h"],
     deps = [
         ":config",
-        ":uchar",
     ],
 )
 
@@ -847,7 +838,6 @@ cc_library(
     hdrs = ["utf8.h"],
     deps = [
         ":config",
-        ":uchar",
         ":unicode",
         "//cel-c:assert",
         "@protobuf//upb/base",

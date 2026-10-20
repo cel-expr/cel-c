@@ -460,7 +460,6 @@ cc_library(
     deps = [
         ":assert",
         ":config",
-        ":hash",
     ],
 )
 
@@ -469,7 +468,6 @@ cc_test(
     srcs = ["cstring_view_test.cc"],
     deps = [
         ":cstring_view",
-        ":hash",
         ":string_view",
         "@googletest//:gtest_main",
     ],
@@ -947,36 +945,6 @@ cc_library(
 )
 
 cc_library(
-    name = "hash",
-    srcs = [
-        "hash.cc",
-    ],
-    hdrs = [
-        "hash.h",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":assert",
-        ":config",
-        "//cel-c/internal:bit",
-        "//cel-c/internal:config",
-        "//cel-c/internal:unaligned",
-        "@abseil-cpp//absl/numeric:int128",
-        "@protobuf//upb/base",
-    ],
-)
-
-cc_test(
-    name = "hash_test",
-    srcs = ["hash_test.cc"],
-    deps = [
-        ":hash",
-        "@googletest//:gtest_main",
-        "@protobuf//upb/base",
-    ],
-)
-
-cc_library(
     name = "operators",
     srcs = [
         "operators.cc",
@@ -1364,7 +1332,6 @@ cc_library(
         ":assert",
         ":config",
         ":cstring_view",
-        ":hash",
         "//cel-c/internal:memory",
         "@protobuf//upb/base",
     ],
@@ -1375,7 +1342,6 @@ cc_test(
     srcs = ["string_view_test.cc"],
     deps = [
         ":cstring_view",
-        ":hash",
         ":string_view",
         "@googletest//:gtest_main",
     ],

@@ -24,7 +24,6 @@
 #include "cel-c/assert.h"
 #include "cel-c/config.h"
 #include "cel-c/cstring_view.h"
-#include "cel-c/hash.h"
 #include "upb/base/string_view.h"
 
 CEL_BEGIN_DECLS
@@ -200,13 +199,6 @@ cel_StringView_Tokenize(cel_StringView subject, cel_StringView delim) {
   tokenizer.delim = delim;
   tokenizer.done = false;
   return tokenizer;
-}
-
-CEL_ATTRIBUTE_NODISCARD
-static CEL_INLINE cel_HashState cel_StringView_Hash(cel_StringView str,
-                                                    cel_HashState state) {
-  return cel_HashState_CombineN(state, cel_StringView_Data(str),
-                                cel_StringView_Size(str));
 }
 
 CEL_ATTRIBUTE_NODISCARD

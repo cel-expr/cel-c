@@ -175,9 +175,9 @@ cc_test(
     deps = [
         ":arena_flat_hash_map",
         ":config",
+        ":hash",
         "//cel-c:alloc",
         "//cel-c:arena",
-        "//cel-c:hash",
         "@abseil-cpp//absl/log:die_if_null",
         "@googletest//:gtest_main",
     ],
@@ -461,8 +461,8 @@ cc_test(
     deps = [
         ":config",
         ":flat_hash_map",
+        ":hash",
         "//cel-c:alloc",
-        "//cel-c:hash",
         "@googletest//:gtest_main",
     ],
 )
@@ -483,8 +483,8 @@ cc_test(
     deps = [
         ":config",
         ":flat_hash_set",
+        ":hash",
         "//cel-c:alloc",
-        "//cel-c:hash",
         "@googletest//:gtest_main",
     ],
 )
@@ -554,6 +554,39 @@ cc_test(
     deps = [
         ":generic_string",
         "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "hash",
+    srcs = [
+        "hash.cc",
+    ],
+    hdrs = [
+        "hash.h",
+    ],
+    deps = [
+        ":bit",
+        ":config",
+        ":unaligned",
+        "//cel-c:assert",
+        "//cel-c:config",
+        "//cel-c:cstring_view",
+        "//cel-c:string_view",
+        "@abseil-cpp//absl/numeric:int128",
+        "@protobuf//upb/base",
+    ],
+)
+
+cc_test(
+    name = "hash_test",
+    srcs = ["hash_test.cc"],
+    deps = [
+        ":hash",
+        "//cel-c:cstring_view",
+        "//cel-c:string_view",
+        "@googletest//:gtest_main",
+        "@protobuf//upb/base",
     ],
 )
 
@@ -983,6 +1016,7 @@ cc_library(
         ":bit",
         ":ckdint",
         ":config",
+        ":hash",
         ":message_equality",
         ":sort",
         "//cel-c:alloc",
@@ -991,7 +1025,6 @@ cc_library(
         "//cel-c:duration",
         "//cel-c:error",
         "//cel-c:error_code",
-        "//cel-c:hash",
         "//cel-c:status",
         "//cel-c:status_code",
         "//cel-c:string_view",
@@ -1024,12 +1057,12 @@ cc_test(
     ],
     deps = [
         ":config",
+        ":hash",
         ":value",
         ":value_testing",
         "//cel-c:duration",
         "//cel-c:error",
         "//cel-c:error_code",
-        "//cel-c:hash",
         "//cel-c:status",
         "//cel-c:string_view",
         "//cel-c:string_view_absl",

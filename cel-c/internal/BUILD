@@ -389,10 +389,10 @@ cc_test(
 
 cc_library(
     name = "ctype",
-    srcs = ["ctype.cc"],
     hdrs = ["ctype.h"],
     deps = [
         ":config",
+        "@abseil-cpp//absl/strings",
     ],
 )
 

@@ -960,8 +960,8 @@ cc_library(
         ":config",
         "//cel-c/internal:bit",
         "//cel-c/internal:config",
-        "//cel-c/internal:uint128",
         "//cel-c/internal:unaligned",
+        "@abseil-cpp//absl/numeric:int128",
         "@protobuf//upb/base",
     ],
 )

@@ -890,25 +890,6 @@ cc_library(
 )
 
 cc_library(
-    name = "uint128",
-    hdrs = ["uint128.h"],
-    deps = [
-        ":config",
-        ":endian",
-        "//cel-c:assert",
-    ],
-)
-
-cc_test(
-    name = "uint128_test",
-    srcs = ["uint128_test.cc"],
-    deps = [
-        ":uint128",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
     name = "unaligned",
     hdrs = ["unaligned.h"],
     deps = [

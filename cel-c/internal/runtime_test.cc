@@ -2450,6 +2450,53 @@ TEST_F(RuntimeTest, CallSize) {
   value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 5);
+
+  prog = Parse(R"cel(size(1))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+}
+
+TEST_F(RuntimeTest, CallSizeList) {
+  _cel_ProgramPtr prog = Parse(R"cel([1, 2, 3].size())cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 3);
+
+  prog = Parse(R"cel(size([1, 2, 3]))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 3);
+
+  prog = Parse(R"cel(size([]))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
+}
+
+TEST_F(RuntimeTest, CallSizeMap) {
+  _cel_ProgramPtr prog = Parse(R"cel({1: "a", 2: "b"}.size())cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 2);
+
+  prog = Parse(R"cel(size({1: "a", 2: "b"}))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 2);
+
+  prog = Parse(R"cel(size({}))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
 }
 
 TEST_F(RuntimeTest, CallContainsString) {

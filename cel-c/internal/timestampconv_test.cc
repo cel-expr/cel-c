@@ -143,6 +143,76 @@ TEST_F(CelTimestampConvTest, FromRFC3339Valid) {
   EXPECT_EQ(nanos, 0);
 }
 
+TEST_F(CelTimestampConvTest, ToCivilTime) {
+  // 2025-12-01T10:20:30.456Z
+  cel_Timestamp ts = cel_Timestamp_FromUnix(1764584430, 456000000);
+  _cel_CivilTime civil_time;
+
+  ASSERT_TRUE(
+      _cel_Timestamp_ToCivilTime(ts, cel_StringView_From(""), &civil_time));
+  EXPECT_EQ(civil_time.year, 2025);
+  EXPECT_EQ(civil_time.month, 12);
+  EXPECT_EQ(civil_time.day, 1);
+  EXPECT_EQ(civil_time.hour, 10);
+  EXPECT_EQ(civil_time.minute, 20);
+  EXPECT_EQ(civil_time.second, 30);
+  EXPECT_EQ(civil_time.millisecond, 456);
+
+  ASSERT_TRUE(_cel_Timestamp_ToCivilTime(
+      ts, cel_StringView_From("America/Los_Angeles"), &civil_time));
+  EXPECT_EQ(civil_time.year, 2025);
+  EXPECT_EQ(civil_time.month, 12);
+  EXPECT_EQ(civil_time.day, 1);
+  EXPECT_EQ(civil_time.hour, 2);
+  EXPECT_EQ(civil_time.minute, 20);
+  EXPECT_EQ(civil_time.second, 30);
+  EXPECT_EQ(civil_time.millisecond, 456);
+
+  ASSERT_TRUE(_cel_Timestamp_ToCivilTime(ts, cel_StringView_From("+05:45"),
+                                         &civil_time));
+  EXPECT_EQ(civil_time.year, 2025);
+  EXPECT_EQ(civil_time.month, 12);
+  EXPECT_EQ(civil_time.day, 1);
+  EXPECT_EQ(civil_time.hour, 16);
+  EXPECT_EQ(civil_time.minute, 5);
+  EXPECT_EQ(civil_time.second, 30);
+  EXPECT_EQ(civil_time.millisecond, 456);
+
+  // A time zone that crosses the date boundary.
+  ASSERT_TRUE(_cel_Timestamp_ToCivilTime(ts, cel_StringView_From("-11:00"),
+                                         &civil_time));
+  EXPECT_EQ(civil_time.year, 2025);
+  EXPECT_EQ(civil_time.month, 11);
+  EXPECT_EQ(civil_time.day, 30);
+  EXPECT_EQ(civil_time.hour, 23);
+  EXPECT_EQ(civil_time.minute, 20);
+  EXPECT_EQ(civil_time.second, 30);
+  EXPECT_EQ(civil_time.millisecond, 456);
+
+  // 1969-12-31T23:59:58.5Z
+  ts = cel_Timestamp_FromUnix(-2, 500000000);
+  ASSERT_TRUE(
+      _cel_Timestamp_ToCivilTime(ts, cel_StringView_From(""), &civil_time));
+  EXPECT_EQ(civil_time.year, 1969);
+  EXPECT_EQ(civil_time.month, 12);
+  EXPECT_EQ(civil_time.day, 31);
+  EXPECT_EQ(civil_time.hour, 23);
+  EXPECT_EQ(civil_time.minute, 59);
+  EXPECT_EQ(civil_time.second, 58);
+  EXPECT_EQ(civil_time.millisecond, 500);
+}
+
+TEST_F(CelTimestampConvTest, ToCivilTimeInvalidTimeZone) {
+  cel_Timestamp ts = cel_Timestamp_FromUnix(0, 0);
+  _cel_CivilTime civil_time;
+  EXPECT_FALSE(_cel_Timestamp_ToCivilTime(
+      ts, cel_StringView_From("Invalid/Zone"), &civil_time));
+  EXPECT_FALSE(
+      _cel_Timestamp_ToCivilTime(ts, cel_StringView_From("foo"), &civil_time));
+  EXPECT_FALSE(_cel_Timestamp_ToCivilTime(ts, cel_StringView_From("+aa:bb"),
+                                          &civil_time));
+}
+
 TEST_F(CelTimestampConvTest, FromRFC3339ValidWithOffset) {
   cel_Timestamp ts;
   int64_t seconds;

@@ -17,6 +17,8 @@
 #include <cstdint>
 #include <string>
 
+#include "absl/strings/match.h"
+#include "absl/strings/str_replace.h"
 #include "absl/strings/string_view.h"
 #include "absl/time/time.h"
 #include "cel-c/arena.h"
@@ -66,6 +68,46 @@ bool _cel_Timestamp_FromRFC3339(cel_Timestamp* cel_nonnull out,
     return false;
   }
   *out = cel_Timestamp_FromUnix(seconds, nanos);
+  return true;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+bool _cel_Timestamp_ToCivilTime(cel_Timestamp ts, cel_StringView tz,
+                                _cel_CivilTime* cel_nonnull out) {
+  int64_t sec;
+  int32_t nsec;
+  cel_Timestamp_ToUnix(ts, &sec, &nsec);
+  absl::Time time = absl::FromUnixSeconds(sec) + absl::Nanoseconds(nsec);
+
+  // Defaults to UTC, and is reset to UTC if `absl::LoadTimeZone` fails.
+  absl::TimeZone time_zone;
+  absl::string_view tz_str =
+      absl::string_view(cel_StringView_Data(tz), cel_StringView_Size(tz));
+  if (!tz_str.empty() && !absl::LoadTimeZone(tz_str, &time_zone)) {
+    // Not an IANA time zone, check for a fixed offset of the form [+-]HH:MM by
+    // converting it into a duration of the form [+-]HHhMMm.
+    if (!absl::StrContains(tz_str, ':')) {
+      return false;
+    }
+    std::string offset_str = absl::StrReplaceAll(tz_str, {{":", "h"}});
+    offset_str.push_back('m');
+    absl::Duration offset;
+    if (!absl::ParseDuration(offset_str, &offset)) {
+      return false;
+    }
+    time += offset;
+  }
+
+  absl::TimeZone::CivilInfo info = time_zone.At(time);
+  out->year = static_cast<int64_t>(info.cs.year());
+  out->month = info.cs.month();
+  out->day = info.cs.day();
+  out->hour = info.cs.hour();
+  out->minute = info.cs.minute();
+  out->second = info.cs.second();
+  out->millisecond =
+      static_cast<int32_t>(absl::ToInt64Milliseconds(info.subsecond));
   return true;
 }
 

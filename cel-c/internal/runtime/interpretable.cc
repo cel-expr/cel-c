@@ -3112,6 +3112,8 @@ static inline void _cel_Interpretable_ComputedGoto(
       &&INSTR_LAZY_LEAVE,
       &&INSTR_EXIT,
   };
+  CEL_STATIC_ASSERT(sizeof(dispatch_table) / sizeof(dispatch_table[0]) ==
+                    (size_t)_cel_InstrKind_kExit + 1);
 #define DISPATCH_INSTR() goto* dispatch_table[instr->kind]
 #define NEXT_INSTR() ++instr
 #define DISPATCH_NEXT_INSTR() \

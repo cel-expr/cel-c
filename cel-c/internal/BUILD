@@ -329,25 +329,6 @@ cc_test(
 )
 
 cc_library(
-    name = "endian",
-    hdrs = ["endian.h"],
-    deps = [
-        ":config",
-        ":unaligned",
-        "//cel-c:assert",
-    ],
-)
-
-cc_test(
-    name = "endian_test",
-    srcs = ["endian_test.cc"],
-    deps = [
-        ":endian",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
     name = "flat_hash_map",
     hdrs = ["flat_hash_map.h"],
     deps = [

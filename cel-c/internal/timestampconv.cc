@@ -60,9 +60,16 @@ bool _cel_Timestamp_FromRFC3339(cel_Timestamp* cel_nonnull out,
     return false;
   }
 
-  absl::Duration duration = time - absl::UnixEpoch();
-  int64_t seconds = absl::IDivDuration(duration, absl::Seconds(1), &duration);
-  int32_t nanos = static_cast<int32_t>(absl::ToInt64Nanoseconds(duration));
+  // `absl::ParseTime` accepts "infinite-past" and "infinite-future" regardless
+  // of the format, neither of which are valid timestamps.
+  if (time == absl::InfinitePast() || time == absl::InfiniteFuture()) {
+    return false;
+  }
+  // `absl::ToUnixSeconds` rounds towards negative infinity, so the remainder is
+  // always in [0s, 1s), even for timestamps before the Unix epoch.
+  int64_t seconds = absl::ToUnixSeconds(time);
+  int32_t nanos = static_cast<int32_t>(
+      absl::ToInt64Nanoseconds(time - absl::FromUnixSeconds(seconds)));
 
   if (!cel_Timestamp_Valid(seconds, nanos)) {
     return false;

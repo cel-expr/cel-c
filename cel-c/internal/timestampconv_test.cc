@@ -141,6 +141,26 @@ TEST_F(CelTimestampConvTest, FromRFC3339Valid) {
   cel_Timestamp_ToUnix(ts, &seconds, &nanos);
   EXPECT_EQ(seconds, -1);
   EXPECT_EQ(nanos, 0);
+
+  // Pre-epoch timestamps with fractional seconds keep nanos non-negative.
+  EXPECT_TRUE(_cel_Timestamp_FromRFC3339(
+      &ts, cel_StringView_From("1969-12-31T23:59:58.5Z")));
+  cel_Timestamp_ToUnix(ts, &seconds, &nanos);
+  EXPECT_EQ(seconds, -2);
+  EXPECT_EQ(nanos, 500000000);
+
+  EXPECT_TRUE(_cel_Timestamp_FromRFC3339(
+      &ts, cel_StringView_From("0001-01-01T00:00:00.000000001Z")));
+  cel_Timestamp_ToUnix(ts, &seconds, &nanos);
+  EXPECT_EQ(seconds, cel_Timestamp_kMinSeconds);
+  EXPECT_EQ(nanos, 1);
+
+  // Sub-nanosecond precision is floored.
+  EXPECT_TRUE(_cel_Timestamp_FromRFC3339(
+      &ts, cel_StringView_From("1969-12-31T23:59:59.9999999999Z")));
+  cel_Timestamp_ToUnix(ts, &seconds, &nanos);
+  EXPECT_EQ(seconds, -1);
+  EXPECT_EQ(nanos, 999999999);
 }
 
 TEST_F(CelTimestampConvTest, ToCivilTime) {
@@ -251,6 +271,10 @@ TEST_F(CelTimestampConvTest, FromRFC3339Invalid) {
   cel_Timestamp ts;
   EXPECT_FALSE(_cel_Timestamp_FromRFC3339(&ts, cel_StringView_From("")));
   EXPECT_FALSE(_cel_Timestamp_FromRFC3339(&ts, cel_StringView_From("invalid")));
+  EXPECT_FALSE(
+      _cel_Timestamp_FromRFC3339(&ts, cel_StringView_From("infinite-past")));
+  EXPECT_FALSE(
+      _cel_Timestamp_FromRFC3339(&ts, cel_StringView_From("infinite-future")));
   EXPECT_FALSE(
       _cel_Timestamp_FromRFC3339(&ts, cel_StringView_From("2023-03-15")));
   EXPECT_FALSE(_cel_Timestamp_FromRFC3339(

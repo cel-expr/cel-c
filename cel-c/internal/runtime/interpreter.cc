@@ -1563,6 +1563,27 @@ static void _cel_Interpreter_PreVisitCallArgExpr(
   }
 }
 
+// Returns the instruction kind for the duration/timestamp accessor `fn_name`,
+// or `_cel_InstrKind_kUnreachable` if `fn_name` is not an accessor. Accessors
+// accept (google.protobuf.Duration) or (google.protobuf.Timestamp).
+CEL_ATTRIBUTE_NODISCARD
+static _cel_InstrKind _cel_Interpreter_TimeAccessorKind(
+    cel_StringView fn_name) {
+  if (cel_StringView_Equals(fn_name, cel_StringView_From("getHours"))) {
+    return _cel_InstrKind_kCallGetHours;
+  }
+  if (cel_StringView_Equals(fn_name, cel_StringView_From("getMinutes"))) {
+    return _cel_InstrKind_kCallGetMinutes;
+  }
+  if (cel_StringView_Equals(fn_name, cel_StringView_From("getSeconds"))) {
+    return _cel_InstrKind_kCallGetSeconds;
+  }
+  if (cel_StringView_Equals(fn_name, cel_StringView_From("getMilliseconds"))) {
+    return _cel_InstrKind_kCallGetMilliseconds;
+  }
+  return _cel_InstrKind_kUnreachable;
+}
+
 static void _cel_Interpreter_PostVisitCallExpr(
     cel_AstVisitor* cel_nonnull visitor, const cel_CallExpr* cel_nonnull expr) {
   _cel_Interpreter* interp = _cel_Interpreter_FromAstVisitor(visitor);
@@ -1620,6 +1641,14 @@ static void _cel_Interpreter_PostVisitCallExpr(
       found = true;
     } else if (cel_StringView_Equals(fn_name, cel_StringView_From("matches"))) {
       instr->kind = _cel_InstrKind_kCallRegexExpMatch;
+      found = true;
+    }
+  }
+
+  if (!found && instr->data.call.args == 1) {
+    _cel_InstrKind kind = _cel_Interpreter_TimeAccessorKind(fn_name);
+    if (kind != _cel_InstrKind_kUnreachable) {
+      instr->kind = kind;
       found = true;
     }
   }

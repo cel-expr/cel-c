@@ -805,6 +805,414 @@ TEST_F(RuntimeTest, CallDuration) {
   ASSERT_TRUE(cel_Value_IsError(&value));
 }
 
+TEST_F(RuntimeTest, CallGetHoursDuration) {
+  _cel_ProgramPtr prog = Parse(R"cel(duration("10h20m30.456s").getHours())cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 10);
+
+  prog = Parse(R"cel(getHours(duration("10h20m30.456s")))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 10);
+
+  prog = Parse(R"cel(duration("59m59.999s").getHours())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
+
+  prog = Parse(R"cel(duration("0s").getHours())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
+
+  // Negative durations truncate towards zero.
+  prog = Parse(R"cel(duration("-10h20m30.456s").getHours())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), -10);
+
+  prog = Parse(R"cel(duration("-59m59.999s").getHours())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
+
+  // Duration bounds.
+  prog = Parse(R"cel(duration("315576000000s").getHours())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 87660000);
+
+  prog = Parse(R"cel(duration("-315576000000s").getHours())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), -87660000);
+}
+
+TEST_F(RuntimeTest, CallGetMinutesDuration) {
+  _cel_ProgramPtr prog =
+      Parse(R"cel(duration("10h20m30.456s").getMinutes())cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 620);
+
+  prog = Parse(R"cel(duration("59.999s").getMinutes())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
+
+  // Negative durations truncate towards zero.
+  prog = Parse(R"cel(duration("-10h20m30.456s").getMinutes())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), -620);
+
+  // Duration bounds.
+  prog = Parse(R"cel(duration("315576000000s").getMinutes())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 5259600000);
+
+  prog = Parse(R"cel(duration("-315576000000s").getMinutes())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), -5259600000);
+}
+
+TEST_F(RuntimeTest, CallGetSecondsDuration) {
+  _cel_ProgramPtr prog =
+      Parse(R"cel(duration("10h20m30.456s").getSeconds())cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 37230);
+
+  prog = Parse(R"cel(duration("0.999s").getSeconds())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
+
+  // Negative durations truncate towards zero.
+  prog = Parse(R"cel(duration("-10h20m30.456s").getSeconds())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), -37230);
+
+  // Duration bounds.
+  prog = Parse(R"cel(duration("315576000000s").getSeconds())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 315576000000);
+
+  prog = Parse(R"cel(duration("-315576000000s").getSeconds())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), -315576000000);
+}
+
+TEST_F(RuntimeTest, CallGetMillisecondsDuration) {
+  _cel_ProgramPtr prog =
+      Parse(R"cel(duration("10h20m30.456s").getMilliseconds())cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 456);
+
+  prog = Parse(R"cel(duration("1.5s").getMilliseconds())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 500);
+
+  prog = Parse(R"cel(duration("0.0005s").getMilliseconds())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
+
+  prog = Parse(R"cel(duration("0s").getMilliseconds())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
+
+  // Negative durations truncate towards zero.
+  prog = Parse(R"cel(duration("-10h20m30.456s").getMilliseconds())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), -456);
+
+  prog = Parse(R"cel(duration("-1.5s").getMilliseconds())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), -500);
+
+  // Duration bounds.
+  prog = Parse(R"cel(duration("-315576000000s").getMilliseconds())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
+}
+
+TEST_F(RuntimeTest, CallGetHoursTimestamp) {
+  _cel_ProgramPtr prog =
+      Parse(R"cel(timestamp("2025-12-01T10:20:30.456Z").getHours())cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 10);
+
+  prog = Parse(R"cel(getHours(timestamp("2025-12-01T10:20:30.456Z")))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 10);
+
+  prog =
+      Parse(R"cel(timestamp("2025-12-01T23:59:59.999999999Z").getHours())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 23);
+
+  prog = Parse(R"cel(timestamp("1970-01-01T00:00:00Z").getHours())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
+
+  // Non-UTC offsets are normalized to UTC.
+  prog = Parse(R"cel(timestamp("2025-12-01T10:20:30+05:30").getHours())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 4);
+
+  // Timestamps before the Unix epoch.
+  prog = Parse(R"cel(timestamp("1969-12-31T22:58:57Z").getHours())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 22);
+
+  prog = Parse(R"cel(timestamp("0001-01-01T01:02:03Z").getHours())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 1);
+
+  prog =
+      Parse(R"cel(timestamp("9999-12-31T23:59:59.999999999Z").getHours())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 23);
+}
+
+TEST_F(RuntimeTest, CallGetMinutesTimestamp) {
+  _cel_ProgramPtr prog =
+      Parse(R"cel(timestamp("2025-12-01T10:20:30.456Z").getMinutes())cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 20);
+
+  prog = Parse(
+      R"cel(timestamp("2025-12-01T23:59:59.999999999Z").getMinutes())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 59);
+
+  // Non-UTC offsets are normalized to UTC.
+  prog = Parse(R"cel(timestamp("2025-12-01T10:20:30+05:30").getMinutes())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 50);
+
+  // Timestamps before the Unix epoch.
+  prog = Parse(R"cel(timestamp("1969-12-31T22:58:57Z").getMinutes())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 58);
+
+  prog = Parse(R"cel(timestamp("0001-01-01T01:02:03Z").getMinutes())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 2);
+}
+
+TEST_F(RuntimeTest, CallGetSecondsTimestamp) {
+  _cel_ProgramPtr prog =
+      Parse(R"cel(timestamp("2025-12-01T10:20:30.456Z").getSeconds())cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 30);
+
+  prog = Parse(
+      R"cel(timestamp("2025-12-01T23:59:59.999999999Z").getSeconds())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 59);
+
+  // Timestamps before the Unix epoch.
+  prog = Parse(R"cel(timestamp("1969-12-31T22:58:57Z").getSeconds())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 57);
+
+  prog = Parse(R"cel(timestamp("0001-01-01T01:02:03Z").getSeconds())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 3);
+}
+
+TEST_F(RuntimeTest, CallGetMillisecondsTimestamp) {
+  _cel_ProgramPtr prog =
+      Parse(R"cel(timestamp("2025-12-01T10:20:30.456Z").getMilliseconds())cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 456);
+
+  prog = Parse(
+      R"cel(timestamp("2025-12-01T23:59:59.999999999Z").getMilliseconds())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 999);
+
+  prog = Parse(R"cel(timestamp("1970-01-01T00:00:00Z").getMilliseconds())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
+
+  // Timestamps before the Unix epoch.
+  prog = Parse(R"cel(timestamp("1969-12-31T22:58:57Z").getMilliseconds())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
+
+  prog = Parse(R"cel(timestamp("0001-01-01T01:02:03Z").getMilliseconds())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
+}
+
+TEST_F(RuntimeTest, CallTimeAccessorsNoSuchOverload) {
+  _cel_ProgramPtr prog = Parse(R"cel(getHours(1))cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: no such overload"));
+
+  prog = Parse(R"cel(getMinutes("foo"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: no such overload"));
+
+  prog = Parse(R"cel(getSeconds(1.0))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: no such overload"));
+
+  prog = Parse(R"cel(getMilliseconds(true))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: no such overload"));
+
+  prog = Parse(R"cel(1.getHours())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: no such overload"));
+
+  prog = Parse(R"cel("foo".getMinutes())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: no such overload"));
+}
+
+TEST_F(RuntimeTest, CallTimeAccessorsPropagatesError) {
+  _cel_ProgramPtr prog = Parse(R"cel(getHours(1 / 0))cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: divide by zero"));
+
+  prog = Parse(R"cel((1 / 0).getMinutes())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: divide by zero"));
+
+  prog = Parse(R"cel((1 / 0).getSeconds())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: divide by zero"));
+
+  prog = Parse(R"cel((1 / 0).getMilliseconds())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: divide by zero"));
+}
+
 // TODO: Add addition tests for duration/timestamp
 
 TEST_F(RuntimeTest, IntSub) {

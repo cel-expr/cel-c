@@ -2765,6 +2765,93 @@ static inline void _cel_Interpretable_CallSize(
   }
 }
 
+typedef enum {
+  _cel_TimeAccessor_kHours,
+  _cel_TimeAccessor_kMinutes,
+  _cel_TimeAccessor_kSeconds,
+  _cel_TimeAccessor_kMilliseconds,
+} _cel_TimeAccessor;
+
+// Returns the requested component of a duration, matching cel-cpp. Hours,
+// minutes and seconds are the total number of whole units in the duration,
+// truncated towards zero. Milliseconds is the sub-second component, in the
+// range [-999, 999].
+CEL_ATTRIBUTE_NODISCARD
+static inline int64_t _cel_Interpretable_DurationComponent(
+    cel_Duration d, _cel_TimeAccessor accessor) {
+  int64_t sec;
+  int32_t nsec;
+  cel_Duration_ToUnix(d, &sec, &nsec);
+  // The seconds and nanoseconds of a duration always share the same sign, so
+  // truncating the seconds is equivalent to truncating the total duration.
+  switch (accessor) {
+    case _cel_TimeAccessor_kHours:
+      return sec / INT64_C(3600);
+    case _cel_TimeAccessor_kMinutes:
+      return sec / INT64_C(60);
+    case _cel_TimeAccessor_kSeconds:
+      return sec;
+    case _cel_TimeAccessor_kMilliseconds:
+      return nsec / INT32_C(1000000);
+  }
+  CEL_UNREACHABLE();
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static inline int64_t _cel_Interpretable_CivilTimeComponent(
+    const _cel_CivilTime* cel_nonnull civil_time, _cel_TimeAccessor accessor) {
+  switch (accessor) {
+    case _cel_TimeAccessor_kHours:
+      return civil_time->hour;
+    case _cel_TimeAccessor_kMinutes:
+      return civil_time->minute;
+    case _cel_TimeAccessor_kSeconds:
+      return civil_time->second;
+    case _cel_TimeAccessor_kMilliseconds:
+      return civil_time->millisecond;
+  }
+  CEL_UNREACHABLE();
+}
+
+// Implements `getHours`, `getMinutes`, `getSeconds` and `getMilliseconds`:
+//
+//   (google.protobuf.Duration) -> int
+//   (google.protobuf.Timestamp) -> int
+//
+// Timestamps are broken down in UTC.
+static inline void _cel_Interpretable_CallTimeAccessor(
+    _cel_Interpretable* cel_nonnull interp,
+    const _cel_InstrData* cel_nonnull instr, _cel_TimeAccessor accessor) {
+  CEL_ASSERT_NOT_NULL(interp);
+  CEL_ASSERT_NOT_NULL(instr);
+  CEL_ASSERT(instr->call.args == 1);
+
+  cel_Value* const top = _cel_Interpretable_Top(interp, instr);
+  switch (cel_Value_Kind(top)) {
+    case cel_ValueKind_kError:
+      break;
+    case cel_ValueKind_kDuration:
+      cel_Value_SetInt(top, _cel_Interpretable_DurationComponent(
+                                cel_Value_GetDuration(top), accessor));
+      break;
+    case cel_ValueKind_kTimestamp: {
+      _cel_CivilTime civil_time;
+      if (CEL_UNLIKELY(!_cel_Timestamp_ToCivilTime(cel_Value_GetTimestamp(top),
+                                                   cel_StringView_From(""),
+                                                   &civil_time))) {
+        // An empty time zone means UTC, which is always valid.
+        CEL_UNREACHABLE();
+      }
+      cel_Value_SetInt(
+          top, _cel_Interpretable_CivilTimeComponent(&civil_time, accessor));
+    } break;
+    default:
+      cel_Value_SetError(top,
+                         _cel_Interpretable_NewNoSuchOverloadError(interp));
+      break;
+  }
+}
+
 static inline void _cel_Interpretable_Index(
     _cel_Interpretable* cel_nonnull interp,
     const _cel_InstrData* cel_nonnull instr) {
@@ -3113,6 +3200,10 @@ static inline void _cel_Interpretable_ComputedGoto(
       &&INSTR_CALL_TIMESTAMP,
       &&INSTR_CALL_DURATION,
       &&INSTR_CALL_SIZE,
+      &&INSTR_CALL_GET_HOURS,
+      &&INSTR_CALL_GET_MINUTES,
+      &&INSTR_CALL_GET_SECONDS,
+      &&INSTR_CALL_GET_MILLISECONDS,
       &&INSTR_CALL_CONTAINS_STRING,
       &&INSTR_CALL_STARTS_WITH_STRING,
       &&INSTR_CALL_ENDS_WITH_STRING,
@@ -3282,6 +3373,22 @@ INSTR_CALL_DURATION:
   DISPATCH_NEXT_INSTR();
 INSTR_CALL_SIZE:
   _cel_Interpretable_CallSize(interp, &instr->data);
+  DISPATCH_NEXT_INSTR();
+INSTR_CALL_GET_HOURS:
+  _cel_Interpretable_CallTimeAccessor(interp, &instr->data,
+                                      _cel_TimeAccessor_kHours);
+  DISPATCH_NEXT_INSTR();
+INSTR_CALL_GET_MINUTES:
+  _cel_Interpretable_CallTimeAccessor(interp, &instr->data,
+                                      _cel_TimeAccessor_kMinutes);
+  DISPATCH_NEXT_INSTR();
+INSTR_CALL_GET_SECONDS:
+  _cel_Interpretable_CallTimeAccessor(interp, &instr->data,
+                                      _cel_TimeAccessor_kSeconds);
+  DISPATCH_NEXT_INSTR();
+INSTR_CALL_GET_MILLISECONDS:
+  _cel_Interpretable_CallTimeAccessor(interp, &instr->data,
+                                      _cel_TimeAccessor_kMilliseconds);
   DISPATCH_NEXT_INSTR();
 INSTR_CALL_CONTAINS_STRING:
   _cel_Interpretable_CallContainsString(interp, &instr->data);
@@ -3519,6 +3626,26 @@ static inline void _cel_Interpretable_Switch(
         break;
       case _cel_InstrKind_kCallSize:
         _cel_Interpretable_CallSize(interp, &instr->data);
+        ++instr;
+        break;
+      case _cel_InstrKind_kCallGetHours:
+        _cel_Interpretable_CallTimeAccessor(interp, &instr->data,
+                                            _cel_TimeAccessor_kHours);
+        ++instr;
+        break;
+      case _cel_InstrKind_kCallGetMinutes:
+        _cel_Interpretable_CallTimeAccessor(interp, &instr->data,
+                                            _cel_TimeAccessor_kMinutes);
+        ++instr;
+        break;
+      case _cel_InstrKind_kCallGetSeconds:
+        _cel_Interpretable_CallTimeAccessor(interp, &instr->data,
+                                            _cel_TimeAccessor_kSeconds);
+        ++instr;
+        break;
+      case _cel_InstrKind_kCallGetMilliseconds:
+        _cel_Interpretable_CallTimeAccessor(interp, &instr->data,
+                                            _cel_TimeAccessor_kMilliseconds);
         ++instr;
         break;
       case _cel_InstrKind_kCallContainsString:

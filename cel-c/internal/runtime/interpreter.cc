@@ -1565,7 +1565,8 @@ static void _cel_Interpreter_PreVisitCallArgExpr(
 
 // Returns the instruction kind for the duration/timestamp accessor `fn_name`,
 // or `_cel_InstrKind_kUnreachable` if `fn_name` is not an accessor. Accessors
-// accept (google.protobuf.Duration) or (google.protobuf.Timestamp).
+// accept (google.protobuf.Duration), (google.protobuf.Timestamp) or
+// (google.protobuf.Timestamp, string).
 CEL_ATTRIBUTE_NODISCARD
 static _cel_InstrKind _cel_Interpreter_TimeAccessorKind(
     cel_StringView fn_name) {
@@ -1645,7 +1646,7 @@ static void _cel_Interpreter_PostVisitCallExpr(
     }
   }
 
-  if (!found && instr->data.call.args == 1) {
+  if (!found && (instr->data.call.args == 1 || instr->data.call.args == 2)) {
     _cel_InstrKind kind = _cel_Interpreter_TimeAccessorKind(fn_name);
     if (kind != _cel_InstrKind_kUnreachable) {
       instr->kind = kind;

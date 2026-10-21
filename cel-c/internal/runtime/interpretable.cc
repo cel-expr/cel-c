@@ -328,6 +328,19 @@ _cel_Interpretable_NewTimestampOverflowError(
 
 CEL_ATTRIBUTE_NODISCARD
 static CEL_INLINE cel_Error* cel_nonnull
+_cel_Interpretable_NewInvalidTimeZoneError(
+    _cel_Interpretable* cel_nonnull interp) {
+  cel_Error* error = cel_Error_New(interp->arena);
+  if (CEL_UNLIKELY(error == cel_nullptr)) {
+    _cel_Interpretable_ThrowOutOfMemory(interp);
+  }
+  cel_Error_SetMessage(error, cel_StringView_From("cel: invalid time zone"));
+  cel_Error_SetCanonicalCode(error, cel_ErrorCode_kInvalidArgument);
+  return error;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE cel_Error* cel_nonnull
 _cel_Interpretable_NewDuplicateKeyError(
     _cel_Interpretable* cel_nonnull interp) {
   cel_Error* error = cel_Error_New(interp->arena);
@@ -2817,38 +2830,73 @@ static inline int64_t _cel_Interpretable_CivilTimeComponent(
 //
 //   (google.protobuf.Duration) -> int
 //   (google.protobuf.Timestamp) -> int
+//   (google.protobuf.Timestamp, string) -> int
 //
-// Timestamps are broken down in UTC.
+// For timestamps, the optional string is the time zone, otherwise UTC is used.
 static inline void _cel_Interpretable_CallTimeAccessor(
     _cel_Interpretable* cel_nonnull interp,
     const _cel_InstrData* cel_nonnull instr, _cel_TimeAccessor accessor) {
   CEL_ASSERT_NOT_NULL(interp);
   CEL_ASSERT_NOT_NULL(instr);
-  CEL_ASSERT(instr->call.args == 1);
+  CEL_ASSERT(instr->call.args == 1 || instr->call.args == 2);
 
-  cel_Value* const top = _cel_Interpretable_Top(interp, instr);
+  cel_Value* const top =
+      _cel_Interpretable_TopN(interp, instr, instr->call.args);
+  cel_Value* const tz = instr->call.args == 2 ? top + 1 : cel_nullptr;
+
   switch (cel_Value_Kind(top)) {
     case cel_ValueKind_kError:
       break;
     case cel_ValueKind_kDuration:
+      if (tz != cel_nullptr) {
+        // There is no time zone overload for durations.
+        if (cel_Value_IsError(tz)) {
+          *top = *tz;
+        } else {
+          cel_Value_SetError(top,
+                             _cel_Interpretable_NewNoSuchOverloadError(interp));
+        }
+        break;
+      }
       cel_Value_SetInt(top, _cel_Interpretable_DurationComponent(
                                 cel_Value_GetDuration(top), accessor));
       break;
     case cel_ValueKind_kTimestamp: {
+      cel_StringView tz_name = cel_StringView_From("");
+      if (tz != cel_nullptr) {
+        if (cel_Value_IsError(tz)) {
+          *top = *tz;
+          break;
+        }
+        if (cel_Value_Kind(tz) != cel_ValueKind_kString) {
+          cel_Value_SetError(top,
+                             _cel_Interpretable_NewNoSuchOverloadError(interp));
+          break;
+        }
+        tz_name = cel_Value_GetString(tz);
+      }
       _cel_CivilTime civil_time;
-      if (CEL_UNLIKELY(!_cel_Timestamp_ToCivilTime(cel_Value_GetTimestamp(top),
-                                                   cel_StringView_From(""),
-                                                   &civil_time))) {
-        // An empty time zone means UTC, which is always valid.
-        CEL_UNREACHABLE();
+      if (!_cel_Timestamp_ToCivilTime(cel_Value_GetTimestamp(top), tz_name,
+                                      &civil_time)) {
+        cel_Value_SetError(top,
+                           _cel_Interpretable_NewInvalidTimeZoneError(interp));
+        break;
       }
       cel_Value_SetInt(
           top, _cel_Interpretable_CivilTimeComponent(&civil_time, accessor));
     } break;
     default:
-      cel_Value_SetError(top,
-                         _cel_Interpretable_NewNoSuchOverloadError(interp));
+      if (tz != cel_nullptr && cel_Value_IsError(tz)) {
+        *top = *tz;
+      } else {
+        cel_Value_SetError(top,
+                           _cel_Interpretable_NewNoSuchOverloadError(interp));
+      }
       break;
+  }
+
+  if (tz != cel_nullptr) {
+    _cel_Interpretable_Pop(interp, instr);
   }
 }
 

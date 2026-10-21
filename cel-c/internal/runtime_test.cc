@@ -1137,6 +1137,168 @@ TEST_F(RuntimeTest, CallGetMillisecondsTimestamp) {
   EXPECT_EQ(cel_Value_GetInt(&value), 0);
 }
 
+TEST_F(RuntimeTest, CallGetHoursTimestampWithTimeZone) {
+  // Empty and UTC time zones match the single argument overloads.
+  _cel_ProgramPtr prog =
+      Parse(R"cel(timestamp("2025-12-01T10:20:30.456Z").getHours(""))cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 10);
+
+  prog =
+      Parse(R"cel(timestamp("2025-12-01T10:20:30.456Z").getHours("UTC"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 10);
+
+  prog =
+      Parse(R"cel(getHours(timestamp("2025-12-01T10:20:30.456Z"), "UTC"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 10);
+
+  // IANA time zones.
+  prog = Parse(
+      R"cel(timestamp("2025-12-01T10:20:30.456Z").getHours("America/Los_Angeles"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 2);
+
+  prog = Parse(
+      R"cel(timestamp("2025-07-01T10:20:30.456Z").getHours("America/Los_Angeles"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 3);
+
+  prog = Parse(
+      R"cel(timestamp("2025-12-01T02:00:00Z").getHours("America/New_York"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 21);
+
+  prog = Parse(
+      R"cel(timestamp("2025-12-01T10:20:30.456Z").getHours("Asia/Kolkata"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 15);
+
+  // Fixed UTC offsets.
+  prog = Parse(
+      R"cel(timestamp("2025-12-01T10:20:30.456Z").getHours("+05:30"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 15);
+
+  prog = Parse(
+      R"cel(timestamp("2025-12-01T10:20:30.456Z").getHours("-08:00"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 2);
+
+  prog = Parse(
+      R"cel(timestamp("2025-12-01T10:20:30.456Z").getHours("-01:30"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 8);
+
+  // Time zones before the Unix epoch.
+  prog = Parse(R"cel(timestamp("1969-12-31T23:59:58Z").getHours("+05:30"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 5);
+}
+
+TEST_F(RuntimeTest, CallGetMinutesTimestampWithTimeZone) {
+  // IANA time zones.
+  _cel_ProgramPtr prog = Parse(
+      R"cel(timestamp("2025-12-01T10:20:30.456Z").getMinutes("Asia/Kolkata"))cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 50);
+
+  prog = Parse(
+      R"cel(timestamp("2025-12-01T10:20:30.456Z").getMinutes("Asia/Kathmandu"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 5);
+
+  // Fixed UTC offsets.
+  prog = Parse(
+      R"cel(timestamp("2025-12-01T10:20:30.456Z").getMinutes("+05:30"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 50);
+
+  prog = Parse(
+      R"cel(timestamp("2025-12-01T10:20:30.456Z").getMinutes("-01:30"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 50);
+}
+
+TEST_F(RuntimeTest, CallGetSecondsTimestampWithTimeZone) {
+  // IANA time zones.
+  _cel_ProgramPtr prog = Parse(
+      R"cel(timestamp("2025-12-01T10:20:30.456Z").getSeconds("Asia/Kolkata"))cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 30);
+
+  // Fixed UTC offsets.
+  prog = Parse(
+      R"cel(timestamp("2025-12-01T10:20:30.456Z").getSeconds("-01:30"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 30);
+}
+
+TEST_F(RuntimeTest, CallGetMillisecondsTimestampWithTimeZone) {
+  // IANA time zones.
+  _cel_ProgramPtr prog = Parse(
+      R"cel(timestamp("2025-12-01T10:20:30.456Z").getMilliseconds("Asia/Kolkata"))cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 456);
+
+  // Fixed UTC offsets.
+  prog = Parse(
+      R"cel(timestamp("2025-12-01T10:20:30.456Z").getMilliseconds("-01:30"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 456);
+
+  // Time zones before the Unix epoch.
+  prog = Parse(
+      R"cel(timestamp("1969-12-31T23:59:58Z").getMilliseconds("+05:30"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
+}
+
 TEST_F(RuntimeTest, CallTimeAccessorsNoSuchOverload) {
   _cel_ProgramPtr prog = Parse(R"cel(getHours(1))cel");
   _cel_TestingVariableResolver var_resolver;
@@ -1180,6 +1342,70 @@ TEST_F(RuntimeTest, CallTimeAccessorsNoSuchOverload) {
   ASSERT_TRUE(cel_Value_IsError(&value));
   EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
             cel_StringView_From("cel: no such overload"));
+
+  // Durations do not have a time zone overload.
+  prog = Parse(R"cel(duration("1h").getHours("UTC"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: no such overload"));
+
+  prog = Parse(R"cel(getMinutes(duration("1h"), "UTC"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: no such overload"));
+
+  // The time zone must be a string.
+  prog = Parse(R"cel(timestamp("2025-12-01T10:20:30Z").getSeconds(1))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: no such overload"));
+
+  prog = Parse(R"cel(1.getMilliseconds("UTC"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: no such overload"));
+}
+
+TEST_F(RuntimeTest, CallTimeAccessorsInvalidTimeZone) {
+  _cel_ProgramPtr prog = Parse(
+      R"cel(timestamp("2025-12-01T10:20:30Z").getHours("Invalid/Zone"))cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: invalid time zone"));
+
+  prog = Parse(R"cel(timestamp("2025-12-01T10:20:30Z").getMinutes("foo"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: invalid time zone"));
+
+  prog =
+      Parse(R"cel(timestamp("2025-12-01T10:20:30Z").getSeconds("+aa:bb"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: invalid time zone"));
+
+  prog =
+      Parse(R"cel(timestamp("2025-12-01T10:20:30Z").getMilliseconds(":"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: invalid time zone"));
 }
 
 TEST_F(RuntimeTest, CallTimeAccessorsPropagatesError) {
@@ -1206,6 +1432,35 @@ TEST_F(RuntimeTest, CallTimeAccessorsPropagatesError) {
             cel_StringView_From("cel: divide by zero"));
 
   prog = Parse(R"cel((1 / 0).getMilliseconds())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: divide by zero"));
+
+  // Errors in either argument of the time zone overload propagate.
+  prog = Parse(R"cel((1 / 0).getHours("UTC"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: divide by zero"));
+
+  prog = Parse(R"cel(timestamp("2025-12-01T10:20:30Z").getHours(1 / 0))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: divide by zero"));
+
+  prog = Parse(R"cel(duration("1h").getMinutes(1 / 0))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: divide by zero"));
+
+  prog = Parse(R"cel(true.getSeconds(1 / 0))cel");
   act = Activate(prog.get(), &var_resolver);
   value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsError(&value));

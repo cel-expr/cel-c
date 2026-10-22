@@ -22,6 +22,7 @@
 #include <string.h>
 
 #include <memory>
+#include <new>
 
 #include "cel-c/alloc.h"
 #include "cel-c/assert.h"
@@ -44,22 +45,19 @@ typedef struct {
   _cel_String value;
 } _cel_StatusRepPayload;
 
-typedef union {
-  CEL_ATTRIBUTE_MAYBE_UNUSED cel_Status pub;
-  struct {
-    // code **must** be first.
-    unsigned int code;
+typedef struct alignas(cel_Status) {
+  // code **must** be first.
+  unsigned int code;
 
-    int raw_code;
-    CEL_NONNULL(const cel_ErrorSpace*) space;
-    _cel_String message;
-    _cel_Array(_cel_StatusRepPayload) payloads;
-    CEL_NULLABLE(const char*) file;
-    int line;
-  };
+  int raw_code;
+  CEL_NONNULL(const cel_ErrorSpace*) space;
+  _cel_String message;
+  _cel_Array(_cel_StatusRepPayload) payloads;
+  CEL_NULLABLE(const char*) file;
+  int line;
 } _cel_StatusRep;
 
-CEL_STATIC_ASSERT(sizeof(_cel_StatusRep) == sizeof(cel_Status));
+CEL_STATIC_ASSERT(sizeof(_cel_StatusRep) <= sizeof(cel_Status));
 CEL_STATIC_ASSERT(alignof(_cel_StatusRep) == alignof(cel_Status));
 CEL_STATIC_ASSERT(offsetof(_cel_StatusRep, code) == offsetof(cel_Status, code));
 
@@ -112,10 +110,11 @@ extern "C" void cel_Status_Construct(CEL_NONNULL(cel_Status*) status) {
   CEL_ASSERT_NOT_NULL(status);
 
   CEL_NONNULL(_cel_StatusRep*) status_rep = _cel_Status_Rep(status);
-  memset(status_rep, '\0', sizeof(*status_rep));
+  memset(status, '\0', sizeof(*status));
   status_rep->space = cel_CanonicalErrorSpace;
   _cel_String_Construct(&status_rep->message);
-  std::construct_at(&status_rep->payloads);
+  ::new (static_cast<void*>(&status_rep->payloads))
+      cel_Array<_cel_StatusRepPayload>();
 }
 
 extern "C" void cel_Status_Destruct(CEL_NONNULL(cel_Status*) status) {

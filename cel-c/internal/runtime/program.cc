@@ -18,6 +18,7 @@
 #include <string.h>
 
 #include <memory>
+#include <new>
 
 #include "cel-c/alloc.h"
 #include "cel-c/assert.h"
@@ -65,7 +66,7 @@ _cel_Program_New(const cel_Runtime* cel_nonnull rt) {
   if (CEL_UNLIKELY(prog == cel_nullptr)) {
     return cel_nullptr;
   }
-  std::construct_at(prog);
+  ::new (static_cast<void*>(prog)) cel_Program();
   prog->rt = _cel_Runtime_ConstRef(rt);
   _cel_AtomicRefCount_Initialize(&prog->rc);
   return prog;

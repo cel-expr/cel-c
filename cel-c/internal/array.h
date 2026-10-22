@@ -389,7 +389,7 @@ _cel_Array_Append(cel_Array<T>* cel_nonnull arr, size_t n) {
 template <typename T>
 CEL_DEPRECATE_AND_INLINE CEL_INLINE void _cel_Array_Erase(
     cel_Array<T>* cel_nonnull arr, size_t idx) {
-  return arr->erase(idx);
+  arr->erase(idx);
 }
 
 template <typename T>

@@ -19,7 +19,7 @@
 #include <cstring>
 #include <type_traits>
 
-#include "third_party/cel/c/internal/config.h"  // IWYU pragma: keep
+#include "cel-c/internal/config.h"  // IWYU pragma: keep
 
 #if CEL_HAVE_BUILTIN(__builtin_is_cpp_trivially_relocatable)
 // https://github.com/llvm/llvm-project/pull/127636#pullrequestreview-2637005293

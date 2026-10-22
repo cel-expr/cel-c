@@ -221,11 +221,11 @@ extern "C" _cel_HashState _cel_HashState_Combine64(_cel_HashState state,
 
 extern "C" _cel_HashState _cel_HashState_CombineLD(_cel_HashState state,
                                                    long double value) {
-  const int cat = fpclassify(value);
+  const int cat = std::fpclassify(value);
   switch (cat) {
     case FP_INFINITE:
       // Add the sign bit to differentiate between +Inf and -Inf
-      state = _cel_HashState_CombineB(state, signbit(value));
+      state = _cel_HashState_CombineB(state, std::signbit(value));
       break;
     case FP_NAN:
       CEL_ATTRIBUTE_FALLTHROUGH;

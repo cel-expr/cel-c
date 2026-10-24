@@ -21,6 +21,7 @@
 
 #include "cel-c/arena.h"
 #include "cel-c/assert.h"
+#include "cel-c/attribute.h"
 #include "cel-c/config.h"
 #include "cel-c/constant.h"
 #include "cel-c/operators.h"
@@ -333,6 +334,38 @@ struct cel_BlockExpr {
   cel_Expr* cel_nullable bound;
 };
 
+struct cel_AttrQualExpr {
+  cel_ExprId id;
+  CEL_NONNULL(cel_Ast*) ast;
+  CEL_NULLABLE(cel_Expr*) parent;
+  cel_ExprKind kind;
+  cel_SourceRange range;
+  CEL_NULLABLE(const cel_Ref*) ref;
+  CEL_NULLABLE(cel_Type*) type;
+
+  _cel_ExprLink* cel_nullable left;
+  _cel_ExprLink* cel_nullable right;
+  ptrdiff_t index;
+
+  cel_AttributeQualifier value;
+};
+
+struct cel_AttrExpr {
+  cel_ExprId id;
+  CEL_NONNULL(cel_Ast*) ast;
+  CEL_NULLABLE(cel_Expr*) parent;
+  cel_ExprKind kind;
+  cel_SourceRange range;
+  CEL_NULLABLE(const cel_Ref*) ref;
+  CEL_NULLABLE(cel_Type*) type;
+
+  _cel_ExprLink* cel_nullable quals_head;
+  _cel_ExprLink* cel_nullable quals_tail;
+  size_t quals;
+  cel_Expr* cel_nullable target;
+  bool test_only;
+};
+
 struct _cel_ExprLink {
   union {
     struct {
@@ -352,6 +385,7 @@ struct _cel_ExprLink {
     cel_MapEntryExpr map_entry_expr;
     cel_StructFieldExpr struct_field_expr;
     cel_BlockBindingExpr block_binding_expr;
+    cel_AttrQualExpr attr_qual_expr;
   };
 };
 
@@ -386,6 +420,8 @@ struct cel_Expr {
     cel_BlockBindingExpr block_binding_expr;
     cel_BlockIndexExpr block_index_expr;
     cel_BlockExpr block_expr;
+    cel_AttrQualExpr attr_qual_expr;
+    cel_AttrExpr attr_expr;
   };
 };
 
@@ -2282,4 +2318,182 @@ extern "C" CEL_NULLABLE(cel_BlockBindingExpr*)
     binding = (cel_BlockBindingExpr*)binding->right;
   }
   return (cel_BlockBindingExpr*)binding;
+}
+
+extern "C" cel_AttrQualExpr* cel_nullable
+cel_AttrQualExpr_New(cel_Ast* cel_nonnull ast) {
+  CEL_ASSERT_NOT_NULL(ast);
+
+  cel_AttrQualExpr* expr = (cel_AttrQualExpr*)cel_Arena_Malloc(
+      ast->arena, sizeof(cel_AttrQualExpr), cel_nullptr);
+  if (expr != cel_nullptr) {
+    memset(expr, 0, sizeof(*expr));
+    expr->ast = ast;
+    expr->kind = cel_ExprKind_kAttrQual;
+    expr->range = cel_SourceRange(-1, -1);
+  }
+  return expr;
+}
+
+extern "C" cel_AttrExpr* cel_nullable
+cel_AttrQualExpr_Parent(const cel_AttrQualExpr* cel_nonnull expr) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return cel_AttrExpr_DownCast(expr->parent);
+}
+
+extern "C" const cel_AttributeQualifier* cel_nonnull
+cel_AttrQualExpr_Value(const cel_AttrQualExpr* cel_nonnull expr) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return &expr->value;
+}
+
+extern "C" cel_AttributeQualifier* cel_nonnull
+cel_AttrQualExpr_MutableValue(cel_AttrQualExpr* cel_nonnull expr) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return &expr->value;
+}
+
+extern "C" cel_AttrExpr* cel_nullable cel_AttrExpr_New(CEL_NONNULL(cel_Ast*)
+                                                           ast) {
+  CEL_ASSERT_NOT_NULL(ast);
+
+  cel_AttrExpr* expr = (cel_AttrExpr*)cel_Arena_Malloc(
+      ast->arena, sizeof(cel_AttrExpr), cel_nullptr);
+  if (expr != cel_nullptr) {
+    memset(expr, 0, sizeof(*expr));
+    expr->ast = ast;
+    expr->kind = cel_ExprKind_kAttr;
+    expr->range = cel_SourceRange(-1, -1);
+  }
+  return expr;
+}
+
+extern "C" cel_Expr* cel_nullable
+cel_AttrExpr_Target(const cel_AttrExpr* cel_nonnull expr) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return expr->target;
+}
+
+extern "C" cel_Expr* cel_nullable cel_AttrExpr_SetTarget(
+    cel_AttrExpr* cel_nonnull expr, cel_Expr* cel_nullable target) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return _cel_Expr_SetChild(cel_Expr_UpCast(expr), &expr->target, target);
+}
+
+extern "C" cel_Expr* cel_nullable
+cel_AttrExpr_ReleaseTarget(cel_AttrExpr* cel_nonnull expr) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return _cel_Expr_ReleaseChild(cel_Expr_UpCast(expr), &expr->target);
+}
+
+extern "C" void cel_AttrExpr_AppendQualifier(CEL_NONNULL(cel_AttrExpr*) expr,
+                                             CEL_NONNULL(cel_AttrQualExpr*)
+                                                 qualifier) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  _cel_Expr_LinkChild(cel_Expr_UpCast(expr), &expr->quals_head,
+                      &expr->quals_tail, &expr->quals, cel_nullptr,
+                      (_cel_ExprLink*)qualifier);
+}
+
+extern "C" void cel_AttrExpr_PrependQualifier(CEL_NONNULL(cel_AttrExpr*) expr,
+                                              CEL_NONNULL(cel_AttrQualExpr*)
+                                                  qualifier) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  _cel_Expr_LinkChild(cel_Expr_UpCast(expr), &expr->quals_head,
+                      &expr->quals_tail, &expr->quals, expr->quals_head,
+                      (_cel_ExprLink*)qualifier);
+}
+
+extern "C" void cel_AttrExpr_InsertQualifier(CEL_NONNULL(cel_AttrExpr*) expr,
+                                             CEL_NULLABLE(cel_AttrQualExpr*)
+                                                 before,
+                                             CEL_NONNULL(cel_AttrQualExpr*)
+                                                 qualifier) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  _cel_Expr_LinkChild(cel_Expr_UpCast(expr), &expr->quals_head,
+                      &expr->quals_tail, &expr->quals, (_cel_ExprLink*)before,
+                      (_cel_ExprLink*)qualifier);
+}
+
+extern "C" CEL_NONNULL(cel_AttrQualExpr*)
+    cel_AttrExpr_ReleaseQualifier(CEL_NONNULL(cel_AttrExpr*) expr,
+                                  CEL_NONNULL(cel_AttrQualExpr*) qualifier) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  _cel_Expr_UnlinkChild(cel_Expr_UpCast(expr), &expr->quals_head,
+                        &expr->quals_tail, &expr->quals,
+                        (_cel_ExprLink*)qualifier);
+  return qualifier;
+}
+
+extern "C" CEL_NONNULL(cel_AttrQualExpr*)
+    cel_AttrExpr_Qualifier(CEL_NONNULL(const cel_AttrExpr*) expr,
+                           size_t index) {
+  CEL_ASSERT_NOT_NULL(expr);
+  CEL_ASSERT_LT(index, expr->quals);
+
+  CEL_NULLABLE(_cel_ExprLink*) arg = expr->quals_head;
+  for (; index > 0; --index) {
+    CEL_ASSERT_NOT_NULL(arg);
+    arg = arg->right;
+  }
+  CEL_ASSERT_NOT_NULL(arg);
+  CEL_ASSERT(arg->parent == cel_Expr_UpCast(expr));
+  return (cel_AttrQualExpr*)arg;
+}
+
+extern "C" size_t cel_AttrExpr_Qualifiers(CEL_NONNULL(const cel_AttrExpr*) expr,
+                                          CEL_NULLABLE(cel_AttrQualExpr*) *
+                                              cel_nullable head,
+                                          CEL_NULLABLE(cel_AttrQualExpr*) *
+                                              cel_nullable tail) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  if (head != cel_nullptr) {
+    *head = (cel_AttrQualExpr*)expr->quals_head;
+  }
+  if (tail != cel_nullptr) {
+    *tail = (cel_AttrQualExpr*)expr->quals_tail;
+  }
+  return expr->quals;
+}
+
+extern "C" CEL_NULLABLE(cel_AttrQualExpr*)
+    cel_AttrExpr_PrevQualifier(CEL_NULLABLE(const cel_AttrQualExpr*)
+                                   qualifier) {
+  if (qualifier != cel_nullptr) {
+    qualifier = (cel_AttrQualExpr*)qualifier->left;
+  }
+  return (cel_AttrQualExpr*)qualifier;
+}
+
+extern "C" CEL_NULLABLE(cel_AttrQualExpr*)
+    cel_AttrExpr_NextQualifier(CEL_NULLABLE(const cel_AttrQualExpr*)
+                                   qualifier) {
+  if (qualifier != cel_nullptr) {
+    qualifier = (cel_AttrQualExpr*)qualifier->right;
+  }
+  return (cel_AttrQualExpr*)qualifier;
+}
+
+extern "C" bool cel_AttrExpr_TestOnly(CEL_NONNULL(const cel_AttrExpr*) expr) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  return expr->test_only;
+}
+
+extern "C" void cel_AttrExpr_SetTestOnly(CEL_NONNULL(cel_AttrExpr*) expr,
+                                         bool test_only) {
+  CEL_ASSERT_NOT_NULL(expr);
+
+  expr->test_only = test_only;
 }

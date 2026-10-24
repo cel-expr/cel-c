@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef THIRD_PARTY_CEL_C_AST_TRAVERSE_H_
-#define THIRD_PARTY_CEL_C_AST_TRAVERSE_H_
+#ifndef THIRD_PARTY_CEL_C_INTERNAL_AST_TRAVERSE_H_
+#define THIRD_PARTY_CEL_C_INTERNAL_AST_TRAVERSE_H_
 
 #include <stdbool.h>  // IWYU pragma: keep
 
-#include "cel-c/ast.h"
-#include "cel-c/ast_visitor.h"
 #include "cel-c/config.h"
+#include "cel-c/internal/ast.h"
+#include "cel-c/internal/ast_visitor.h"
 #include "cel-c/status.h"
 
 CEL_BEGIN_DECLS
@@ -66,4 +66,4 @@ CEL_EXTERN bool cel_AstTraverser_Traverse(CEL_NONNULL(cel_AstTraverser*)
 
 CEL_END_DECLS
 
-#endif  // THIRD_PARTY_CEL_C_AST_TRAVERSE_H_
+#endif  // THIRD_PARTY_CEL_C_INTERNAL_AST_TRAVERSE_H_

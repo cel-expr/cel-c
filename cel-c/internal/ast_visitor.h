@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef THIRD_PARTY_CEL_C_AST_VISITOR_H_
-#define THIRD_PARTY_CEL_C_AST_VISITOR_H_
+#ifndef THIRD_PARTY_CEL_C_INTERNAL_AST_VISITOR_H_
+#define THIRD_PARTY_CEL_C_INTERNAL_AST_VISITOR_H_
 
 #include <stddef.h>
 
-#include "cel-c/ast.h"
 #include "cel-c/config.h"
+#include "cel-c/internal/ast.h"
 
 CEL_BEGIN_DECLS
 
@@ -232,6 +232,19 @@ typedef void cel_AstVisitorVTable_PreVisitBlockExprBound(
 typedef void cel_AstVisitorVTable_PostVisitBlockExprBound(
     CEL_NONNULL(cel_AstVisitor*), CEL_NONNULL(const cel_Expr*));
 
+typedef void cel_AstVisitorVTable_VisitAttrQualExpr(
+    CEL_NONNULL(cel_AstVisitor*), CEL_NONNULL(const cel_AttrQualExpr*));
+
+typedef void cel_AstVisitorVTable_PreVisitAttrExpr(
+    CEL_NONNULL(cel_AstVisitor*), CEL_NONNULL(const cel_AttrExpr*));
+typedef void cel_AstVisitorVTable_PostVisitAttrExpr(
+    CEL_NONNULL(cel_AstVisitor*), CEL_NONNULL(const cel_AttrExpr*));
+
+typedef void cel_AstVisitorVTable_PreVisitAttrExprOperand(
+    CEL_NONNULL(cel_AstVisitor*), CEL_NONNULL(const cel_Expr*));
+typedef void cel_AstVisitorVTable_PostVisitAttrExprOperand(
+    CEL_NONNULL(cel_AstVisitor*), CEL_NONNULL(const cel_Expr*));
+
 struct cel_AstVisitorVTable {
   // NOLINTBEGIN(google3-readability-class-member-naming)
   CEL_NULLABLE(cel_AstVisitorVTable_PreVisitExpr*) PreVisitExpr;
@@ -410,6 +423,16 @@ struct cel_AstVisitorVTable {
       PreVisitBlockExprBound;
   cel_AstVisitorVTable_PostVisitBlockExprBound* cel_nullable
       PostVisitBlockExprBound;
+
+  cel_AstVisitorVTable_VisitAttrQualExpr* cel_nullable VisitAttrQualExpr;
+
+  cel_AstVisitorVTable_PreVisitAttrExpr* cel_nullable PreVisitAttrExpr;
+  cel_AstVisitorVTable_PostVisitAttrExpr* cel_nullable PostVisitAttrExpr;
+
+  cel_AstVisitorVTable_PreVisitAttrExprOperand* cel_nullable
+      PreVisitAttrExprOperand;
+  cel_AstVisitorVTable_PostVisitAttrExprOperand* cel_nullable
+      PostVisitAttrExprOperand;
   // NOLINTEND(google3-readability-class-member-naming)
 };
 
@@ -419,4 +442,4 @@ struct cel_AstVisitor {
 
 CEL_END_DECLS
 
-#endif  // THIRD_PARTY_CEL_C_AST_VISITOR_H_
+#endif  // THIRD_PARTY_CEL_C_INTERNAL_AST_VISITOR_H_

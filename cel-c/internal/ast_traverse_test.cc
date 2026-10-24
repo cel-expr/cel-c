@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "cel-c/ast_traverse.h"
+#include "cel-c/internal/ast_traverse.h"
 
 #include <memory>
 
@@ -21,9 +21,9 @@
 #include "absl/log/die_if_null.h"
 #include "cel-c/alloc.h"
 #include "cel-c/arena.h"
-#include "cel-c/ast.h"
-#include "cel-c/ast_visitor.h"
 #include "cel-c/config.h"
+#include "cel-c/internal/ast.h"
+#include "cel-c/internal/ast_visitor.h"
 #include "cel-c/status.h"
 
 namespace {
@@ -692,7 +692,7 @@ class MockAstVisitor : public AstVisitor {
 };
 
 struct AstDeleter {
-  void operator()(cel_Ast* ast) const { cel_Ast_Delete(ast); }
+  void operator()(cel_Ast* ast) const { _cel_Ast_Delete(ast); }
 };
 
 using AstPtr = std::unique_ptr<cel_Ast, AstDeleter>;

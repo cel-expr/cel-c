@@ -146,6 +146,92 @@ cc_library(
 )
 
 cc_library(
+    name = "ast",
+    srcs = [
+        "ast.cc",
+    ],
+    hdrs = [
+        "ast.h",
+    ],
+    deps = [
+        "//cel-c:arena",
+        "//cel-c:assert",
+        "//cel-c:attribute",
+        "//cel-c:config",
+        "//cel-c:constant",
+        "//cel-c:operators",
+        "//cel-c:ref",
+        "//cel-c:source",
+        "//cel-c:string_view",
+        "//cel-c:type",
+    ],
+)
+
+cc_test(
+    name = "ast_test",
+    srcs = ["ast_test.cc"],
+    deps = [
+        ":ast",
+        "//cel-c:alloc",
+        "//cel-c:arena",
+        "//cel-c:config",
+        "//cel-c:operators",
+        "//cel-c:source",
+        "//cel-c:string_view",
+        "@abseil-cpp//absl/log:die_if_null",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "ast_traverse",
+    srcs = [
+        "ast_traverse.cc",
+    ],
+    hdrs = [
+        "ast_traverse.h",
+    ],
+    deps = [
+        ":ast",
+        ":ast_visitor",
+        "//cel-c:alloc",
+        "//cel-c:assert",
+        "//cel-c:config",
+        "//cel-c:status",
+        "//cel-c:string_view",
+        "//cel-c/internal:deque",
+        "//cel-c/internal:malloc",
+    ],
+)
+
+cc_test(
+    name = "ast_traverse_test",
+    srcs = ["ast_traverse_test.cc"],
+    deps = [
+        ":ast",
+        ":ast_traverse",
+        ":ast_visitor",
+        "//cel-c:alloc",
+        "//cel-c:arena",
+        "//cel-c:config",
+        "//cel-c:status",
+        "@abseil-cpp//absl/log:die_if_null",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "ast_visitor",
+    hdrs = [
+        "ast_visitor.h",
+    ],
+    deps = [
+        ":ast",
+        "//cel-c:config",
+    ],
+)
+
+cc_library(
     name = "binary_search",
     hdrs = ["binary_search.h"],
     deps = [

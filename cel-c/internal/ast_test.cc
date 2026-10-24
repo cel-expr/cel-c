@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "cel-c/ast.h"
+#include "cel-c/internal/ast.h"
 
 #include <memory>
 
@@ -33,7 +33,7 @@ using ::testing::IsNull;
 using ::testing::NotNull;
 
 struct AstDeleter {
-  void operator()(CEL_NULLABLE(cel_Ast*) ast) const { cel_Ast_Delete(ast); }
+  void operator()(CEL_NULLABLE(cel_Ast*) ast) const { _cel_Ast_Delete(ast); }
 };
 
 using AstPtr = std::unique_ptr<cel_Ast, AstDeleter>;

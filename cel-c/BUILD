@@ -134,31 +134,8 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        ":arena",
-        ":assert",
         ":config",
-        ":constant",
-        ":operators",
-        ":ref",
-        ":source",
-        ":string_view",
-        ":type",
-    ],
-)
-
-cc_test(
-    name = "ast_test",
-    srcs = ["ast_test.cc"],
-    deps = [
-        ":alloc",
-        ":arena",
-        ":ast",
-        ":config",
-        ":operators",
-        ":source",
-        ":string_view",
-        "@abseil-cpp//absl/log:die_if_null",
-        "@googletest//:gtest_main",
+        "//cel-c/internal:ast",
     ],
 )
 
@@ -176,16 +153,18 @@ cc_library(
         ":assert",
         ":ast",
         ":config",
-        ":constant_proto",
         ":operators",
-        ":ref",
-        ":ref_proto",
         ":status",
         ":string_view",
         ":type",
         ":type_proto",
+        "//cel-c/internal:ast",
+        "//cel-c/internal:attribute",
         "//cel-c/internal:charconv",
+        "//cel-c/internal:constant_proto",
         "//cel-c/internal:malloc",
+        "//cel-c/internal:ref",
+        "//cel-c/internal:ref_proto",
         "//cel-c/internal:setjmp",
         "@cel-spec//proto/cel/expr:checked_upb_proto",
         "@cel-spec//proto/cel/expr:syntax_upb_proto",
@@ -202,12 +181,14 @@ cc_test(
         ":ast",
         ":ast_proto",
         ":config",
-        ":constant",
         ":duration",
         ":operators",
         ":status",
         ":string_view",
         ":timestamp",
+        "//cel-c/internal:ast",
+        "//cel-c/internal:attribute",
+        "//cel-c/internal:constant",
         "@abseil-cpp//absl/cleanup",
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/log:die_if_null",
@@ -233,16 +214,18 @@ cc_library(
         ":assert",
         ":ast",
         ":config",
-        ":constant_proto_v1alpha1",
         ":operators",
-        ":ref",
-        ":ref_proto_v1alpha1",
         ":status",
         ":string_view",
         ":type",
         ":type_proto_v1alpha1",
+        "//cel-c/internal:ast",
+        "//cel-c/internal:attribute",
         "//cel-c/internal:charconv",
+        "//cel-c/internal:constant_proto_v1alpha1",
         "//cel-c/internal:malloc",
+        "//cel-c/internal:ref",
+        "//cel-c/internal:ref_proto_v1alpha1",
         "//cel-c/internal:setjmp",
         "@googleapis//google/api/expr/v1alpha1:checked_upb_proto",
         "@protobuf//upb/mem",
@@ -258,12 +241,14 @@ cc_test(
         ":ast",
         ":ast_proto_v1alpha1",
         ":config",
-        ":constant",
         ":duration",
         ":operators",
         ":status",
         ":string_view",
         ":timestamp",
+        "//cel-c/internal:ast",
+        "//cel-c/internal:attribute",
+        "//cel-c/internal:constant",
         "@abseil-cpp//absl/cleanup",
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/log:die_if_null",
@@ -276,176 +261,9 @@ cc_test(
 )
 
 cc_library(
-    name = "ast_traverse",
-    srcs = [
-        "ast_traverse.cc",
-    ],
-    hdrs = [
-        "ast_traverse.h",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":alloc",
-        ":assert",
-        ":ast",
-        ":ast_visitor",
-        ":config",
-        ":status",
-        ":string_view",
-        "//cel-c/internal:deque",
-        "//cel-c/internal:malloc",
-    ],
-)
-
-cc_test(
-    name = "ast_traverse_test",
-    srcs = ["ast_traverse_test.cc"],
-    deps = [
-        ":alloc",
-        ":arena",
-        ":ast",
-        ":ast_traverse",
-        ":ast_visitor",
-        ":config",
-        ":status",
-        "@abseil-cpp//absl/log:die_if_null",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "ast_visitor",
-    hdrs = [
-        "ast_visitor.h",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":ast",
-        ":config",
-    ],
-)
-
-cc_library(
     name = "config",
     hdrs = ["config.h"],
     visibility = ["//visibility:public"],
-)
-
-cc_library(
-    name = "constant",
-    srcs = ["constant.cc"],
-    hdrs = ["constant.h"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":assert",
-        ":config",
-        ":duration",
-        ":string_view",
-        ":timestamp",
-    ],
-)
-
-cc_test(
-    name = "constant_test",
-    srcs = ["constant_test.cc"],
-    deps = [
-        ":config",
-        ":constant",
-        ":duration",
-        ":string_view",
-        ":timestamp",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "constant_proto",
-    srcs = ["constant_proto.cc"],
-    hdrs = ["constant_proto.h"],
-    visibility = ["//visibility:private"],
-    deps = [
-        ":arena",
-        ":assert",
-        ":config",
-        ":constant",
-        ":duration",
-        ":duration_proto",
-        ":status",
-        ":string_view",
-        ":timestamp",
-        ":timestamp_proto",
-        "@cel-spec//proto/cel/expr:syntax_upb_proto",
-        "@protobuf//:duration_upb_proto",
-        "@protobuf//:struct_upb_proto",
-        "@protobuf//:timestamp_upb_proto",
-        "@protobuf//upb/mem",
-    ],
-)
-
-cc_test(
-    name = "constant_proto_test",
-    srcs = ["constant_proto_test.cc"],
-    deps = [
-        ":config",
-        ":constant",
-        ":constant_proto",
-        ":duration",
-        ":status",
-        ":string_view",
-        ":timestamp",
-        "@abseil-cpp//absl/log:die_if_null",
-        "@cel-spec//proto/cel/expr:syntax_upb_proto",
-        "@googletest//:gtest_main",
-        "@protobuf//:duration_upb_proto",
-        "@protobuf//:struct_upb_proto",
-        "@protobuf//:timestamp_upb_proto",
-        "@protobuf//upb/mem",
-    ],
-)
-
-cc_library(
-    name = "constant_proto_v1alpha1",
-    srcs = ["constant_proto_v1alpha1.cc"],
-    hdrs = ["constant_proto_v1alpha1.h"],
-    visibility = ["//visibility:private"],
-    deps = [
-        ":arena",
-        ":assert",
-        ":config",
-        ":constant",
-        ":duration",
-        ":duration_proto",
-        ":status",
-        ":string_view",
-        ":timestamp",
-        ":timestamp_proto",
-        "@googleapis//google/api/expr/v1alpha1:checked_upb_proto",
-        "@protobuf//:duration_upb_proto",
-        "@protobuf//:struct_upb_proto",
-        "@protobuf//:timestamp_upb_proto",
-        "@protobuf//upb/mem",
-    ],
-)
-
-cc_test(
-    name = "constant_proto_v1alpha1_test",
-    srcs = ["constant_proto_v1alpha1_test.cc"],
-    deps = [
-        ":config",
-        ":constant",
-        ":constant_proto_v1alpha1",
-        ":duration",
-        ":status",
-        ":string_view",
-        ":timestamp",
-        "@abseil-cpp//absl/log:die_if_null",
-        "@googleapis//google/api/expr/v1alpha1:checked_upb_proto",
-        "@googletest//:gtest_main",
-        "@protobuf//:duration_upb_proto",
-        "@protobuf//:struct_upb_proto",
-        "@protobuf//:timestamp_upb_proto",
-        "@protobuf//upb/mem",
-    ],
 )
 
 cc_library(
@@ -470,138 +288,6 @@ cc_test(
         ":cstring_view",
         ":string_view",
         "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "decl",
-    srcs = [
-        "decl.cc",
-    ],
-    hdrs = [
-        "decl.h",
-    ],
-    visibility = ["//visibility:private"],
-    deps = [
-        ":arena",
-        ":assert",
-        ":config",
-        ":constant",
-        ":function_scope",
-        ":string_view",
-        ":type",
-        ":type_kind",
-    ],
-)
-
-cc_test(
-    name = "decl_test",
-    srcs = ["decl_test.cc"],
-    deps = [
-        ":alloc",
-        ":arena",
-        ":decl",
-        ":function_scope",
-        ":string_view",
-        ":string_view_absl",
-        ":type",
-        "@abseil-cpp//absl/log:die_if_null",
-        "@abseil-cpp//absl/strings:string_view",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "decl_proto",
-    srcs = [
-        "decl_proto.cc",
-    ],
-    hdrs = [
-        "decl_proto.h",
-    ],
-    visibility = ["//visibility:private"],
-    deps = [
-        ":arena",
-        ":assert",
-        ":config",
-        ":constant_proto",
-        ":decl",
-        ":function_scope",
-        ":status",
-        ":string_view",
-        ":type",
-        ":type_proto",
-        "@cel-spec//proto/cel/expr:checked_upb_proto",
-    ],
-)
-
-cc_test(
-    name = "decl_proto_test",
-    srcs = ["decl_proto_test.cc"],
-    deps = [
-        ":alloc",
-        ":arena",
-        ":constant",
-        ":decl",
-        ":decl_proto",
-        ":function_scope",
-        ":status",
-        ":string_view",
-        ":type",
-        "@abseil-cpp//absl/log:absl_check",
-        "@abseil-cpp//absl/log:die_if_null",
-        "@abseil-cpp//absl/strings:string_view",
-        "@cel-spec//proto/cel/expr:checked_cc_proto",
-        "@cel-spec//proto/cel/expr:checked_upb_proto",
-        "@googletest//:gtest_main",
-        "@protobuf",
-    ],
-)
-
-cc_library(
-    name = "decl_proto_v1alpha1",
-    srcs = [
-        "decl_proto_v1alpha1.cc",
-    ],
-    hdrs = [
-        "decl_proto_v1alpha1.h",
-    ],
-    visibility = ["//visibility:private"],
-    deps = [
-        ":arena",
-        ":assert",
-        ":config",
-        ":constant_proto_v1alpha1",
-        ":decl",
-        ":function_scope",
-        ":status",
-        ":string_view",
-        ":type",
-        ":type_proto_v1alpha1",
-        "@googleapis//google/api/expr/v1alpha1:checked_upb_proto",
-    ],
-)
-
-cc_test(
-    name = "decl_proto_v1alpha1_test",
-    srcs = ["decl_proto_v1alpha1_test.cc"],
-    deps = [
-        ":alloc",
-        ":arena",
-        ":constant",
-        ":decl",
-        ":decl_proto_v1alpha1",
-        ":function_scope",
-        ":status",
-        ":string_view",
-        ":type",
-        "@abseil-cpp//absl/log:absl_check",
-        "@abseil-cpp//absl/log:die_if_null",
-        "@abseil-cpp//absl/strings:string_view",
-        "@googleapis//google/api/expr/v1alpha1:checked_cc_proto",
-        "@googleapis//google/api/expr/v1alpha1:checked_upb_proto",
-        "@googletest//:gtest_main",
-        "@protobuf",
     ],
 )
 
@@ -634,7 +320,7 @@ cc_test(
 cc_library(
     name = "duration_absl",
     hdrs = ["duration_absl.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":config",
         ":duration",
@@ -661,7 +347,7 @@ cc_library(
     hdrs = [
         "duration_proto.h",
     ],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":assert",
         ":config",
@@ -725,7 +411,7 @@ cc_library(
     name = "error_absl",
     srcs = ["error_absl.cc"],
     hdrs = ["error_absl.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":assert",
         ":config",
@@ -762,7 +448,7 @@ cc_library(
     name = "error_proto",
     srcs = ["error_proto.cc"],
     hdrs = ["error_proto.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":arena",
         ":assert",
@@ -825,7 +511,7 @@ cc_test(
 cc_library(
     name = "error_code_absl",
     hdrs = ["error_code_absl.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":config",
         ":error_code",
@@ -847,7 +533,7 @@ cc_test(
 cc_library(
     name = "error_code_proto",
     hdrs = ["error_code_proto.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":config",
         ":error_code",
@@ -878,7 +564,7 @@ cc_library(
         "@platforms//os:linux": ["_GNU_SOURCE=1"],
         "//conditions:default": [],
     }),
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":assert",
         ":config",
@@ -906,7 +592,7 @@ cc_library(
     hdrs = [
         "error_status.h",
     ],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":arena",
         ":assert",
@@ -938,7 +624,7 @@ cc_test(
 cc_library(
     name = "function_scope",
     hdrs = ["function_scope.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":config",
     ],
@@ -985,7 +671,6 @@ cc_library(
         ":assert",
         ":ast",
         ":config",
-        ":decl",
         ":function_scope",
         ":status",
         ":string_view",
@@ -1011,7 +696,6 @@ cc_library(
         ":assert",
         ":ast",
         ":config",
-        ":decl",
         ":function_scope",
         ":status",
         ":string_view",
@@ -1027,114 +711,9 @@ cc_library(
 cc_library(
     name = "source",
     hdrs = ["source.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":config",
-    ],
-)
-
-cc_library(
-    name = "ref",
-    srcs = [
-        "ref.cc",
-    ],
-    hdrs = [
-        "ref.h",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":arena",
-        ":assert",
-        ":config",
-        ":constant",
-        ":string_view",
-    ],
-)
-
-cc_library(
-    name = "ref_proto",
-    srcs = [
-        "ref_proto.cc",
-    ],
-    hdrs = [
-        "ref_proto.h",
-    ],
-    visibility = ["//visibility:private"],
-    deps = [
-        ":arena",
-        ":assert",
-        ":config",
-        ":constant_proto",
-        ":ref",
-        ":status",
-        ":string_view",
-        "@cel-spec//proto/cel/expr:checked_upb_proto",
-        "@protobuf//upb/base",
-    ],
-)
-
-cc_test(
-    name = "ref_proto_test",
-    srcs = ["ref_proto_test.cc"],
-    deps = [
-        ":alloc",
-        ":arena",
-        ":constant",
-        ":ref",
-        ":ref_proto",
-        ":status",
-        ":string_view",
-        "@abseil-cpp//absl/log:absl_check",
-        "@abseil-cpp//absl/log:die_if_null",
-        "@abseil-cpp//absl/strings:string_view",
-        "@cel-spec//proto/cel/expr:checked_cc_proto",
-        "@cel-spec//proto/cel/expr:checked_upb_proto",
-        "@googletest//:gtest_main",
-        "@protobuf",
-    ],
-)
-
-cc_library(
-    name = "ref_proto_v1alpha1",
-    srcs = [
-        "ref_proto_v1alpha1.cc",
-    ],
-    hdrs = [
-        "ref_proto_v1alpha1.h",
-    ],
-    visibility = ["//visibility:private"],
-    deps = [
-        ":arena",
-        ":assert",
-        ":config",
-        ":constant_proto",
-        ":constant_proto_v1alpha1",
-        ":ref",
-        ":status",
-        ":string_view",
-        "@googleapis//google/api/expr/v1alpha1:checked_upb_proto",
-        "@protobuf//upb/base",
-    ],
-)
-
-cc_test(
-    name = "ref_proto_v1alpha1_test",
-    srcs = ["ref_proto_v1alpha1_test.cc"],
-    deps = [
-        ":alloc",
-        ":arena",
-        ":constant",
-        ":ref",
-        ":ref_proto_v1alpha1",
-        ":status",
-        ":string_view",
-        "@abseil-cpp//absl/log:absl_check",
-        "@abseil-cpp//absl/log:die_if_null",
-        "@abseil-cpp//absl/strings:string_view",
-        "@googleapis//google/api/expr/v1alpha1:checked_cc_proto",
-        "@googleapis//google/api/expr/v1alpha1:checked_upb_proto",
-        "@googletest//:gtest_main",
-        "@protobuf",
     ],
 )
 
@@ -1214,7 +793,7 @@ cc_library(
     name = "status_proto",
     srcs = ["status_proto.cc"],
     hdrs = ["status_proto.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":assert",
         ":config",
@@ -1278,7 +857,7 @@ cc_test(
 cc_library(
     name = "status_code_absl",
     hdrs = ["status_code_absl.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":config",
         ":status_code",
@@ -1300,7 +879,7 @@ cc_test(
 cc_library(
     name = "status_code_proto",
     hdrs = ["status_code_proto.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":config",
         ":status_code",
@@ -1400,7 +979,7 @@ cc_test(
 cc_library(
     name = "timestamp_absl",
     hdrs = ["timestamp_absl.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":config",
         ":timestamp",
@@ -1427,7 +1006,7 @@ cc_library(
     hdrs = [
         "timestamp_proto.h",
     ],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":assert",
         ":config",
@@ -1519,7 +1098,7 @@ cc_library(
     hdrs = [
         "type_proto.h",
     ],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":arena",
         ":assert",
@@ -1559,7 +1138,7 @@ cc_library(
     hdrs = [
         "type_proto_v1alpha1.h",
     ],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":arena",
         ":assert",

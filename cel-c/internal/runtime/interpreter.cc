@@ -1565,8 +1565,8 @@ static void _cel_Interpreter_PreVisitCallArgExpr(
 
 // Returns the instruction kind for the duration/timestamp accessor `fn_name`,
 // or `_cel_InstrKind_kUnreachable` if `fn_name` is not an accessor. Accessors
-// accept (google.protobuf.Duration), (google.protobuf.Timestamp) or
-// (google.protobuf.Timestamp, string).
+// accept (google.protobuf.Timestamp) or (google.protobuf.Timestamp, string),
+// and some additionally accept (google.protobuf.Duration).
 CEL_ATTRIBUTE_NODISCARD
 static _cel_InstrKind _cel_Interpreter_TimeAccessorKind(
     cel_StringView fn_name) {
@@ -1581,6 +1581,24 @@ static _cel_InstrKind _cel_Interpreter_TimeAccessorKind(
   }
   if (cel_StringView_Equals(fn_name, cel_StringView_From("getMilliseconds"))) {
     return _cel_InstrKind_kCallGetMilliseconds;
+  }
+  if (cel_StringView_Equals(fn_name, cel_StringView_From("getFullYear"))) {
+    return _cel_InstrKind_kCallGetFullYear;
+  }
+  if (cel_StringView_Equals(fn_name, cel_StringView_From("getMonth"))) {
+    return _cel_InstrKind_kCallGetMonth;
+  }
+  if (cel_StringView_Equals(fn_name, cel_StringView_From("getDate"))) {
+    return _cel_InstrKind_kCallGetDate;
+  }
+  if (cel_StringView_Equals(fn_name, cel_StringView_From("getDayOfMonth"))) {
+    return _cel_InstrKind_kCallGetDayOfMonth;
+  }
+  if (cel_StringView_Equals(fn_name, cel_StringView_From("getDayOfWeek"))) {
+    return _cel_InstrKind_kCallGetDayOfWeek;
+  }
+  if (cel_StringView_Equals(fn_name, cel_StringView_From("getDayOfYear"))) {
+    return _cel_InstrKind_kCallGetDayOfYear;
   }
   return _cel_InstrKind_kUnreachable;
 }

@@ -2779,16 +2779,45 @@ static inline void _cel_Interpretable_CallSize(
 }
 
 typedef enum {
+  // Accessors supported by both durations and timestamps.
   _cel_TimeAccessor_kHours,
   _cel_TimeAccessor_kMinutes,
   _cel_TimeAccessor_kSeconds,
   _cel_TimeAccessor_kMilliseconds,
+  // Accessors supported only by timestamps.
+  _cel_TimeAccessor_kFullYear,
+  _cel_TimeAccessor_kMonth,
+  _cel_TimeAccessor_kDate,
+  _cel_TimeAccessor_kDayOfMonth,
+  _cel_TimeAccessor_kDayOfWeek,
+  _cel_TimeAccessor_kDayOfYear,
 } _cel_TimeAccessor;
+
+// Returns true if `accessor` has an overload for `google.protobuf.Duration`.
+CEL_ATTRIBUTE_NODISCARD
+static inline bool _cel_TimeAccessor_SupportsDuration(
+    _cel_TimeAccessor accessor) {
+  switch (accessor) {
+    case _cel_TimeAccessor_kHours:
+    case _cel_TimeAccessor_kMinutes:
+    case _cel_TimeAccessor_kSeconds:
+    case _cel_TimeAccessor_kMilliseconds:
+      return true;
+    case _cel_TimeAccessor_kFullYear:
+    case _cel_TimeAccessor_kMonth:
+    case _cel_TimeAccessor_kDate:
+    case _cel_TimeAccessor_kDayOfMonth:
+    case _cel_TimeAccessor_kDayOfWeek:
+    case _cel_TimeAccessor_kDayOfYear:
+      return false;
+  }
+  CEL_UNREACHABLE();
+}
 
 // Returns the requested component of a duration, matching cel-cpp. Hours,
 // minutes and seconds are the total number of whole units in the duration,
 // truncated towards zero. Milliseconds is the sub-second component, in the
-// range [-999, 999].
+// range [-999, 999]. `accessor` must support durations.
 CEL_ATTRIBUTE_NODISCARD
 static inline int64_t _cel_Interpretable_DurationComponent(
     cel_Duration d, _cel_TimeAccessor accessor) {
@@ -2806,10 +2835,20 @@ static inline int64_t _cel_Interpretable_DurationComponent(
       return sec;
     case _cel_TimeAccessor_kMilliseconds:
       return nsec / INT32_C(1000000);
+    case _cel_TimeAccessor_kFullYear:
+    case _cel_TimeAccessor_kMonth:
+    case _cel_TimeAccessor_kDate:
+    case _cel_TimeAccessor_kDayOfMonth:
+    case _cel_TimeAccessor_kDayOfWeek:
+    case _cel_TimeAccessor_kDayOfYear:
+      break;
   }
   CEL_UNREACHABLE();
 }
 
+// Returns the requested component of a civil time, matching the CEL
+// specification. Note that `getMonth`, `getDayOfMonth` and `getDayOfYear` are
+// zero-based, whereas `getDate` is one-based.
 CEL_ATTRIBUTE_NODISCARD
 static inline int64_t _cel_Interpretable_CivilTimeComponent(
     const _cel_CivilTime* cel_nonnull civil_time, _cel_TimeAccessor accessor) {
@@ -2822,6 +2861,18 @@ static inline int64_t _cel_Interpretable_CivilTimeComponent(
       return civil_time->second;
     case _cel_TimeAccessor_kMilliseconds:
       return civil_time->millisecond;
+    case _cel_TimeAccessor_kFullYear:
+      return civil_time->year;
+    case _cel_TimeAccessor_kMonth:
+      return civil_time->month - 1;
+    case _cel_TimeAccessor_kDate:
+      return civil_time->day;
+    case _cel_TimeAccessor_kDayOfMonth:
+      return civil_time->day - 1;
+    case _cel_TimeAccessor_kDayOfWeek:
+      return civil_time->day_of_week;
+    case _cel_TimeAccessor_kDayOfYear:
+      return civil_time->day_of_year - 1;
   }
   CEL_UNREACHABLE();
 }
@@ -2829,6 +2880,12 @@ static inline int64_t _cel_Interpretable_CivilTimeComponent(
 // Implements `getHours`, `getMinutes`, `getSeconds` and `getMilliseconds`:
 //
 //   (google.protobuf.Duration) -> int
+//   (google.protobuf.Timestamp) -> int
+//   (google.protobuf.Timestamp, string) -> int
+//
+// And `getFullYear`, `getMonth`, `getDate`, `getDayOfMonth`, `getDayOfWeek` and
+// `getDayOfYear`:
+//
 //   (google.protobuf.Timestamp) -> int
 //   (google.protobuf.Timestamp, string) -> int
 //
@@ -2848,9 +2905,10 @@ static inline void _cel_Interpretable_CallTimeAccessor(
     case cel_ValueKind_kError:
       break;
     case cel_ValueKind_kDuration:
-      if (tz != cel_nullptr) {
-        // There is no time zone overload for durations.
-        if (cel_Value_IsError(tz)) {
+      if (tz != cel_nullptr || !_cel_TimeAccessor_SupportsDuration(accessor)) {
+        // There is no time zone overload for durations, and not all accessors
+        // support durations.
+        if (tz != cel_nullptr && cel_Value_IsError(tz)) {
           *top = *tz;
         } else {
           cel_Value_SetError(top,
@@ -3252,6 +3310,12 @@ static inline void _cel_Interpretable_ComputedGoto(
       &&INSTR_CALL_GET_MINUTES,
       &&INSTR_CALL_GET_SECONDS,
       &&INSTR_CALL_GET_MILLISECONDS,
+      &&INSTR_CALL_GET_FULL_YEAR,
+      &&INSTR_CALL_GET_MONTH,
+      &&INSTR_CALL_GET_DATE,
+      &&INSTR_CALL_GET_DAY_OF_MONTH,
+      &&INSTR_CALL_GET_DAY_OF_WEEK,
+      &&INSTR_CALL_GET_DAY_OF_YEAR,
       &&INSTR_CALL_CONTAINS_STRING,
       &&INSTR_CALL_STARTS_WITH_STRING,
       &&INSTR_CALL_ENDS_WITH_STRING,
@@ -3437,6 +3501,30 @@ INSTR_CALL_GET_SECONDS:
 INSTR_CALL_GET_MILLISECONDS:
   _cel_Interpretable_CallTimeAccessor(interp, &instr->data,
                                       _cel_TimeAccessor_kMilliseconds);
+  DISPATCH_NEXT_INSTR();
+INSTR_CALL_GET_FULL_YEAR:
+  _cel_Interpretable_CallTimeAccessor(interp, &instr->data,
+                                      _cel_TimeAccessor_kFullYear);
+  DISPATCH_NEXT_INSTR();
+INSTR_CALL_GET_MONTH:
+  _cel_Interpretable_CallTimeAccessor(interp, &instr->data,
+                                      _cel_TimeAccessor_kMonth);
+  DISPATCH_NEXT_INSTR();
+INSTR_CALL_GET_DATE:
+  _cel_Interpretable_CallTimeAccessor(interp, &instr->data,
+                                      _cel_TimeAccessor_kDate);
+  DISPATCH_NEXT_INSTR();
+INSTR_CALL_GET_DAY_OF_MONTH:
+  _cel_Interpretable_CallTimeAccessor(interp, &instr->data,
+                                      _cel_TimeAccessor_kDayOfMonth);
+  DISPATCH_NEXT_INSTR();
+INSTR_CALL_GET_DAY_OF_WEEK:
+  _cel_Interpretable_CallTimeAccessor(interp, &instr->data,
+                                      _cel_TimeAccessor_kDayOfWeek);
+  DISPATCH_NEXT_INSTR();
+INSTR_CALL_GET_DAY_OF_YEAR:
+  _cel_Interpretable_CallTimeAccessor(interp, &instr->data,
+                                      _cel_TimeAccessor_kDayOfYear);
   DISPATCH_NEXT_INSTR();
 INSTR_CALL_CONTAINS_STRING:
   _cel_Interpretable_CallContainsString(interp, &instr->data);
@@ -3694,6 +3782,36 @@ static inline void _cel_Interpretable_Switch(
       case _cel_InstrKind_kCallGetMilliseconds:
         _cel_Interpretable_CallTimeAccessor(interp, &instr->data,
                                             _cel_TimeAccessor_kMilliseconds);
+        ++instr;
+        break;
+      case _cel_InstrKind_kCallGetFullYear:
+        _cel_Interpretable_CallTimeAccessor(interp, &instr->data,
+                                            _cel_TimeAccessor_kFullYear);
+        ++instr;
+        break;
+      case _cel_InstrKind_kCallGetMonth:
+        _cel_Interpretable_CallTimeAccessor(interp, &instr->data,
+                                            _cel_TimeAccessor_kMonth);
+        ++instr;
+        break;
+      case _cel_InstrKind_kCallGetDate:
+        _cel_Interpretable_CallTimeAccessor(interp, &instr->data,
+                                            _cel_TimeAccessor_kDate);
+        ++instr;
+        break;
+      case _cel_InstrKind_kCallGetDayOfMonth:
+        _cel_Interpretable_CallTimeAccessor(interp, &instr->data,
+                                            _cel_TimeAccessor_kDayOfMonth);
+        ++instr;
+        break;
+      case _cel_InstrKind_kCallGetDayOfWeek:
+        _cel_Interpretable_CallTimeAccessor(interp, &instr->data,
+                                            _cel_TimeAccessor_kDayOfWeek);
+        ++instr;
+        break;
+      case _cel_InstrKind_kCallGetDayOfYear:
+        _cel_Interpretable_CallTimeAccessor(interp, &instr->data,
+                                            _cel_TimeAccessor_kDayOfYear);
         ++instr;
         break;
       case _cel_InstrKind_kCallContainsString:

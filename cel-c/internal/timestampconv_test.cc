@@ -177,6 +177,8 @@ TEST_F(CelTimestampConvTest, ToCivilTime) {
   EXPECT_EQ(civil_time.minute, 20);
   EXPECT_EQ(civil_time.second, 30);
   EXPECT_EQ(civil_time.millisecond, 456);
+  EXPECT_EQ(civil_time.day_of_week, 1);
+  EXPECT_EQ(civil_time.day_of_year, 335);
 
   ASSERT_TRUE(_cel_Timestamp_ToCivilTime(
       ts, cel_StringView_From("America/Los_Angeles"), &civil_time));
@@ -187,6 +189,8 @@ TEST_F(CelTimestampConvTest, ToCivilTime) {
   EXPECT_EQ(civil_time.minute, 20);
   EXPECT_EQ(civil_time.second, 30);
   EXPECT_EQ(civil_time.millisecond, 456);
+  EXPECT_EQ(civil_time.day_of_week, 1);
+  EXPECT_EQ(civil_time.day_of_year, 335);
 
   ASSERT_TRUE(_cel_Timestamp_ToCivilTime(ts, cel_StringView_From("+05:45"),
                                          &civil_time));
@@ -197,6 +201,8 @@ TEST_F(CelTimestampConvTest, ToCivilTime) {
   EXPECT_EQ(civil_time.minute, 5);
   EXPECT_EQ(civil_time.second, 30);
   EXPECT_EQ(civil_time.millisecond, 456);
+  EXPECT_EQ(civil_time.day_of_week, 1);
+  EXPECT_EQ(civil_time.day_of_year, 335);
 
   // A time zone that crosses the date boundary.
   ASSERT_TRUE(_cel_Timestamp_ToCivilTime(ts, cel_StringView_From("-11:00"),
@@ -208,6 +214,8 @@ TEST_F(CelTimestampConvTest, ToCivilTime) {
   EXPECT_EQ(civil_time.minute, 20);
   EXPECT_EQ(civil_time.second, 30);
   EXPECT_EQ(civil_time.millisecond, 456);
+  EXPECT_EQ(civil_time.day_of_week, 0);
+  EXPECT_EQ(civil_time.day_of_year, 334);
 
   // 1969-12-31T23:59:58.5Z
   ts = cel_Timestamp_FromUnix(-2, 500000000);
@@ -220,6 +228,8 @@ TEST_F(CelTimestampConvTest, ToCivilTime) {
   EXPECT_EQ(civil_time.minute, 59);
   EXPECT_EQ(civil_time.second, 58);
   EXPECT_EQ(civil_time.millisecond, 500);
+  EXPECT_EQ(civil_time.day_of_week, 3);
+  EXPECT_EQ(civil_time.day_of_year, 365);
 }
 
 TEST_F(CelTimestampConvTest, ToCivilTimeInvalidTimeZone) {

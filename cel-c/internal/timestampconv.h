@@ -55,6 +55,8 @@ typedef struct {
   int32_t minute;       // [0, 59]
   int32_t second;       // [0, 59]
   int32_t millisecond;  // [0, 999]
+  int32_t day_of_week;  // [0, 6], where 0 is Sunday
+  int32_t day_of_year;  // [1, 366]
 } _cel_CivilTime;
 
 // _cel_Timestamp_ToCivilTime

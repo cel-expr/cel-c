@@ -20,6 +20,7 @@
 #include "absl/strings/match.h"
 #include "absl/strings/str_replace.h"
 #include "absl/strings/string_view.h"
+#include "absl/time/civil_time.h"
 #include "absl/time/time.h"
 #include "cel-c/arena.h"
 #include "cel-c/internal/config.h"
@@ -115,6 +116,10 @@ bool _cel_Timestamp_ToCivilTime(cel_Timestamp ts, cel_StringView tz,
   out->second = info.cs.second();
   out->millisecond =
       static_cast<int32_t>(absl::ToInt64Milliseconds(info.subsecond));
+  // `absl::Weekday` enumerates Monday through Sunday as 0 through 6, so rotate
+  // it to make Sunday 0.
+  out->day_of_week = (static_cast<int32_t>(absl::GetWeekday(info.cs)) + 1) % 7;
+  out->day_of_year = absl::GetYearDay(absl::CivilDay(info.cs));
   return true;
 }
 

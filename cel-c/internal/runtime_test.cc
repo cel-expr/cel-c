@@ -1299,6 +1299,431 @@ TEST_F(RuntimeTest, CallGetMillisecondsTimestampWithTimeZone) {
   EXPECT_EQ(cel_Value_GetInt(&value), 0);
 }
 
+TEST_F(RuntimeTest, CallGetFullYearTimestamp) {
+  _cel_ProgramPtr prog =
+      Parse(R"cel(timestamp("2025-12-01T10:20:30.456Z").getFullYear())cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 2025);
+
+  prog = Parse(R"cel(getFullYear(timestamp("2025-12-01T10:20:30.456Z")))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 2025);
+
+  // Timestamps before the Unix epoch.
+  prog = Parse(R"cel(timestamp("1969-12-31T23:59:59Z").getFullYear())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 1969);
+
+  // Timestamp bounds.
+  prog = Parse(R"cel(timestamp("0001-01-01T00:00:00Z").getFullYear())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 1);
+
+  prog = Parse(
+      R"cel(timestamp("9999-12-31T23:59:59.999999999Z").getFullYear())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 9999);
+}
+
+TEST_F(RuntimeTest, CallGetMonthTimestamp) {
+  // Months are zero-based.
+  _cel_ProgramPtr prog =
+      Parse(R"cel(timestamp("2025-12-01T10:20:30.456Z").getMonth())cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 11);
+
+  prog = Parse(R"cel(getMonth(timestamp("2025-01-31T23:59:59Z")))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
+
+  // Timestamps before the Unix epoch.
+  prog = Parse(R"cel(timestamp("1969-12-31T23:59:59Z").getMonth())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 11);
+
+  // Timestamp bounds.
+  prog = Parse(R"cel(timestamp("0001-01-01T00:00:00Z").getMonth())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
+}
+
+TEST_F(RuntimeTest, CallGetDateTimestamp) {
+  // Dates are one-based.
+  _cel_ProgramPtr prog =
+      Parse(R"cel(timestamp("2025-12-01T10:20:30.456Z").getDate())cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 1);
+
+  prog = Parse(R"cel(getDate(timestamp("2025-01-31T23:59:59Z")))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 31);
+
+  // Leap day.
+  prog = Parse(R"cel(timestamp("2024-02-29T12:00:00Z").getDate())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 29);
+
+  // Timestamps before the Unix epoch.
+  prog = Parse(R"cel(timestamp("1969-12-31T23:59:59Z").getDate())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 31);
+}
+
+TEST_F(RuntimeTest, CallGetDayOfMonthTimestamp) {
+  // Days of the month are zero-based.
+  _cel_ProgramPtr prog =
+      Parse(R"cel(timestamp("2025-12-01T10:20:30.456Z").getDayOfMonth())cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
+
+  prog = Parse(R"cel(getDayOfMonth(timestamp("2025-01-31T23:59:59Z")))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 30);
+
+  // Leap day.
+  prog = Parse(R"cel(timestamp("2024-02-29T12:00:00Z").getDayOfMonth())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 28);
+
+  // Timestamps before the Unix epoch.
+  prog = Parse(R"cel(timestamp("1969-12-31T23:59:59Z").getDayOfMonth())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 30);
+}
+
+TEST_F(RuntimeTest, CallGetDayOfWeekTimestamp) {
+  // Monday.
+  _cel_ProgramPtr prog =
+      Parse(R"cel(timestamp("2025-12-01T10:20:30.456Z").getDayOfWeek())cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 1);
+
+  prog = Parse(R"cel(getDayOfWeek(timestamp("2025-12-01T10:20:30.456Z")))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 1);
+
+  // Days of the week start on Sunday.
+  prog = Parse(R"cel(timestamp("2025-11-30T23:59:59Z").getDayOfWeek())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
+
+  // Saturday.
+  prog = Parse(R"cel(timestamp("2025-12-06T00:00:00Z").getDayOfWeek())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 6);
+
+  // Thursday.
+  prog = Parse(R"cel(timestamp("1970-01-01T00:00:00Z").getDayOfWeek())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 4);
+
+  // Timestamps before the Unix epoch.
+  prog = Parse(R"cel(timestamp("1969-12-31T23:59:59Z").getDayOfWeek())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 3);
+
+  // Timestamp bounds.
+  prog = Parse(R"cel(timestamp("0001-01-01T00:00:00Z").getDayOfWeek())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 1);
+
+  prog = Parse(
+      R"cel(timestamp("9999-12-31T23:59:59.999999999Z").getDayOfWeek())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 5);
+}
+
+TEST_F(RuntimeTest, CallGetDayOfYearTimestamp) {
+  // Days of the year are zero-based.
+  _cel_ProgramPtr prog =
+      Parse(R"cel(timestamp("2025-12-01T10:20:30.456Z").getDayOfYear())cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 334);
+
+  prog = Parse(R"cel(getDayOfYear(timestamp("2025-01-01T00:00:00Z")))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
+
+  prog = Parse(R"cel(timestamp("2025-12-31T23:59:59Z").getDayOfYear())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 364);
+
+  // Leap years.
+  prog = Parse(R"cel(timestamp("2024-03-01T00:00:00Z").getDayOfYear())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 60);
+
+  prog = Parse(R"cel(timestamp("2024-12-31T23:59:59Z").getDayOfYear())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 365);
+
+  // Timestamps before the Unix epoch.
+  prog = Parse(R"cel(timestamp("1969-12-31T23:59:59Z").getDayOfYear())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 364);
+}
+
+TEST_F(RuntimeTest, CallDateAccessorsTimestampWithTimeZone) {
+  // Empty and UTC time zones match the single argument overloads.
+  _cel_ProgramPtr prog =
+      Parse(R"cel(timestamp("2025-12-01T02:00:00Z").getDate(""))cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 1);
+
+  prog = Parse(R"cel(timestamp("2025-12-01T02:00:00Z").getDate("UTC"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 1);
+
+  prog = Parse(R"cel(getDate(timestamp("2025-12-01T02:00:00Z"), "UTC"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 1);
+
+  // IANA time zones crossing the day and month boundary.
+  prog = Parse(
+      R"cel(timestamp("2025-12-01T02:00:00Z").getFullYear("America/Los_Angeles"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 2025);
+
+  prog = Parse(
+      R"cel(timestamp("2025-12-01T02:00:00Z").getMonth("America/Los_Angeles"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 10);
+
+  prog = Parse(
+      R"cel(timestamp("2025-12-01T02:00:00Z").getDate("America/Los_Angeles"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 30);
+
+  prog = Parse(
+      R"cel(timestamp("2025-12-01T02:00:00Z").getDayOfMonth("America/Los_Angeles"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 29);
+
+  prog = Parse(
+      R"cel(timestamp("2025-12-01T02:00:00Z").getDayOfWeek("America/Los_Angeles"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
+
+  prog = Parse(
+      R"cel(timestamp("2025-12-01T02:00:00Z").getDayOfYear("America/Los_Angeles"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 333);
+
+  // IANA time zones crossing the year boundary backwards, into a leap year.
+  prog = Parse(
+      R"cel(timestamp("2025-01-01T03:00:00Z").getFullYear("America/New_York"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 2024);
+
+  prog = Parse(
+      R"cel(timestamp("2025-01-01T03:00:00Z").getMonth("America/New_York"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 11);
+
+  prog = Parse(
+      R"cel(timestamp("2025-01-01T03:00:00Z").getDate("America/New_York"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 31);
+
+  prog = Parse(
+      R"cel(timestamp("2025-01-01T03:00:00Z").getDayOfWeek("America/New_York"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 2);
+
+  prog = Parse(
+      R"cel(timestamp("2025-01-01T03:00:00Z").getDayOfYear("America/New_York"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 365);
+
+  // IANA time zones crossing the year boundary forwards.
+  prog = Parse(
+      R"cel(timestamp("2025-12-31T20:00:00Z").getFullYear("Asia/Tokyo"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 2026);
+
+  prog = Parse(
+      R"cel(timestamp("2025-12-31T20:00:00Z").getMonth("Asia/Tokyo"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
+
+  prog =
+      Parse(R"cel(timestamp("2025-12-31T20:00:00Z").getDate("Asia/Tokyo"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 1);
+
+  prog = Parse(
+      R"cel(timestamp("2025-12-31T20:00:00Z").getDayOfMonth("Asia/Tokyo"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
+
+  prog = Parse(
+      R"cel(timestamp("2025-12-31T20:00:00Z").getDayOfWeek("Asia/Tokyo"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 4);
+
+  prog = Parse(
+      R"cel(timestamp("2025-12-31T20:00:00Z").getDayOfYear("Asia/Tokyo"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 0);
+
+  // Fixed UTC offsets.
+  prog = Parse(R"cel(timestamp("2025-12-01T20:00:00Z").getDate("+05:30"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 2);
+
+  prog = Parse(
+      R"cel(timestamp("2025-12-01T20:00:00Z").getDayOfWeek("+05:30"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 2);
+
+  prog = Parse(R"cel(timestamp("2025-12-01T02:00:00Z").getDate("-08:00"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 30);
+
+  prog = Parse(R"cel(timestamp("2024-02-28T20:00:00Z").getDate("+05:30"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 29);
+
+  prog = Parse(
+      R"cel(timestamp("2024-02-28T20:00:00Z").getDayOfYear("+05:30"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 59);
+
+  // Time zones before the Unix epoch.
+  prog =
+      Parse(R"cel(timestamp("1970-01-01T02:00:00Z").getFullYear("-05:00"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 1969);
+
+  prog = Parse(
+      R"cel(timestamp("1970-01-01T02:00:00Z").getDayOfWeek("-05:00"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 3);
+}
+
 TEST_F(RuntimeTest, CallTimeAccessorsNoSuchOverload) {
   _cel_ProgramPtr prog = Parse(R"cel(getHours(1))cel");
   _cel_TestingVariableResolver var_resolver;
@@ -1461,6 +1886,210 @@ TEST_F(RuntimeTest, CallTimeAccessorsPropagatesError) {
             cel_StringView_From("cel: divide by zero"));
 
   prog = Parse(R"cel(true.getSeconds(1 / 0))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: divide by zero"));
+}
+
+TEST_F(RuntimeTest, CallDateAccessorsNoSuchOverload) {
+  // Durations do not support the date accessors.
+  _cel_ProgramPtr prog = Parse(R"cel(duration("1h").getFullYear())cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: no such overload"));
+
+  prog = Parse(R"cel(getMonth(duration("1h")))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: no such overload"));
+
+  prog = Parse(R"cel(duration("1h").getDate())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: no such overload"));
+
+  prog = Parse(R"cel(duration("1h").getDayOfMonth())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: no such overload"));
+
+  prog = Parse(R"cel(duration("1h").getDayOfWeek())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: no such overload"));
+
+  prog = Parse(R"cel(duration("1h").getDayOfYear())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: no such overload"));
+
+  prog = Parse(R"cel(duration("1h").getDayOfYear("UTC"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: no such overload"));
+
+  prog = Parse(R"cel(getFullYear(1))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: no such overload"));
+
+  prog = Parse(R"cel("foo".getMonth())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: no such overload"));
+
+  prog = Parse(R"cel(getDate(1.0, "UTC"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: no such overload"));
+
+  // The time zone must be a string.
+  prog = Parse(R"cel(timestamp("2025-12-01T10:20:30Z").getDayOfWeek(1))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: no such overload"));
+}
+
+TEST_F(RuntimeTest, CallDateAccessorsInvalidTimeZone) {
+  _cel_ProgramPtr prog = Parse(
+      R"cel(timestamp("2025-12-01T10:20:30Z").getFullYear("Invalid/Zone"))cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: invalid time zone"));
+
+  prog = Parse(R"cel(timestamp("2025-12-01T10:20:30Z").getMonth("foo"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: invalid time zone"));
+
+  prog = Parse(R"cel(timestamp("2025-12-01T10:20:30Z").getDate("+aa:bb"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: invalid time zone"));
+
+  prog = Parse(R"cel(timestamp("2025-12-01T10:20:30Z").getDayOfMonth(":"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: invalid time zone"));
+
+  prog =
+      Parse(R"cel(timestamp("2025-12-01T10:20:30Z").getDayOfWeek("foo"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: invalid time zone"));
+
+  prog = Parse(
+      R"cel(timestamp("2025-12-01T10:20:30Z").getDayOfYear("Invalid/Zone"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: invalid time zone"));
+}
+
+TEST_F(RuntimeTest, CallDateAccessorsPropagatesError) {
+  _cel_ProgramPtr prog = Parse(R"cel(getFullYear(1 / 0))cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: divide by zero"));
+
+  prog = Parse(R"cel((1 / 0).getMonth())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: divide by zero"));
+
+  prog = Parse(R"cel((1 / 0).getDate())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: divide by zero"));
+
+  prog = Parse(R"cel((1 / 0).getDayOfMonth())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: divide by zero"));
+
+  prog = Parse(R"cel((1 / 0).getDayOfWeek())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: divide by zero"));
+
+  prog = Parse(R"cel((1 / 0).getDayOfYear())cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: divide by zero"));
+
+  // Errors in either argument of the time zone overload propagate.
+  prog = Parse(R"cel((1 / 0).getDayOfYear("UTC"))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: divide by zero"));
+
+  prog = Parse(R"cel(timestamp("2025-12-01T10:20:30Z").getMonth(1 / 0))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: divide by zero"));
+
+  prog = Parse(R"cel(duration("1h").getDate(1 / 0))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: divide by zero"));
+
+  prog = Parse(R"cel(true.getDayOfWeek(1 / 0))cel");
   act = Activate(prog.get(), &var_resolver);
   value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsError(&value));

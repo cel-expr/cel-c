@@ -56,8 +56,10 @@ CEL_ATTRIBUTE_NOTHROW
 CEL_EXTERN void cel_AstTraverser_StepOver(
     cel_AstTraverser* cel_nonnull ast_traverser);
 
+// Not `CEL_ATTRIBUTE_NOTHROW`: visitor callbacks may abort the traversal with
+// `longjmp`, which on some platforms (e.g. Windows) unwinds through this frame
+// like an exception and would call `std::terminate` if it were `noexcept`.
 CEL_ATTRIBUTE_NODISCARD
-CEL_ATTRIBUTE_NOTHROW
 CEL_EXTERN bool cel_AstTraverser_Traverse(CEL_NONNULL(cel_AstTraverser*)
                                               ast_traverser,
                                           CEL_NONNULL(cel_Status*) status);

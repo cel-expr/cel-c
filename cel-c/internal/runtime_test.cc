@@ -27,6 +27,8 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/absl_check.h"
 #include "absl/log/die_if_null.h"
+#include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/string_view.h"
 #include "cel-c/activation.h"
 #include "cel-c/alloc.h"
@@ -60,7 +62,9 @@
 
 namespace {
 
+using ::absl_testing::StatusIs;
 using ::testing::_;
+using ::testing::HasSubstr;
 using ::testing::Invoke;
 
 struct _cel_AstDeleter {
@@ -243,6 +247,20 @@ class RuntimeHarness {
                                              ast.get(), nullptr, status()));
     ABSL_CHECK(prog != nullptr) << cel_Status_ToAbsl(status());
     return prog;
+  }
+
+  // Like `Parse`, but returns the planning status instead of crashing when
+  // planning fails.
+  absl::Status ParseStatus(absl::string_view content) {
+    _cel_AstPtr ast(_cel_TestingParser_Parse(ABSL_DIE_IF_NULL(parser_.get()),
+                                             cel_StringView_FromAbsl(content),
+                                             arena()));
+    _cel_ProgramPtr prog(
+        cel_Runtime_Compile(rt_.get(), ast.get(), nullptr, status()));
+    absl::Status result = cel_Status_ToAbsl(status());
+    ABSL_CHECK_EQ(prog == nullptr, !result.ok());
+    cel_Status_Clear(status());
+    return result;
   }
 
   _cel_ProgramPtr Compile(absl::string_view content) {
@@ -2095,6 +2113,135 @@ TEST_F(RuntimeTest, CallDateAccessorsPropagatesError) {
   ASSERT_TRUE(cel_Value_IsError(&value));
   EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
             cel_StringView_From("cel: divide by zero"));
+}
+
+TEST_F(RuntimeTest, CallDyn) {
+  _cel_ProgramPtr prog = Parse(R"cel(dyn(1))cel");
+  _cel_TestingVariableResolver var_resolver({{"foo", IntValue(42)}});
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 1);
+
+  prog = Parse(R"cel(dyn(2u))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsUint(&value));
+  EXPECT_EQ(cel_Value_GetUint(&value), 2u);
+
+  prog = Parse(R"cel(dyn(null))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  EXPECT_TRUE(cel_Value_IsNull(&value));
+
+  prog = Parse(R"cel(dyn("foo") + "bar")cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsString(&value));
+  EXPECT_EQ(cel_Value_GetString(&value), cel_StringView_From("foobar"));
+
+  prog = Parse(R"cel(dyn(dyn(true)))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_TRUE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel(dyn(foo) + 1)cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 43);
+
+  prog = Parse(R"cel(dyn([1, 2]) == [1, 2])cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_TRUE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel(dyn(false) ? 1 : dyn(2))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 2);
+}
+
+TEST_F(RuntimeTest, CallDynInControlFlow) {
+  _cel_ProgramPtr prog = Parse(R"cel(dyn(false) && (1 / 0 == 1))cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_FALSE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel(dyn(true) || (1 / 0 == 1))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsBool(&value));
+  EXPECT_TRUE(cel_Value_GetBool(&value));
+
+  prog = Parse(R"cel(true ? dyn(1) : 2)cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 1);
+
+  prog = Parse(R"cel({dyn("k"): dyn(1)}["k"])cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 1);
+
+  prog = Parse(R"cel([dyn(1), 2][0])cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 1);
+
+  prog = Parse(R"cel(cel.bind(x, dyn(2), x * x))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 4);
+
+  prog = Parse(R"cel(cel.bind(x, 2, dyn(x) * dyn(x)))cel");
+  act = Activate(prog.get(), &var_resolver);
+  value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 4);
+}
+
+TEST_F(RuntimeTest, CallDynRequiresSingleGlobalArg) {
+  EXPECT_THAT(ParseStatus(R"cel(dyn())cel"),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("function with name dyn")));
+  EXPECT_THAT(ParseStatus(R"cel(dyn(1, 2))cel"),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("function with name dyn")));
+  EXPECT_THAT(ParseStatus(R"cel(1.dyn())cel"),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("function with name dyn")));
+  EXPECT_THAT(ParseStatus(R"cel(1.dyn(2))cel"),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("function with name dyn")));
+}
+
+TEST_F(RuntimeTest, CallDynPropagatesError) {
+  _cel_ProgramPtr prog = Parse(R"cel(dyn(1 / 0))cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsError(&value));
+  EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
+            cel_StringView_From("cel: divide by zero"));
+}
+
+TEST_F(RuntimeTest, CallDynChecked) {
+  _cel_ProgramPtr prog = Compile(R"cel(dyn(1) + 2)cel");
+  _cel_TestingVariableResolver var_resolver;
+  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_Value value = Execute(act.get());
+  ASSERT_TRUE(cel_Value_IsInt(&value));
+  EXPECT_EQ(cel_Value_GetInt(&value), 3);
 }
 
 // TODO: Add addition tests for duration/timestamp

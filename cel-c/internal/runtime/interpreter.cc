@@ -1606,6 +1606,15 @@ static _cel_InstrKind _cel_Interpreter_TimeAccessorKind(
 static void _cel_Interpreter_PostVisitCallExpr(
     cel_AstVisitor* cel_nonnull visitor, const cel_CallExpr* cel_nonnull expr) {
   _cel_Interpreter* interp = _cel_Interpreter_FromAstVisitor(visitor);
+  if (cel_CallExpr_Target(expr) == cel_nullptr &&
+      cel_CallExpr_Args(expr, cel_nullptr, cel_nullptr) == 1 &&
+      cel_StringView_Equals(cel_CallExpr_Function(expr),
+                            cel_StringView_From("dyn"))) {
+    // `dyn(x)` only affects type checking and is the identity function at
+    // runtime. The value of its argument is already on the top of the value
+    // stack, so no instruction is needed.
+    return;
+  }
   uint32_t index =
       _cel_Interpreter_InternString(interp, cel_CallExpr_Function(expr));
   _cel_Instr* instr = _cel_Interpreter_AppendInstr(interp);

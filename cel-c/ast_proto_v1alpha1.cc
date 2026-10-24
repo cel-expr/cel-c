@@ -24,6 +24,7 @@
 #include "cel-c/arena.h"
 #include "cel-c/assert.h"
 #include "cel-c/ast.h"
+#include "cel-c/attribute.h"
 #include "cel-c/config.h"
 #include "cel-c/constant_proto_v1alpha1.h"
 #include "cel-c/internal/charconv.h"
@@ -45,6 +46,115 @@ typedef struct {
   CEL_NULLABLE(const google_api_expr_v1alpha1_SourceInfo*) source_info;
   _cel_jmp_buf jmp;
 } _cel_AstFromProtoV1Alpha1State;
+
+static bool _cel_AstFromProtoV1Alpha1_IsAttributeOrHasField(
+    CEL_NONNULL(const google_api_expr_v1alpha1_Expr_Call*) expr) {
+  size_t expected_num_args;
+  if (cel_StringView_Equals(google_api_expr_v1alpha1_Expr_Call_function(expr),
+                            cel_StringView_From("cel.@attribute"))) {
+    expected_num_args = 3;
+  } else if (cel_StringView_Equals(
+                 google_api_expr_v1alpha1_Expr_Call_function(expr),
+                 cel_StringView_From("cel.@hasField"))) {
+    expected_num_args = 2;
+  } else {
+    return false;
+  }
+  if (google_api_expr_v1alpha1_Expr_Call_has_target(expr)) {
+    return false;
+  }
+  size_t num_args = 0;
+  const google_api_expr_v1alpha1_Expr* const* args =
+      google_api_expr_v1alpha1_Expr_Call_args(expr, &num_args);
+  if (num_args != expected_num_args || args[0] == nullptr ||
+      args[1] == nullptr || (expected_num_args == 3 && args[2] == nullptr)) {
+    return false;
+  }
+  // Check that the second argument is a list of lists where each list starts
+  // with at least one constant or two.
+  if (!google_api_expr_v1alpha1_Expr_has_list_expr(args[1])) {
+    return false;
+  }
+  const google_api_expr_v1alpha1_Expr_CreateList* list_expr =
+      google_api_expr_v1alpha1_Expr_list_expr(args[1]);
+  size_t optional_indices = 0;
+  google_api_expr_v1alpha1_Expr_CreateList_optional_indices(list_expr,
+                                                            &optional_indices);
+  if (optional_indices != 0) {
+    return false;
+  }
+  size_t num_elems = 0;
+  const google_api_expr_v1alpha1_Expr* const* elems =
+      google_api_expr_v1alpha1_Expr_CreateList_elements(list_expr, &num_elems);
+  if (num_elems == 0) {
+    return false;
+  }
+  for (size_t i = 0; i < num_elems; ++i) {
+    const google_api_expr_v1alpha1_Expr* elem = elems[i];
+    if (elem == nullptr) {
+      return false;
+    }
+    if (!google_api_expr_v1alpha1_Expr_has_list_expr(elem)) {
+      return false;
+    }
+    const google_api_expr_v1alpha1_Expr_CreateList* qual_expr =
+        google_api_expr_v1alpha1_Expr_list_expr(elem);
+    optional_indices = 0;
+    google_api_expr_v1alpha1_Expr_CreateList_optional_indices(
+        qual_expr, &optional_indices);
+    if (optional_indices != 0) {
+      return false;
+    }
+    size_t num_qual_elems = 0;
+    const google_api_expr_v1alpha1_Expr* const* qual_elems =
+        google_api_expr_v1alpha1_Expr_CreateList_elements(qual_expr,
+                                                          &num_qual_elems);
+    if (num_qual_elems == 0) {
+      return false;
+    }
+    if (num_qual_elems == 1) {
+      // Should be `[<constant>]`. With the contant being the first element in
+      // the list.
+      if (qual_elems[0] == nullptr ||
+          !google_api_expr_v1alpha1_Expr_has_const_expr(qual_elems[0])) {
+        return false;
+      }
+      switch (google_api_expr_v1alpha1_Constant_constant_kind_case(
+          google_api_expr_v1alpha1_Expr_const_expr(qual_elems[0]))) {
+        case google_api_expr_v1alpha1_Constant_constant_kind_bool_value:
+          [[fallthrough]];
+        case google_api_expr_v1alpha1_Constant_constant_kind_int64_value:
+          [[fallthrough]];
+        case google_api_expr_v1alpha1_Constant_constant_kind_uint64_value:
+          [[fallthrough]];
+        case google_api_expr_v1alpha1_Constant_constant_kind_string_value:
+          break;
+        default:
+          return false;
+      }
+    } else {
+      // Should be `.<field>`. With the field name being the second element in
+      // the list as a string constant. The first element is a field number, we
+      // validate but ignore it.
+      if (qual_elems[0] == nullptr || qual_elems[1] == nullptr ||
+          !google_api_expr_v1alpha1_Expr_has_const_expr(qual_elems[0]) ||
+          !google_api_expr_v1alpha1_Expr_has_const_expr(qual_elems[1])) {
+        return false;
+      }
+      if (google_api_expr_v1alpha1_Constant_constant_kind_case(
+              google_api_expr_v1alpha1_Expr_const_expr(qual_elems[0])) !=
+          google_api_expr_v1alpha1_Constant_constant_kind_int64_value) {
+        return false;
+      }
+      if (google_api_expr_v1alpha1_Constant_constant_kind_case(
+              google_api_expr_v1alpha1_Expr_const_expr(qual_elems[1])) !=
+          google_api_expr_v1alpha1_Constant_constant_kind_string_value) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
 
 static bool _cel_AstFromProtoV1Alpha1_IsBlockIndex(
     CEL_NONNULL(const google_api_expr_v1alpha1_Expr_Ident*) expr,
@@ -438,6 +548,90 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProtoV1Alpha1_CallExpr(
     }
     cel_BlockExpr_SetBound(expr,
                            _cel_AstFromProtoV1Alpha1_Expr(state, in_args[1]));
+    return cel_Expr_UpCast(expr);
+  }
+  if (_cel_AstFromProtoV1Alpha1_IsAttributeOrHasField(in)) {
+    _cel_AstFromProtoV1Alpha1_CheckId(state, id);
+    cel_AttrExpr* expr = cel_AttrExpr_New(state->ast);
+    if (CEL_UNLIKELY(expr == cel_nullptr)) {
+      cel_OutOfMemoryStatus(state->status);
+      _cel_longjmp(state->jmp);
+    }
+    cel_Expr_SetId(cel_Expr_UpCast(expr), id);
+    _cel_AstFromProtoV1Alpha1_UpdatePosition(state, cel_Expr_UpCast(expr));
+    _cel_AstFromProtoV1Alpha1_SetType(state, cel_Expr_UpCast(expr));
+    _cel_AstFromProtoV1Alpha1_SetRef(state, cel_Expr_UpCast(expr));
+    cel_AttrExpr_SetTarget(expr,
+                           _cel_AstFromProtoV1Alpha1_Expr(state, in_args[0]));
+    size_t in_quals_len = 0;
+    const google_api_expr_v1alpha1_Expr* const* in_quals =
+        google_api_expr_v1alpha1_Expr_CreateList_elements(
+            google_api_expr_v1alpha1_Expr_list_expr(in_args[1]), &in_quals_len);
+    for (size_t i = 0; i < in_quals_len; ++i) {
+      size_t in_qual_len = 0;
+      const google_api_expr_v1alpha1_Expr* const* in_qual =
+          google_api_expr_v1alpha1_Expr_CreateList_elements(
+              google_api_expr_v1alpha1_Expr_list_expr(in_quals[i]),
+              &in_qual_len);
+      CEL_ASSERT_GE(in_qual_len, size_t{1});
+      cel_AttrQualExpr* qual_expr = cel_AttrQualExpr_New(state->ast);
+      if (CEL_UNLIKELY(qual_expr == cel_nullptr)) {
+        cel_OutOfMemoryStatus(state->status);
+        _cel_longjmp(state->jmp);
+      }
+      int64_t qual_expr_id;
+      if (in_qual_len == 1) {
+        qual_expr_id = google_api_expr_v1alpha1_Expr_id(in_qual[0]);
+        switch (google_api_expr_v1alpha1_Constant_constant_kind_case(
+            google_api_expr_v1alpha1_Expr_const_expr(in_qual[0]))) {
+          case google_api_expr_v1alpha1_Constant_constant_kind_bool_value:
+            *cel_AttrQualExpr_MutableValue(qual_expr) =
+                cel_BoolAttributeQualifier(
+                    google_api_expr_v1alpha1_Constant_bool_value(
+                        google_api_expr_v1alpha1_Expr_const_expr(in_qual[0])));
+            break;
+          case google_api_expr_v1alpha1_Constant_constant_kind_int64_value:
+            *cel_AttrQualExpr_MutableValue(qual_expr) =
+                cel_IntAttributeQualifier(
+                    google_api_expr_v1alpha1_Constant_int64_value(
+                        google_api_expr_v1alpha1_Expr_const_expr(in_qual[0])));
+            break;
+          case google_api_expr_v1alpha1_Constant_constant_kind_uint64_value:
+            *cel_AttrQualExpr_MutableValue(qual_expr) =
+                cel_UintAttributeQualifier(
+                    google_api_expr_v1alpha1_Constant_uint64_value(
+                        google_api_expr_v1alpha1_Expr_const_expr(in_qual[0])));
+            break;
+          case google_api_expr_v1alpha1_Constant_constant_kind_string_value:
+            *cel_AttrQualExpr_MutableValue(qual_expr) =
+                cel_StringAttributeQualifier(_cel_AstFromProtoV1Alpha1_StrDup(
+                    state,
+                    google_api_expr_v1alpha1_Constant_string_value(
+                        google_api_expr_v1alpha1_Expr_const_expr(in_qual[0]))));
+            break;
+          default:
+            CEL_UNREACHABLE();
+        }
+      } else {
+        qual_expr_id = google_api_expr_v1alpha1_Expr_id(in_qual[1]);
+        *cel_AttrQualExpr_MutableValue(qual_expr) =
+            cel_StringAttributeQualifier(_cel_AstFromProtoV1Alpha1_StrDup(
+                state,
+                google_api_expr_v1alpha1_Constant_string_value(
+                    google_api_expr_v1alpha1_Expr_const_expr(in_qual[1]))));
+      }
+      _cel_AstFromProtoV1Alpha1_CheckId(state, qual_expr_id);
+      cel_Expr_SetId(cel_Expr_UpCast(qual_expr), qual_expr_id);
+      _cel_AstFromProtoV1Alpha1_UpdatePosition(state,
+                                               cel_Expr_UpCast(qual_expr));
+      _cel_AstFromProtoV1Alpha1_SetType(state, cel_Expr_UpCast(qual_expr));
+      _cel_AstFromProtoV1Alpha1_SetRef(state, cel_Expr_UpCast(qual_expr));
+      cel_AttrExpr_AppendQualifier(expr, qual_expr);
+    }
+    cel_AttrExpr_SetTestOnly(
+        expr,
+        cel_StringView_Equals(google_api_expr_v1alpha1_Expr_Call_function(in),
+                              cel_StringView_From("cel.@hasField")));
     return cel_Expr_UpCast(expr);
   }
   cel_StringView function = google_api_expr_v1alpha1_Expr_Call_function(in);

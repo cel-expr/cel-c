@@ -21,6 +21,7 @@
 
 #include "cel-c/arena.h"
 #include "cel-c/assert.h"
+#include "cel-c/attribute.h"
 #include "cel-c/config.h"
 #include "cel-c/constant.h"
 #include "cel-c/operators.h"
@@ -52,6 +53,8 @@ typedef enum CEL_ATTRIBUTE_OPEN_ENUM {
   cel_ExprKind_kBlock,
   cel_ExprKind_kBlockBinding,
   cel_ExprKind_kBlockIndex,
+  cel_ExprKind_kAttrQual,
+  cel_ExprKind_kAttr,
 } cel_ExprKind;
 
 typedef int64_t cel_ExprId;
@@ -79,6 +82,8 @@ typedef struct cel_BindExpr cel_BindExpr;
 typedef struct cel_BlockIndexExpr cel_BlockIndexExpr;
 typedef struct cel_BlockBindingExpr cel_BlockBindingExpr;
 typedef struct cel_BlockExpr cel_BlockExpr;
+typedef struct cel_AttrQualExpr cel_AttrQualExpr;
+typedef struct cel_AttrExpr cel_AttrExpr;
 
 // cel_Ast
 
@@ -1726,6 +1731,165 @@ static CEL_INLINE CEL_NULLABILITY_UNKNOWN(const cel_BlockExpr*)
   return (CEL_NULLABILITY_UNKNOWN(const cel_BlockExpr*))expr;
 }
 
+// cel_AttrQualExpr
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_AttrQualExpr* cel_nullable
+cel_AttrQualExpr_New(cel_Ast* cel_nonnull ast);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_AttrExpr* cel_nullable
+cel_AttrQualExpr_Parent(const cel_AttrQualExpr* cel_nonnull expr);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN const cel_AttributeQualifier* cel_nonnull
+cel_AttrQualExpr_Value(const cel_AttrQualExpr* cel_nonnull expr);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_AttributeQualifier* cel_nonnull
+cel_AttrQualExpr_MutableValue(cel_AttrQualExpr* cel_nonnull expr);
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(cel_Expr*)
+    cel_AttrQualExpr_MutableUpCast(CEL_NULLABILITY_UNKNOWN(cel_AttrQualExpr*)
+                                       expr) {
+  return (CEL_NULLABILITY_UNKNOWN(cel_Expr*))expr;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(const cel_Expr*)
+    cel_AttrQualExpr_ConstUpCast(
+        CEL_NULLABILITY_UNKNOWN(const cel_AttrQualExpr*) expr) {
+  return (CEL_NULLABILITY_UNKNOWN(const cel_Expr*))expr;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(cel_AttrQualExpr*)
+    cel_AttrQualExpr_MutableDownCast(CEL_NULLABILITY_UNKNOWN(cel_Expr*) expr) {
+  CEL_ASSERT(expr == cel_nullptr ||
+             cel_Expr_Kind(expr) == cel_ExprKind_kAttrQual);
+
+  return (CEL_NULLABILITY_UNKNOWN(cel_AttrQualExpr*))expr;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(const cel_AttrQualExpr*)
+    cel_AttrQualExpr_ConstDownCast(CEL_NULLABILITY_UNKNOWN(const cel_Expr*)
+                                       expr) {
+  CEL_ASSERT(expr == cel_nullptr ||
+             cel_Expr_Kind(expr) == cel_ExprKind_kAttrQual);
+
+  return (CEL_NULLABILITY_UNKNOWN(const cel_AttrQualExpr*))expr;
+}
+
+// cel_AttrExpr
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_AttrExpr* cel_nullable cel_AttrExpr_New(CEL_NONNULL(cel_Ast*)
+                                                           ast);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_Expr* cel_nullable
+cel_AttrExpr_Target(const cel_AttrExpr* cel_nonnull expr);
+
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_Expr* cel_nullable cel_AttrExpr_SetTarget(
+    cel_AttrExpr* cel_nonnull expr, cel_Expr* cel_nullable target);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN cel_Expr* cel_nullable
+cel_AttrExpr_ReleaseTarget(cel_AttrExpr* cel_nonnull expr);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN void cel_AttrExpr_AppendQualifier(CEL_NONNULL(cel_AttrExpr*) expr,
+                                             CEL_NONNULL(cel_AttrQualExpr*)
+                                                 qualifier);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN void cel_AttrExpr_PrependQualifier(CEL_NONNULL(cel_AttrExpr*) expr,
+                                              CEL_NONNULL(cel_AttrQualExpr*)
+                                                  qualifier);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN void cel_AttrExpr_InsertQualifier(CEL_NONNULL(cel_AttrExpr*) expr,
+                                             CEL_NULLABLE(cel_AttrQualExpr*)
+                                                 before,
+                                             CEL_NONNULL(cel_AttrQualExpr*)
+                                                 qualifier);
+
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN CEL_NONNULL(cel_AttrQualExpr*)
+    cel_AttrExpr_ReleaseQualifier(CEL_NONNULL(cel_AttrExpr*) expr,
+                                  CEL_NONNULL(cel_AttrQualExpr*) qualifier);
+
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN CEL_NONNULL(cel_AttrQualExpr*)
+    cel_AttrExpr_Qualifier(CEL_NONNULL(const cel_AttrExpr*) expr, size_t index);
+
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN size_t cel_AttrExpr_Qualifiers(CEL_NONNULL(const cel_AttrExpr*) expr,
+                                          CEL_NULLABLE(cel_AttrQualExpr*) *
+                                              cel_nullable head,
+                                          CEL_NULLABLE(cel_AttrQualExpr*) *
+                                              cel_nullable tail);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN CEL_NULLABLE(cel_AttrQualExpr*)
+    cel_AttrExpr_PrevQualifier(CEL_NULLABLE(const cel_AttrQualExpr*) qualifier);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN CEL_NULLABLE(cel_AttrQualExpr*)
+    cel_AttrExpr_NextQualifier(CEL_NULLABLE(const cel_AttrQualExpr*) qualifier);
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN bool cel_AttrExpr_TestOnly(CEL_NONNULL(const cel_AttrExpr*) expr);
+
+CEL_ATTRIBUTE_NOTHROW
+CEL_EXTERN void cel_AttrExpr_SetTestOnly(CEL_NONNULL(cel_AttrExpr*) expr,
+                                         bool test_only);
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(cel_Expr*)
+    cel_AttrExpr_MutableUpCast(CEL_NULLABILITY_UNKNOWN(cel_AttrExpr*) expr) {
+  return (CEL_NULLABILITY_UNKNOWN(cel_Expr*))expr;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(const cel_Expr*)
+    cel_AttrExpr_ConstUpCast(CEL_NULLABILITY_UNKNOWN(const cel_AttrExpr*)
+                                 expr) {
+  return (CEL_NULLABILITY_UNKNOWN(const cel_Expr*))expr;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(cel_AttrExpr*)
+    cel_AttrExpr_MutableDownCast(CEL_NULLABILITY_UNKNOWN(cel_Expr*) expr) {
+  CEL_ASSERT(expr == cel_nullptr || cel_Expr_Kind(expr) == cel_ExprKind_kAttr);
+
+  return (CEL_NULLABILITY_UNKNOWN(cel_AttrExpr*))expr;
+}
+
+CEL_ATTRIBUTE_NODISCARD
+static CEL_INLINE CEL_NULLABILITY_UNKNOWN(const cel_AttrExpr*)
+    cel_AttrExpr_ConstDownCast(CEL_NULLABILITY_UNKNOWN(const cel_Expr*) expr) {
+  CEL_ASSERT(expr == cel_nullptr || cel_Expr_Kind(expr) == cel_ExprKind_kAttr);
+
+  return (CEL_NULLABILITY_UNKNOWN(const cel_AttrExpr*))expr;
+}
+
 CEL_END_DECLS
 
 #ifndef __cplusplus
@@ -1770,7 +1934,11 @@ CEL_END_DECLS
        cel_BlockIndexExpr*: cel_BlockIndexExpr_MutableUpCast,           \
        const cel_BlockIndexExpr*: cel_BlockIndexExpr_ConstUpCast,       \
        cel_BlockExpr*: cel_BlockExpr_MutableUpCast,                     \
-       const cel_BlockExpr*: cel_BlockExpr_ConstUpCast)(expr))
+       const cel_BlockExpr*: cel_BlockExpr_ConstUpCast,                 \
+       cel_AttrQualExpr*: cel_AttrQualExpr_MutableUpCast,               \
+       const cel_AttrQualExpr*: cel_AttrQualExpr_ConstUpCast,           \
+       cel_AttrExpr*: cel_AttrExpr_MutableUpCast,                       \
+       const cel_AttrExpr*: cel_AttrExpr_ConstUpCast)(expr))
 #define cel_UnspecifiedExpr_DownCast(expr)             \
   (_Generic((expr),                                    \
        cel_Expr*: cel_UnspecifiedExpr_MutableDownCast, \
@@ -1847,6 +2015,14 @@ CEL_END_DECLS
   (_Generic((expr),                              \
        cel_Expr*: cel_BlockExpr_MutableDownCast, \
        const cel_Expr*: cel_BlockExpr_ConstDownCast)(expr))
+#define cel_AttrQualExpr_DownCast(expr)             \
+  (_Generic((expr),                                 \
+       cel_Expr*: cel_AttrQualExpr_MutableDownCast, \
+       const cel_Expr*: cel_AttrQualExpr_ConstDownCast)(expr))
+#define cel_AttrExpr_DownCast(expr)             \
+  (_Generic((expr),                             \
+       cel_Expr*: cel_AttrExpr_MutableDownCast, \
+       const cel_Expr*: cel_AttrExpr_ConstDownCast)(expr))
 #else
 CEL_ATTRIBUTE_NODISCARD
 CEL_INLINE const cel_Expr* cel_nullability_unknown
@@ -2049,6 +2225,26 @@ cel_Expr_UpCast(cel_BlockExpr* cel_nullability_unknown expr) {
   return cel_BlockExpr_MutableUpCast(expr);
 }
 CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE const cel_Expr* cel_nullability_unknown
+cel_Expr_UpCast(const cel_AttrQualExpr* cel_nullability_unknown expr) {
+  return cel_AttrQualExpr_ConstUpCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE cel_Expr* cel_nullability_unknown
+cel_Expr_UpCast(cel_AttrQualExpr* cel_nullability_unknown expr) {
+  return cel_AttrQualExpr_MutableUpCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE const cel_Expr* cel_nullability_unknown
+cel_Expr_UpCast(const cel_AttrExpr* cel_nullability_unknown expr) {
+  return cel_AttrExpr_ConstUpCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE cel_Expr* cel_nullability_unknown
+cel_Expr_UpCast(cel_AttrExpr* cel_nullability_unknown expr) {
+  return cel_AttrExpr_MutableUpCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
 CEL_INLINE const cel_UnspecifiedExpr* cel_nullability_unknown
 cel_UnspecifiedExpr_DownCast(const cel_Expr* cel_nullability_unknown expr) {
   return cel_UnspecifiedExpr_ConstDownCast(expr);
@@ -2247,6 +2443,26 @@ CEL_ATTRIBUTE_NODISCARD
 CEL_INLINE cel_BlockExpr* cel_nullability_unknown
 cel_BlockExpr_DownCast(cel_Expr* cel_nullability_unknown expr) {
   return cel_BlockExpr_MutableDownCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE const cel_AttrQualExpr* cel_nullability_unknown
+cel_AttrQualExpr_DownCast(const cel_Expr* cel_nullability_unknown expr) {
+  return cel_AttrQualExpr_ConstDownCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE cel_AttrQualExpr* cel_nullability_unknown
+cel_AttrQualExpr_DownCast(cel_Expr* cel_nullability_unknown expr) {
+  return cel_AttrQualExpr_MutableDownCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE const cel_AttrExpr* cel_nullability_unknown
+cel_AttrExpr_DownCast(const cel_Expr* cel_nullability_unknown expr) {
+  return cel_AttrExpr_ConstDownCast(expr);
+}
+CEL_ATTRIBUTE_NODISCARD
+CEL_INLINE cel_AttrExpr* cel_nullability_unknown
+cel_AttrExpr_DownCast(cel_Expr* cel_nullability_unknown expr) {
+  return cel_AttrExpr_MutableDownCast(expr);
 }
 #endif
 

@@ -27,6 +27,7 @@
 #include "cel-c/attribute.h"
 #include "cel-c/config.h"
 #include "cel-c/constant_proto_v1alpha1.h"
+#include "cel-c/internal/ast.h"
 #include "cel-c/internal/charconv.h"
 #include "cel-c/internal/malloc.h"
 #include "cel-c/internal/setjmp.h"

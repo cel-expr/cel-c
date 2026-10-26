@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "cel-c/ast_traverse.h"
+#include "cel-c/internal/ast_traverse.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -20,9 +20,9 @@
 
 #include "cel-c/alloc.h"
 #include "cel-c/assert.h"
-#include "cel-c/ast.h"
-#include "cel-c/ast_visitor.h"
 #include "cel-c/config.h"
+#include "cel-c/internal/ast.h"
+#include "cel-c/internal/ast_visitor.h"
 #include "cel-c/internal/deque.h"
 #include "cel-c/internal/malloc.h"
 #include "cel-c/status.h"

@@ -31,6 +31,7 @@
 #include "cel-c/config.h"
 #include "cel-c/constant.h"
 #include "cel-c/duration.h"
+#include "cel-c/internal/ast.h"
 #include "cel-c/operators.h"
 #include "cel-c/status.h"
 #include "cel-c/string_view.h"

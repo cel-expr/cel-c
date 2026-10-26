@@ -134,32 +134,8 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        ":arena",
-        ":assert",
-        ":attribute",
         ":config",
-        ":constant",
-        ":operators",
-        ":ref",
-        ":source",
-        ":string_view",
-        ":type",
-    ],
-)
-
-cc_test(
-    name = "ast_test",
-    srcs = ["ast_test.cc"],
-    deps = [
-        ":alloc",
-        ":arena",
-        ":ast",
-        ":config",
-        ":operators",
-        ":source",
-        ":string_view",
-        "@abseil-cpp//absl/log:die_if_null",
-        "@googletest//:gtest_main",
+        "//cel-c/internal:ast",
     ],
 )
 
@@ -186,6 +162,7 @@ cc_library(
         ":string_view",
         ":type",
         ":type_proto",
+        "//cel-c/internal:ast",
         "//cel-c/internal:charconv",
         "//cel-c/internal:malloc",
         "//cel-c/internal:setjmp",
@@ -211,6 +188,7 @@ cc_test(
         ":status",
         ":string_view",
         ":timestamp",
+        "//cel-c/internal:ast",
         "@abseil-cpp//absl/cleanup",
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/log:die_if_null",
@@ -245,6 +223,7 @@ cc_library(
         ":string_view",
         ":type",
         ":type_proto_v1alpha1",
+        "//cel-c/internal:ast",
         "//cel-c/internal:charconv",
         "//cel-c/internal:malloc",
         "//cel-c/internal:setjmp",
@@ -269,6 +248,7 @@ cc_test(
         ":status",
         ":string_view",
         ":timestamp",
+        "//cel-c/internal:ast",
         "@abseil-cpp//absl/cleanup",
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/log:die_if_null",
@@ -277,56 +257,6 @@ cc_test(
         "@googleapis//google/api/expr/v1alpha1:checked_upb_proto",
         "@googletest//:gtest_main",
         "@protobuf",
-    ],
-)
-
-cc_library(
-    name = "ast_traverse",
-    srcs = [
-        "ast_traverse.cc",
-    ],
-    hdrs = [
-        "ast_traverse.h",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":alloc",
-        ":assert",
-        ":ast",
-        ":ast_visitor",
-        ":config",
-        ":status",
-        ":string_view",
-        "//cel-c/internal:deque",
-        "//cel-c/internal:malloc",
-    ],
-)
-
-cc_test(
-    name = "ast_traverse_test",
-    srcs = ["ast_traverse_test.cc"],
-    deps = [
-        ":alloc",
-        ":arena",
-        ":ast",
-        ":ast_traverse",
-        ":ast_visitor",
-        ":config",
-        ":status",
-        "@abseil-cpp//absl/log:die_if_null",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "ast_visitor",
-    hdrs = [
-        "ast_visitor.h",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":ast",
-        ":config",
     ],
 )
 
@@ -392,7 +322,7 @@ cc_library(
     name = "constant_proto",
     srcs = ["constant_proto.cc"],
     hdrs = ["constant_proto.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":arena",
         ":assert",
@@ -437,7 +367,7 @@ cc_library(
     name = "constant_proto_v1alpha1",
     srcs = ["constant_proto_v1alpha1.cc"],
     hdrs = ["constant_proto_v1alpha1.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":arena",
         ":assert",
@@ -511,7 +441,7 @@ cc_library(
     hdrs = [
         "decl.h",
     ],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":arena",
         ":assert",
@@ -549,7 +479,7 @@ cc_library(
     hdrs = [
         "decl_proto.h",
     ],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":arena",
         ":assert",
@@ -596,7 +526,7 @@ cc_library(
     hdrs = [
         "decl_proto_v1alpha1.h",
     ],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":arena",
         ":assert",
@@ -664,7 +594,7 @@ cc_test(
 cc_library(
     name = "duration_absl",
     hdrs = ["duration_absl.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":config",
         ":duration",
@@ -691,7 +621,7 @@ cc_library(
     hdrs = [
         "duration_proto.h",
     ],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":assert",
         ":config",
@@ -755,7 +685,7 @@ cc_library(
     name = "error_absl",
     srcs = ["error_absl.cc"],
     hdrs = ["error_absl.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":assert",
         ":config",
@@ -792,7 +722,7 @@ cc_library(
     name = "error_proto",
     srcs = ["error_proto.cc"],
     hdrs = ["error_proto.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":arena",
         ":assert",
@@ -855,7 +785,7 @@ cc_test(
 cc_library(
     name = "error_code_absl",
     hdrs = ["error_code_absl.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":config",
         ":error_code",
@@ -877,7 +807,7 @@ cc_test(
 cc_library(
     name = "error_code_proto",
     hdrs = ["error_code_proto.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":config",
         ":error_code",
@@ -908,7 +838,7 @@ cc_library(
         "@platforms//os:linux": ["_GNU_SOURCE=1"],
         "//conditions:default": [],
     }),
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":assert",
         ":config",
@@ -936,7 +866,7 @@ cc_library(
     hdrs = [
         "error_status.h",
     ],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":arena",
         ":assert",
@@ -968,7 +898,7 @@ cc_test(
 cc_library(
     name = "function_scope",
     hdrs = ["function_scope.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":config",
     ],
@@ -1057,7 +987,7 @@ cc_library(
 cc_library(
     name = "source",
     hdrs = ["source.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":config",
     ],
@@ -1089,7 +1019,7 @@ cc_library(
     hdrs = [
         "ref_proto.h",
     ],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":arena",
         ":assert",
@@ -1132,7 +1062,7 @@ cc_library(
     hdrs = [
         "ref_proto_v1alpha1.h",
     ],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":arena",
         ":assert",
@@ -1244,7 +1174,7 @@ cc_library(
     name = "status_proto",
     srcs = ["status_proto.cc"],
     hdrs = ["status_proto.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":assert",
         ":config",
@@ -1308,7 +1238,7 @@ cc_test(
 cc_library(
     name = "status_code_absl",
     hdrs = ["status_code_absl.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":config",
         ":status_code",
@@ -1330,7 +1260,7 @@ cc_test(
 cc_library(
     name = "status_code_proto",
     hdrs = ["status_code_proto.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":config",
         ":status_code",
@@ -1430,7 +1360,7 @@ cc_test(
 cc_library(
     name = "timestamp_absl",
     hdrs = ["timestamp_absl.h"],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":config",
         ":timestamp",
@@ -1457,7 +1387,7 @@ cc_library(
     hdrs = [
         "timestamp_proto.h",
     ],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":assert",
         ":config",
@@ -1549,7 +1479,7 @@ cc_library(
     hdrs = [
         "type_proto.h",
     ],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":arena",
         ":assert",
@@ -1589,7 +1519,7 @@ cc_library(
     hdrs = [
         "type_proto_v1alpha1.h",
     ],
-    visibility = ["//visibility:private"],
+    visibility = [":internal"],
     deps = [
         ":arena",
         ":assert",

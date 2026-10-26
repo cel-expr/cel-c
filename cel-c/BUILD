@@ -136,6 +136,7 @@ cc_library(
     deps = [
         ":arena",
         ":assert",
+        ":attribute",
         ":config",
         ":constant",
         ":operators",
@@ -175,6 +176,7 @@ cc_library(
         ":arena",
         ":assert",
         ":ast",
+        ":attribute",
         ":config",
         ":constant_proto",
         ":operators",
@@ -201,6 +203,7 @@ cc_test(
         ":arena",
         ":ast",
         ":ast_proto",
+        ":attribute",
         ":config",
         ":constant",
         ":duration",
@@ -232,6 +235,7 @@ cc_library(
         ":arena",
         ":assert",
         ":ast",
+        ":attribute",
         ":config",
         ":constant_proto_v1alpha1",
         ":operators",
@@ -257,6 +261,7 @@ cc_test(
         ":arena",
         ":ast",
         ":ast_proto_v1alpha1",
+        ":attribute",
         ":config",
         ":constant",
         ":duration",
@@ -322,6 +327,31 @@ cc_library(
     deps = [
         ":ast",
         ":config",
+    ],
+)
+
+cc_library(
+    name = "attribute",
+    srcs = ["attribute.cc"],
+    hdrs = [
+        "attribute.h",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":assert",
+        ":config",
+        ":string_view",
+    ],
+)
+
+cc_test(
+    name = "attribute_test",
+    srcs = ["attribute_test.cc"],
+    deps = [
+        ":attribute",
+        ":config",
+        ":string_view",
+        "@googletest//:gtest_main",
     ],
 )
 

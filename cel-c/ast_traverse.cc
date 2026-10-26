@@ -73,6 +73,7 @@ typedef enum CEL_ATTRIBUTE_CLOSED_ENUM {
   _cel_AstTraverserRecordKind_kBindBound,
   _cel_AstTraverserRecordKind_kBlockBindingBound,
   _cel_AstTraverserRecordKind_kBlockBound,
+  _cel_AstTraverserRecordKind_kAttrOperand,
 } _cel_AstTraverserRecordKind;
 
 typedef struct {
@@ -135,6 +136,9 @@ struct cel_AstTraverser {
   // Is the visitor interested in any {Pre,Post}VisitBlockBindingExpr{...}
   // callbacks?
   bool block_bound_callbacks;
+  // Is the visitor interested in any {Pre,Post}VisitAttrExpr{...}
+  // callbacks?
+  bool attr_operand_callbacks;
 };
 
 CEL_ATTRIBUTE_NODISCARD
@@ -305,6 +309,14 @@ static _cel_AstVisitorControl _cel_AstTraverserRecord_PreVisit(
           control = _cel_AstVisitor_Invoke(visitor, PreVisitBlockExpr,
                                            cel_BlockExpr_DownCast(expr));
           break;
+        case cel_ExprKind_kAttrQual:
+          control = _cel_AstVisitor_Invoke(visitor, VisitAttrQualExpr,
+                                           cel_AttrQualExpr_DownCast(expr));
+          break;
+        case cel_ExprKind_kAttr:
+          control = _cel_AstVisitor_Invoke(visitor, PreVisitAttrExpr,
+                                           cel_AttrExpr_DownCast(expr));
+          break;
         default:
           cel_InternalStatus(status,
                              cel_StringView_From("unexpected AST node kind"));
@@ -436,6 +448,10 @@ static _cel_AstVisitorControl _cel_AstTraverserRecord_PreVisit(
       control = _cel_AstVisitor_Invoke(visitor, PreVisitBlockExprBound, expr);
       break;
     }
+    case _cel_AstTraverserRecordKind_kAttrOperand: {
+      control = _cel_AstVisitor_Invoke(visitor, PreVisitAttrExprOperand, expr);
+      break;
+    }
     default:
       CEL_UNREACHABLE();
   }
@@ -552,6 +568,12 @@ static _cel_AstVisitorControl _cel_AstTraverserRecord_PostVisit(
           case cel_ExprKind_kBlock:
             control = _cel_AstVisitor_Invoke(visitor, PostVisitBlockExpr,
                                              cel_BlockExpr_DownCast(expr));
+            break;
+          case cel_ExprKind_kAttrQual:
+            break;
+          case cel_ExprKind_kAttr:
+            control = _cel_AstVisitor_Invoke(visitor, PostVisitAttrExpr,
+                                             cel_AttrExpr_DownCast(expr));
             break;
           default:
             record->data.postvisited = false;
@@ -680,6 +702,10 @@ static _cel_AstVisitorControl _cel_AstTraverserRecord_PostVisit(
     }
     case _cel_AstTraverserRecordKind_kBlockBound: {
       control = _cel_AstVisitor_Invoke(visitor, PostVisitBlockExprBound, expr);
+      break;
+    }
+    case _cel_AstTraverserRecordKind_kAttrOperand: {
+      control = _cel_AstVisitor_Invoke(visitor, PostVisitAttrExprOperand, expr);
       break;
     }
     default:
@@ -1060,6 +1086,23 @@ static bool _cel_AstTraverser_PushBlockBound(CEL_NONNULL(cel_AstTraverser*)
 }
 
 CEL_ATTRIBUTE_NODISCARD
+static bool _cel_AstTraverser_PushAttrOperand(CEL_NONNULL(cel_AstTraverser*)
+                                                  traverser,
+                                              CEL_NONNULL(const cel_Expr*)
+                                                  result,
+                                              CEL_NONNULL(cel_Status*) status) {
+  _cel_AstTraverserRecord* record = _cel_AstTraverser_Push(traverser, status);
+  if (CEL_UNLIKELY(record == cel_nullptr)) {
+    return false;
+  }
+  record->data.expr = result;
+  record->kind = traverser->attr_operand_callbacks
+                     ? _cel_AstTraverserRecordKind_kAttrOperand
+                     : _cel_AstTraverserRecordKind_kExpr;
+  return true;
+}
+
+CEL_ATTRIBUTE_NODISCARD
 static bool _cel_AstTraverser_PushSelectDeps(CEL_NONNULL(cel_AstTraverser*)
                                                  traverser,
                                              const cel_SelectExpr* select_expr,
@@ -1373,6 +1416,30 @@ static bool _cel_AstTraverser_PushBlockDeps(CEL_NONNULL(cel_AstTraverser*)
 }
 
 CEL_ATTRIBUTE_NODISCARD
+static bool _cel_AstTraverser_PushAttrDeps(CEL_NONNULL(cel_AstTraverser*)
+                                               traverser,
+                                           const cel_AttrExpr* attr_expr,
+                                           CEL_NONNULL(cel_Status*) status) {
+  CEL_NULLABLE(cel_AttrQualExpr*) quals;
+  size_t quals_size =
+      cel_AttrExpr_Qualifiers(attr_expr, /*head=*/cel_nullptr, &quals);
+  for (size_t i = quals_size; i > 0; --i) {
+    if (!_cel_AstTraverser_PushExpr(traverser, cel_Expr_UpCast(quals),
+                                    status)) {
+      return false;
+    }
+    quals = cel_AttrExpr_PrevQualifier(quals);
+  }
+  CEL_NULLABLE(cel_Expr*) operand = cel_AttrExpr_Operand(attr_expr);
+  if (operand != cel_nullptr) {
+    if (!_cel_AstTraverser_PushAttrOperand(traverser, operand, status)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+CEL_ATTRIBUTE_NODISCARD
 static bool _cel_AstTraverser_PushDeps(CEL_NONNULL(cel_AstTraverser*) traverser,
                                        CEL_NONNULL(_cel_AstTraverserRecord*)
                                            record,
@@ -1437,6 +1504,11 @@ static bool _cel_AstTraverser_PushDeps(CEL_NONNULL(cel_AstTraverser*) traverser,
         case cel_ExprKind_kBlock:
           return _cel_AstTraverser_PushBlockDeps(
               traverser, cel_BlockExpr_DownCast(expr), status);
+        case cel_ExprKind_kAttrQual:
+          break;
+        case cel_ExprKind_kAttr:
+          return _cel_AstTraverser_PushAttrDeps(
+              traverser, cel_AttrExpr_DownCast(expr), status);
         default:
           cel_InternalStatus(status,
                              cel_StringView_From("unexpected AST node kind"));
@@ -1487,6 +1559,8 @@ static bool _cel_AstTraverser_PushDeps(CEL_NONNULL(cel_AstTraverser*) traverser,
     case _cel_AstTraverserRecordKind_kBlockBindingBound:
       CEL_ATTRIBUTE_FALLTHROUGH;
     case _cel_AstTraverserRecordKind_kBlockBound:
+      CEL_ATTRIBUTE_FALLTHROUGH;
+    case _cel_AstTraverserRecordKind_kAttrOperand:
       return _cel_AstTraverser_PushExpr(traverser, expr, status);
     default:
       CEL_UNREACHABLE();
@@ -1545,6 +1619,8 @@ static void _cel_AstTraverser_Construct(CEL_NONNULL(cel_AstTraverser*)
       _cel_AstVisitor_HasVisit(visitor, BlockBindingExprBound);
   traverser->block_bound_callbacks =
       _cel_AstVisitor_HasVisit(visitor, BlockExprBound);
+  traverser->attr_operand_callbacks =
+      _cel_AstVisitor_HasVisit(visitor, AttrExprOperand);
 }
 
 static void _cel_AstTraverser_Destruct(CEL_NONNULL(cel_AstTraverser*)

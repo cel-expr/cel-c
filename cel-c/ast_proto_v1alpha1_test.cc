@@ -27,6 +27,7 @@
 #include "cel-c/alloc.h"
 #include "cel-c/arena.h"
 #include "cel-c/ast.h"
+#include "cel-c/attribute.h"
 #include "cel-c/config.h"
 #include "cel-c/constant.h"
 #include "cel-c/duration.h"
@@ -1197,6 +1198,300 @@ TEST_F(AstFromProtoTest, Block) {
   EXPECT_TRUE(cel_StringView_Equals(
       cel_IdentExpr_Name(cel_IdentExpr_DownCast(bound_expr)),
       cel_StringView_From("baz")));
+}
+
+TEST_F(AstFromProtoTest, Attribute) {
+  AstPtr ast(cel_Ast_FromProtoV1Alpha1(
+      ParseTextProto(R"pb(
+        source_info: {
+          positions { key: 1 value: 1 }
+          positions { key: 2 value: 2 }
+          positions { key: 3 value: 3 }
+          positions { key: 4 value: 4 }
+          positions { key: 5 value: 5 }
+          positions { key: 6 value: 6 }
+          positions { key: 7 value: 7 }
+          positions { key: 8 value: 8 }
+          positions { key: 9 value: 9 }
+          positions { key: 10 value: 10 }
+          positions { key: 11 value: 11 }
+          positions { key: 12 value: 12 }
+          positions { key: 13 value: 13 }
+          positions { key: 14 value: 14 }
+        }
+        expr: {
+          id: 1
+          call_expr: {
+            function: "cel.@attribute"
+            args {
+              id: 2
+              ident_expr: { name: "baz" }
+            }
+            args {
+              id: 3
+              list_expr: {
+                elements {
+                  id: 4
+                  list_expr: {
+                    elements {
+                      id: 5
+                      const_expr: { int64_value: 1 }
+                    }
+                    elements {
+                      id: 6
+                      const_expr: { string_value: "foo" }
+                    }
+                  }
+                }
+                elements {
+                  id: 7
+                  list_expr: {
+                    elements {
+                      id: 8
+                      const_expr: { bool_value: true }
+                    }
+                  }
+                }
+                elements {
+                  id: 9
+                  list_expr: {
+                    elements {
+                      id: 10
+                      const_expr: { int64_value: 2 }
+                    }
+                  }
+                }
+                elements {
+                  id: 11
+                  list_expr: {
+                    elements {
+                      id: 12
+                      const_expr: { uint64_value: 3 }
+                    }
+                  }
+                }
+                elements {
+                  id: 13
+                  list_expr: {
+                    elements {
+                      id: 14
+                      const_expr: { string_value: "bar" }
+                    }
+                  }
+                }
+              }
+            }
+            args {
+              id: 15
+              const_expr: { int64_value: 0 }
+            }
+          }
+        }
+      )pb"),
+      arena(), status()));
+  ASSERT_THAT(ast, NotNull());
+  ASSERT_TRUE(cel_Status_Ok(status()));
+  EXPECT_EQ(cel_Ast_MaxId(ast.get()), 14);
+
+  cel_Expr* expr = cel_Ast_Expr(ast.get());
+  ASSERT_THAT(expr, NotNull());
+  ASSERT_EQ(cel_Expr_Kind(expr), cel_ExprKind_kAttr);
+  EXPECT_EQ(cel_Expr_SourcePosition(expr), 1);
+
+  cel_AttrExpr* attr_expr = cel_AttrExpr_DownCast(expr);
+  ASSERT_THAT(attr_expr, NotNull());
+  EXPECT_FALSE(cel_AttrExpr_TestOnly(attr_expr));
+
+  cel_Expr* operand = cel_AttrExpr_Operand(attr_expr);
+  ASSERT_THAT(operand, NotNull());
+  EXPECT_EQ(cel_Expr_SourcePosition(operand), 2);
+  ASSERT_EQ(cel_Expr_Kind(operand), cel_ExprKind_kIdent);
+
+  ASSERT_EQ(cel_AttrExpr_Qualifiers(attr_expr, nullptr, nullptr), 5);
+
+  cel_AttrQualExpr* qual0 = cel_AttrExpr_Qualifier(attr_expr, 0);
+  ASSERT_THAT(qual0, NotNull());
+  EXPECT_EQ(cel_Expr_SourcePosition(cel_Expr_UpCast(qual0)), 6);
+  ASSERT_EQ(cel_AttributeQualifier_Kind(cel_AttrQualExpr_Value(qual0)),
+            cel_AttributeQualifierKind_kString);
+  EXPECT_TRUE(cel_StringView_Equals(
+      cel_AttributeQualifier_GetString(cel_AttrQualExpr_Value(qual0)),
+      cel_StringView_From("foo")));
+
+  cel_AttrQualExpr* qual1 = cel_AttrExpr_Qualifier(attr_expr, 1);
+  ASSERT_THAT(qual1, NotNull());
+  EXPECT_EQ(cel_Expr_SourcePosition(cel_Expr_UpCast(qual1)), 8);
+  ASSERT_EQ(cel_AttributeQualifier_Kind(cel_AttrQualExpr_Value(qual1)),
+            cel_AttributeQualifierKind_kBool);
+  EXPECT_TRUE(cel_AttributeQualifier_GetBool(cel_AttrQualExpr_Value(qual1)));
+
+  cel_AttrQualExpr* qual2 = cel_AttrExpr_Qualifier(attr_expr, 2);
+  ASSERT_THAT(qual2, NotNull());
+  EXPECT_EQ(cel_Expr_SourcePosition(cel_Expr_UpCast(qual2)), 10);
+  ASSERT_EQ(cel_AttributeQualifier_Kind(cel_AttrQualExpr_Value(qual2)),
+            cel_AttributeQualifierKind_kInt);
+  EXPECT_EQ(cel_AttributeQualifier_GetInt(cel_AttrQualExpr_Value(qual2)), 2);
+
+  cel_AttrQualExpr* qual3 = cel_AttrExpr_Qualifier(attr_expr, 3);
+  ASSERT_THAT(qual3, NotNull());
+  EXPECT_EQ(cel_Expr_SourcePosition(cel_Expr_UpCast(qual3)), 12);
+  ASSERT_EQ(cel_AttributeQualifier_Kind(cel_AttrQualExpr_Value(qual3)),
+            cel_AttributeQualifierKind_kUint);
+  EXPECT_EQ(cel_AttributeQualifier_GetUint(cel_AttrQualExpr_Value(qual3)), 3);
+
+  cel_AttrQualExpr* qual4 = cel_AttrExpr_Qualifier(attr_expr, 4);
+  ASSERT_THAT(qual4, NotNull());
+  EXPECT_EQ(cel_Expr_SourcePosition(cel_Expr_UpCast(qual4)), 14);
+  ASSERT_EQ(cel_AttributeQualifier_Kind(cel_AttrQualExpr_Value(qual4)),
+            cel_AttributeQualifierKind_kString);
+  EXPECT_TRUE(cel_StringView_Equals(
+      cel_AttributeQualifier_GetString(cel_AttrQualExpr_Value(qual4)),
+      cel_StringView_From("bar")));
+}
+
+TEST_F(AstFromProtoTest, HasField) {
+  AstPtr ast(cel_Ast_FromProtoV1Alpha1(
+      ParseTextProto(R"pb(
+        source_info: {
+          positions { key: 1 value: 1 }
+          positions { key: 2 value: 2 }
+          positions { key: 3 value: 3 }
+          positions { key: 4 value: 4 }
+          positions { key: 5 value: 5 }
+          positions { key: 6 value: 6 }
+          positions { key: 7 value: 7 }
+          positions { key: 8 value: 8 }
+          positions { key: 9 value: 9 }
+          positions { key: 10 value: 10 }
+          positions { key: 11 value: 11 }
+          positions { key: 12 value: 12 }
+          positions { key: 13 value: 13 }
+          positions { key: 14 value: 14 }
+        }
+        expr: {
+          id: 1
+          call_expr: {
+            function: "cel.@hasField"
+            args {
+              id: 2
+              ident_expr: { name: "baz" }
+            }
+            args {
+              id: 3
+              list_expr: {
+                elements {
+                  id: 4
+                  list_expr: {
+                    elements {
+                      id: 5
+                      const_expr: { int64_value: 1 }
+                    }
+                    elements {
+                      id: 6
+                      const_expr: { string_value: "foo" }
+                    }
+                  }
+                }
+                elements {
+                  id: 7
+                  list_expr: {
+                    elements {
+                      id: 8
+                      const_expr: { bool_value: true }
+                    }
+                  }
+                }
+                elements {
+                  id: 9
+                  list_expr: {
+                    elements {
+                      id: 10
+                      const_expr: { int64_value: 2 }
+                    }
+                  }
+                }
+                elements {
+                  id: 11
+                  list_expr: {
+                    elements {
+                      id: 12
+                      const_expr: { uint64_value: 3 }
+                    }
+                  }
+                }
+                elements {
+                  id: 13
+                  list_expr: {
+                    elements {
+                      id: 14
+                      const_expr: { string_value: "bar" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      )pb"),
+      arena(), status()));
+  ASSERT_THAT(ast, NotNull());
+  ASSERT_TRUE(cel_Status_Ok(status()));
+  EXPECT_EQ(cel_Ast_MaxId(ast.get()), 14);
+
+  cel_Expr* expr = cel_Ast_Expr(ast.get());
+  ASSERT_THAT(expr, NotNull());
+  ASSERT_EQ(cel_Expr_Kind(expr), cel_ExprKind_kAttr);
+  EXPECT_EQ(cel_Expr_SourcePosition(expr), 1);
+
+  cel_AttrExpr* attr_expr = cel_AttrExpr_DownCast(expr);
+  ASSERT_THAT(attr_expr, NotNull());
+  EXPECT_TRUE(cel_AttrExpr_TestOnly(attr_expr));
+
+  cel_Expr* operand = cel_AttrExpr_Operand(attr_expr);
+  ASSERT_THAT(operand, NotNull());
+  EXPECT_EQ(cel_Expr_SourcePosition(operand), 2);
+  ASSERT_EQ(cel_Expr_Kind(operand), cel_ExprKind_kIdent);
+
+  ASSERT_EQ(cel_AttrExpr_Qualifiers(attr_expr, nullptr, nullptr), 5);
+
+  cel_AttrQualExpr* qual0 = cel_AttrExpr_Qualifier(attr_expr, 0);
+  ASSERT_THAT(qual0, NotNull());
+  EXPECT_EQ(cel_Expr_SourcePosition(cel_Expr_UpCast(qual0)), 6);
+  ASSERT_EQ(cel_AttributeQualifier_Kind(cel_AttrQualExpr_Value(qual0)),
+            cel_AttributeQualifierKind_kString);
+  EXPECT_TRUE(cel_StringView_Equals(
+      cel_AttributeQualifier_GetString(cel_AttrQualExpr_Value(qual0)),
+      cel_StringView_From("foo")));
+
+  cel_AttrQualExpr* qual1 = cel_AttrExpr_Qualifier(attr_expr, 1);
+  ASSERT_THAT(qual1, NotNull());
+  EXPECT_EQ(cel_Expr_SourcePosition(cel_Expr_UpCast(qual1)), 8);
+  ASSERT_EQ(cel_AttributeQualifier_Kind(cel_AttrQualExpr_Value(qual1)),
+            cel_AttributeQualifierKind_kBool);
+  EXPECT_TRUE(cel_AttributeQualifier_GetBool(cel_AttrQualExpr_Value(qual1)));
+
+  cel_AttrQualExpr* qual2 = cel_AttrExpr_Qualifier(attr_expr, 2);
+  ASSERT_THAT(qual2, NotNull());
+  EXPECT_EQ(cel_Expr_SourcePosition(cel_Expr_UpCast(qual2)), 10);
+  ASSERT_EQ(cel_AttributeQualifier_Kind(cel_AttrQualExpr_Value(qual2)),
+            cel_AttributeQualifierKind_kInt);
+  EXPECT_EQ(cel_AttributeQualifier_GetInt(cel_AttrQualExpr_Value(qual2)), 2);
+
+  cel_AttrQualExpr* qual3 = cel_AttrExpr_Qualifier(attr_expr, 3);
+  ASSERT_THAT(qual3, NotNull());
+  EXPECT_EQ(cel_Expr_SourcePosition(cel_Expr_UpCast(qual3)), 12);
+  ASSERT_EQ(cel_AttributeQualifier_Kind(cel_AttrQualExpr_Value(qual3)),
+            cel_AttributeQualifierKind_kUint);
+  EXPECT_EQ(cel_AttributeQualifier_GetUint(cel_AttrQualExpr_Value(qual3)), 3);
+
+  cel_AttrQualExpr* qual4 = cel_AttrExpr_Qualifier(attr_expr, 4);
+  ASSERT_THAT(qual4, NotNull());
+  EXPECT_EQ(cel_Expr_SourcePosition(cel_Expr_UpCast(qual4)), 14);
+  ASSERT_EQ(cel_AttributeQualifier_Kind(cel_AttrQualExpr_Value(qual4)),
+            cel_AttributeQualifierKind_kString);
+  EXPECT_TRUE(cel_StringView_Equals(
+      cel_AttributeQualifier_GetString(cel_AttrQualExpr_Value(qual4)),
+      cel_StringView_From("bar")));
 }
 
 }  // namespace

@@ -65,48 +65,6 @@ namespace {
 using ::absl_testing::StatusIs;
 using ::testing::_;
 using ::testing::HasSubstr;
-using ::testing::Invoke;
-
-struct _cel_AstDeleter {
-  void operator()(const cel_Ast* ast) const noexcept {
-    if (ast != nullptr) {
-      cel_Ast_Delete(const_cast<cel_Ast*>(ast));
-    }
-  }
-};
-
-using _cel_AstPtr = std::unique_ptr<cel_Ast, _cel_AstDeleter>;
-
-struct _cel_RuntimeDeleter {
-  void operator()(const cel_Runtime* rt) const noexcept {
-    if (rt != nullptr) {
-      cel_Runtime_Delete(const_cast<cel_Runtime*>(rt));
-    }
-  }
-};
-
-using _cel_RuntimePtr = std::unique_ptr<cel_Runtime, _cel_RuntimeDeleter>;
-
-struct _cel_ProgramDeleter {
-  void operator()(const cel_Program* prog) const noexcept {
-    if (prog != nullptr) {
-      cel_Program_Delete(const_cast<cel_Program*>(prog));
-    }
-  }
-};
-
-using _cel_ProgramPtr = std::unique_ptr<cel_Program, _cel_ProgramDeleter>;
-
-struct _cel_ActivationDeleter {
-  void operator()(const cel_Activation* act) const noexcept {
-    if (act != nullptr) {
-      cel_Activation_Delete(const_cast<cel_Activation*>(act));
-    }
-  }
-};
-
-using _cel_ActivationPtr =
-    std::unique_ptr<cel_Activation, _cel_ActivationDeleter>;
 
 struct _cel_TestingVariableResolver : cel_VariableResolver {
   absl::flat_hash_map<absl::string_view, cel_Value> bindings;
@@ -232,19 +190,19 @@ class RuntimeHarness {
 
   const cel_ValueContext* context() { return &context_; }
 
-  _cel_RuntimePtr NewRuntime(const cel_RuntimeOptions* opts) {
-    _cel_RuntimePtr rt(cel_Runtime_New(alloc(), def_pool(), opts, status()));
+  cel_RuntimePtr NewRuntime(const cel_RuntimeOptions* opts) {
+    cel_RuntimePtr rt(cel_Runtime_New(alloc(), def_pool(), opts, status()));
     ABSL_CHECK(rt != nullptr) << cel_Status_ToAbsl(status());
     return rt;
   }
 
-  _cel_ProgramPtr Parse(absl::string_view content,
-                        const cel_Runtime* rt = nullptr) {
-    _cel_AstPtr ast(_cel_TestingParser_Parse(ABSL_DIE_IF_NULL(parser_.get()),
-                                             cel_StringView_FromAbsl(content),
-                                             arena()));
-    _cel_ProgramPtr prog(cel_Runtime_Compile(rt == nullptr ? rt_.get() : rt,
-                                             ast.get(), nullptr, status()));
+  cel_ProgramPtr Parse(absl::string_view content,
+                       const cel_Runtime* rt = nullptr) {
+    cel_AstPtr ast(_cel_TestingParser_Parse(ABSL_DIE_IF_NULL(parser_.get()),
+                                            cel_StringView_FromAbsl(content),
+                                            arena()));
+    cel_ProgramPtr prog(cel_Runtime_Compile(rt == nullptr ? rt_.get() : rt,
+                                            ast.get(), nullptr, status()));
     ABSL_CHECK(prog != nullptr) << cel_Status_ToAbsl(status());
     return prog;
   }
@@ -252,10 +210,10 @@ class RuntimeHarness {
   // Like `Parse`, but returns the planning status instead of crashing when
   // planning fails.
   absl::Status ParseStatus(absl::string_view content) {
-    _cel_AstPtr ast(_cel_TestingParser_Parse(ABSL_DIE_IF_NULL(parser_.get()),
-                                             cel_StringView_FromAbsl(content),
-                                             arena()));
-    _cel_ProgramPtr prog(
+    cel_AstPtr ast(_cel_TestingParser_Parse(ABSL_DIE_IF_NULL(parser_.get()),
+                                            cel_StringView_FromAbsl(content),
+                                            arena()));
+    cel_ProgramPtr prog(
         cel_Runtime_Compile(rt_.get(), ast.get(), nullptr, status()));
     absl::Status result = cel_Status_ToAbsl(status());
     ABSL_CHECK_EQ(prog == nullptr, !result.ok());
@@ -263,19 +221,19 @@ class RuntimeHarness {
     return result;
   }
 
-  _cel_ProgramPtr Compile(absl::string_view content) {
-    _cel_AstPtr ast(_cel_TestingCompiler_Compile(
+  cel_ProgramPtr Compile(absl::string_view content) {
+    cel_AstPtr ast(_cel_TestingCompiler_Compile(
         ABSL_DIE_IF_NULL(compiler_.get()), cel_StringView_FromAbsl(content),
         arena()));
-    _cel_ProgramPtr prog(
+    cel_ProgramPtr prog(
         cel_Runtime_Compile(rt_.get(), ast.get(), nullptr, status()));
     ABSL_CHECK(prog != nullptr) << cel_Status_ToAbsl(status());
     return prog;
   }
 
-  _cel_ActivationPtr Activate(const cel_Program* prog,
-                              const cel_VariableResolver* var_resolver) {
-    _cel_ActivationPtr act(cel_Program_Activate(prog, var_resolver, nullptr));
+  cel_ActivationPtr Activate(const cel_Program* prog,
+                             const cel_VariableResolver* var_resolver) {
+    cel_ActivationPtr act(cel_Program_Activate(prog, var_resolver, nullptr));
     ABSL_CHECK(act != nullptr) << cel_Status_ToAbsl(status());
     return act;
   }
@@ -291,7 +249,7 @@ class RuntimeHarness {
  private:
   cel_Status status_;
   cel_Arena* arena_ = nullptr;
-  _cel_RuntimePtr rt_;
+  cel_RuntimePtr rt_;
   _cel_TestingParserPtr parser_;
   _cel_TestingCompilerPtr compiler_;
   cel_ValueContext context_;
@@ -305,78 +263,78 @@ class RuntimeTest : public ::testing::Test, public RuntimeHarness {
 };
 
 TEST_F(RuntimeTest, NullConst) {
-  _cel_ProgramPtr prog = Parse(R"cel(null)cel");
+  cel_ProgramPtr prog = Parse(R"cel(null)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   EXPECT_TRUE(cel_Value_IsNull(&value));
 }
 
 TEST_F(RuntimeTest, FalseConst) {
-  _cel_ProgramPtr prog = Parse(R"cel(false)cel");
+  cel_ProgramPtr prog = Parse(R"cel(false)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   EXPECT_TRUE(cel_Value_IsFalse(&value));
 }
 
 TEST_F(RuntimeTest, TrueConst) {
-  _cel_ProgramPtr prog = Parse(R"cel(true)cel");
+  cel_ProgramPtr prog = Parse(R"cel(true)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   EXPECT_TRUE(cel_Value_IsTrue(&value));
 }
 
 TEST_F(RuntimeTest, IntConst) {
-  _cel_ProgramPtr prog = Parse(R"cel(1)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 1);
 }
 
 TEST_F(RuntimeTest, UintConst) {
-  _cel_ProgramPtr prog = Parse(R"cel(1u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsUint(&value));
   EXPECT_EQ(cel_Value_GetUint(&value), 1);
 }
 
 TEST_F(RuntimeTest, DoubleConst) {
-  _cel_ProgramPtr prog = Parse(R"cel(1.0)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1.0)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsDouble(&value));
   EXPECT_EQ(cel_Value_GetDouble(&value), 1);
 }
 
 TEST_F(RuntimeTest, BytesConst) {
-  _cel_ProgramPtr prog = Parse(R"cel(b'foo')cel");
+  cel_ProgramPtr prog = Parse(R"cel(b'foo')cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBytes(&value));
   EXPECT_EQ(cel_Value_GetBytes(&value), cel_StringView_From("foo"));
 }
 
 TEST_F(RuntimeTest, StringConst) {
-  _cel_ProgramPtr prog = Parse(R"cel('foo')cel");
+  cel_ProgramPtr prog = Parse(R"cel('foo')cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsString(&value));
   EXPECT_EQ(cel_Value_GetString(&value), cel_StringView_From("foo"));
 }
 
 TEST_F(RuntimeTest, Ident) {
-  _cel_ProgramPtr prog = Parse(R"cel(foo)cel");
+  cel_ProgramPtr prog = Parse(R"cel(foo)cel");
   _cel_TestingVariableResolver var_resolver({{"foo", cel_NullValue}});
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   EXPECT_TRUE(cel_Value_IsNull(&value));
 }
@@ -397,12 +355,12 @@ TEST_F(RuntimeTest, ContIdent) {
   cel_RuntimeOptions rt_opts;
   cel_RuntimeOptions_Default(&rt_opts);
   rt_opts.container = cel_StringView_FromString("bar.baz");
-  _cel_RuntimePtr rt = NewRuntime(&rt_opts);
-  _cel_ProgramPtr prog = Parse(R"cel(foo)cel", rt.get());
+  cel_RuntimePtr rt = NewRuntime(&rt_opts);
+  cel_ProgramPtr prog = Parse(R"cel(foo)cel", rt.get());
   _cel_TestingVariableResolver var_resolver({{"bar.baz.foo", IntValue(3)},
                                              {"bar.foo", IntValue(2)},
                                              {"foo", IntValue(1)}});
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 3);
@@ -448,11 +406,11 @@ TEST_F(RuntimeTest, NspaceVarIdent) {
       upb_Message_GetFieldByDef(foo_qux_msg, foo_qux_field).map_val,
       foo_qux_field);
 
-  _cel_ProgramPtr prog = Parse(R"cel(foo.qux.quux)cel");
+  cel_ProgramPtr prog = Parse(R"cel(foo.qux.quux)cel");
   _cel_TestingVariableResolver var_resolver({{"foo.qux.quux", DoubleValue(3.0)},
                                              {"foo.qux", foo_qux_val},
                                              {"foo", foo_val}});
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsDouble(&value));
   EXPECT_EQ(cel_Value_GetDouble(&value), 3);
@@ -472,7 +430,7 @@ TEST_F(RuntimeTest, NspaceVarContIdent) {
   cel_RuntimeOptions rt_opts;
   cel_RuntimeOptions_Default(&rt_opts);
   rt_opts.container = cel_StringView_FromString("bar.baz");
-  _cel_RuntimePtr rt = NewRuntime(&rt_opts);
+  cel_RuntimePtr rt = NewRuntime(&rt_opts);
   upb_Message* bar_baz_foo_msg =
       ParseTextProto("cel.expr.conformance.proto3.TestAllTypes",
                      R"pb(map_string_struct: {
@@ -548,7 +506,7 @@ TEST_F(RuntimeTest, NspaceVarContIdent) {
       upb_Message_GetFieldByDef(foo_qux_msg, foo_qux_field).map_val,
       foo_qux_field);
 
-  _cel_ProgramPtr prog = Parse(R"cel(foo.qux.quux)cel", rt.get());
+  cel_ProgramPtr prog = Parse(R"cel(foo.qux.quux)cel", rt.get());
   _cel_TestingVariableResolver var_resolver(
       {{"bar.baz.foo.qux.quux", DoubleValue(9.0)},
        {"bar.baz.foo.qux", bar_baz_foo_qux_val},
@@ -559,7 +517,7 @@ TEST_F(RuntimeTest, NspaceVarContIdent) {
        {"foo.qux.quux", DoubleValue(3.0)},
        {"foo.qux", foo_qux_val},
        {"foo", foo_val}});
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsDouble(&value));
   EXPECT_EQ(cel_Value_GetDouble(&value), 9);
@@ -606,36 +564,36 @@ TEST_F(RuntimeTest, NspaceVarContIdent) {
 }
 
 TEST_F(RuntimeTest, IntAdd) {
-  _cel_ProgramPtr prog = Parse(R"cel(1 + 1 + 1)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1 + 1 + 1)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 3);
 }
 
 TEST_F(RuntimeTest, UintAdd) {
-  _cel_ProgramPtr prog = Parse(R"cel(1u + 1u + 1u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1u + 1u + 1u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsUint(&value));
   EXPECT_EQ(cel_Value_GetUint(&value), 3);
 }
 
 TEST_F(RuntimeTest, DoubleAdd) {
-  _cel_ProgramPtr prog = Parse(R"cel(1.0 + 1.0 + 1.0)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1.0 + 1.0 + 1.0)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsDouble(&value));
   EXPECT_EQ(cel_Value_GetDouble(&value), 3.0);
 }
 
 TEST_F(RuntimeTest, BytesAdd) {
-  _cel_ProgramPtr prog = Parse(R"cel(b'Hello' + b' ' + b'World!')cel");
+  cel_ProgramPtr prog = Parse(R"cel(b'Hello' + b' ' + b'World!')cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBytes(&value));
   EXPECT_EQ(cel_Value_GetBytes(&value),
@@ -643,9 +601,9 @@ TEST_F(RuntimeTest, BytesAdd) {
 }
 
 TEST_F(RuntimeTest, StringAdd) {
-  _cel_ProgramPtr prog = Parse(R"cel('Hello' + ' ' + 'World!')cel");
+  cel_ProgramPtr prog = Parse(R"cel('Hello' + ' ' + 'World!')cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsString(&value));
   EXPECT_EQ(cel_Value_GetString(&value),
@@ -653,9 +611,9 @@ TEST_F(RuntimeTest, StringAdd) {
 }
 
 TEST_F(RuntimeTest, CallBool) {
-  _cel_ProgramPtr prog = Parse(R"cel(bool("true"))cel");
+  cel_ProgramPtr prog = Parse(R"cel(bool("true"))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -673,9 +631,9 @@ TEST_F(RuntimeTest, CallBool) {
 }
 
 TEST_F(RuntimeTest, CallInt) {
-  _cel_ProgramPtr prog = Parse(R"cel(int("123"))cel");
+  cel_ProgramPtr prog = Parse(R"cel(int("123"))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 123);
@@ -693,9 +651,9 @@ TEST_F(RuntimeTest, CallInt) {
 }
 
 TEST_F(RuntimeTest, CallUint) {
-  _cel_ProgramPtr prog = Parse(R"cel(uint("123"))cel");
+  cel_ProgramPtr prog = Parse(R"cel(uint("123"))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsUint(&value));
   EXPECT_EQ(cel_Value_GetUint(&value), 123u);
@@ -712,9 +670,9 @@ TEST_F(RuntimeTest, CallUint) {
 }
 
 TEST_F(RuntimeTest, CallDouble) {
-  _cel_ProgramPtr prog = Parse(R"cel(double("1.23"))cel");
+  cel_ProgramPtr prog = Parse(R"cel(double("1.23"))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsDouble(&value));
   EXPECT_EQ(cel_Value_GetDouble(&value), 1.23);
@@ -732,9 +690,9 @@ TEST_F(RuntimeTest, CallDouble) {
 }
 
 TEST_F(RuntimeTest, CallBytes) {
-  _cel_ProgramPtr prog = Parse(R"cel(bytes("hello"))cel");
+  cel_ProgramPtr prog = Parse(R"cel(bytes("hello"))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBytes(&value));
   EXPECT_EQ(cel_Value_GetBytes(&value), cel_StringView_From("hello"));
@@ -747,9 +705,9 @@ TEST_F(RuntimeTest, CallBytes) {
 }
 
 TEST_F(RuntimeTest, CallString) {
-  _cel_ProgramPtr prog = Parse(R"cel(string(true))cel");
+  cel_ProgramPtr prog = Parse(R"cel(string(true))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsString(&value));
   EXPECT_EQ(cel_Value_GetString(&value), cel_StringView_From("true"));
@@ -795,9 +753,9 @@ TEST_F(RuntimeTest, CallString) {
 }
 
 TEST_F(RuntimeTest, CallTimestamp) {
-  _cel_ProgramPtr prog = Parse(R"cel(timestamp("2025-12-01T10:00:00Z"))cel");
+  cel_ProgramPtr prog = Parse(R"cel(timestamp("2025-12-01T10:00:00Z"))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsTimestamp(&value));
   EXPECT_EQ(cel_Timestamp_ToUnixSeconds(cel_Value_GetTimestamp(&value)),
@@ -810,9 +768,9 @@ TEST_F(RuntimeTest, CallTimestamp) {
 }
 
 TEST_F(RuntimeTest, CallDuration) {
-  _cel_ProgramPtr prog = Parse(R"cel(duration("1h"))cel");
+  cel_ProgramPtr prog = Parse(R"cel(duration("1h"))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsDuration(&value));
   EXPECT_EQ(cel_Duration_ToUnixSeconds(cel_Value_GetDuration(&value)), 3600);
@@ -824,9 +782,9 @@ TEST_F(RuntimeTest, CallDuration) {
 }
 
 TEST_F(RuntimeTest, CallGetHoursDuration) {
-  _cel_ProgramPtr prog = Parse(R"cel(duration("10h20m30.456s").getHours())cel");
+  cel_ProgramPtr prog = Parse(R"cel(duration("10h20m30.456s").getHours())cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 10);
@@ -877,10 +835,10 @@ TEST_F(RuntimeTest, CallGetHoursDuration) {
 }
 
 TEST_F(RuntimeTest, CallGetMinutesDuration) {
-  _cel_ProgramPtr prog =
+  cel_ProgramPtr prog =
       Parse(R"cel(duration("10h20m30.456s").getMinutes())cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 620);
@@ -913,10 +871,10 @@ TEST_F(RuntimeTest, CallGetMinutesDuration) {
 }
 
 TEST_F(RuntimeTest, CallGetSecondsDuration) {
-  _cel_ProgramPtr prog =
+  cel_ProgramPtr prog =
       Parse(R"cel(duration("10h20m30.456s").getSeconds())cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 37230);
@@ -949,10 +907,10 @@ TEST_F(RuntimeTest, CallGetSecondsDuration) {
 }
 
 TEST_F(RuntimeTest, CallGetMillisecondsDuration) {
-  _cel_ProgramPtr prog =
+  cel_ProgramPtr prog =
       Parse(R"cel(duration("10h20m30.456s").getMilliseconds())cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 456);
@@ -997,10 +955,10 @@ TEST_F(RuntimeTest, CallGetMillisecondsDuration) {
 }
 
 TEST_F(RuntimeTest, CallGetHoursTimestamp) {
-  _cel_ProgramPtr prog =
+  cel_ProgramPtr prog =
       Parse(R"cel(timestamp("2025-12-01T10:20:30.456Z").getHours())cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 10);
@@ -1053,10 +1011,10 @@ TEST_F(RuntimeTest, CallGetHoursTimestamp) {
 }
 
 TEST_F(RuntimeTest, CallGetMinutesTimestamp) {
-  _cel_ProgramPtr prog =
+  cel_ProgramPtr prog =
       Parse(R"cel(timestamp("2025-12-01T10:20:30.456Z").getMinutes())cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 20);
@@ -1090,10 +1048,10 @@ TEST_F(RuntimeTest, CallGetMinutesTimestamp) {
 }
 
 TEST_F(RuntimeTest, CallGetSecondsTimestamp) {
-  _cel_ProgramPtr prog =
+  cel_ProgramPtr prog =
       Parse(R"cel(timestamp("2025-12-01T10:20:30.456Z").getSeconds())cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 30);
@@ -1120,10 +1078,10 @@ TEST_F(RuntimeTest, CallGetSecondsTimestamp) {
 }
 
 TEST_F(RuntimeTest, CallGetMillisecondsTimestamp) {
-  _cel_ProgramPtr prog =
+  cel_ProgramPtr prog =
       Parse(R"cel(timestamp("2025-12-01T10:20:30.456Z").getMilliseconds())cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 456);
@@ -1157,10 +1115,10 @@ TEST_F(RuntimeTest, CallGetMillisecondsTimestamp) {
 
 TEST_F(RuntimeTest, CallGetHoursTimestampWithTimeZone) {
   // Empty and UTC time zones match the single argument overloads.
-  _cel_ProgramPtr prog =
+  cel_ProgramPtr prog =
       Parse(R"cel(timestamp("2025-12-01T10:20:30.456Z").getHours(""))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 10);
@@ -1240,10 +1198,10 @@ TEST_F(RuntimeTest, CallGetHoursTimestampWithTimeZone) {
 
 TEST_F(RuntimeTest, CallGetMinutesTimestampWithTimeZone) {
   // IANA time zones.
-  _cel_ProgramPtr prog = Parse(
+  cel_ProgramPtr prog = Parse(
       R"cel(timestamp("2025-12-01T10:20:30.456Z").getMinutes("Asia/Kolkata"))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 50);
@@ -1273,10 +1231,10 @@ TEST_F(RuntimeTest, CallGetMinutesTimestampWithTimeZone) {
 
 TEST_F(RuntimeTest, CallGetSecondsTimestampWithTimeZone) {
   // IANA time zones.
-  _cel_ProgramPtr prog = Parse(
+  cel_ProgramPtr prog = Parse(
       R"cel(timestamp("2025-12-01T10:20:30.456Z").getSeconds("Asia/Kolkata"))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 30);
@@ -1292,10 +1250,10 @@ TEST_F(RuntimeTest, CallGetSecondsTimestampWithTimeZone) {
 
 TEST_F(RuntimeTest, CallGetMillisecondsTimestampWithTimeZone) {
   // IANA time zones.
-  _cel_ProgramPtr prog = Parse(
+  cel_ProgramPtr prog = Parse(
       R"cel(timestamp("2025-12-01T10:20:30.456Z").getMilliseconds("Asia/Kolkata"))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 456);
@@ -1318,10 +1276,10 @@ TEST_F(RuntimeTest, CallGetMillisecondsTimestampWithTimeZone) {
 }
 
 TEST_F(RuntimeTest, CallGetFullYearTimestamp) {
-  _cel_ProgramPtr prog =
+  cel_ProgramPtr prog =
       Parse(R"cel(timestamp("2025-12-01T10:20:30.456Z").getFullYear())cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 2025);
@@ -1356,10 +1314,10 @@ TEST_F(RuntimeTest, CallGetFullYearTimestamp) {
 
 TEST_F(RuntimeTest, CallGetMonthTimestamp) {
   // Months are zero-based.
-  _cel_ProgramPtr prog =
+  cel_ProgramPtr prog =
       Parse(R"cel(timestamp("2025-12-01T10:20:30.456Z").getMonth())cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 11);
@@ -1387,10 +1345,10 @@ TEST_F(RuntimeTest, CallGetMonthTimestamp) {
 
 TEST_F(RuntimeTest, CallGetDateTimestamp) {
   // Dates are one-based.
-  _cel_ProgramPtr prog =
+  cel_ProgramPtr prog =
       Parse(R"cel(timestamp("2025-12-01T10:20:30.456Z").getDate())cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 1);
@@ -1418,10 +1376,10 @@ TEST_F(RuntimeTest, CallGetDateTimestamp) {
 
 TEST_F(RuntimeTest, CallGetDayOfMonthTimestamp) {
   // Days of the month are zero-based.
-  _cel_ProgramPtr prog =
+  cel_ProgramPtr prog =
       Parse(R"cel(timestamp("2025-12-01T10:20:30.456Z").getDayOfMonth())cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 0);
@@ -1449,10 +1407,10 @@ TEST_F(RuntimeTest, CallGetDayOfMonthTimestamp) {
 
 TEST_F(RuntimeTest, CallGetDayOfWeekTimestamp) {
   // Monday.
-  _cel_ProgramPtr prog =
+  cel_ProgramPtr prog =
       Parse(R"cel(timestamp("2025-12-01T10:20:30.456Z").getDayOfWeek())cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 1);
@@ -1508,10 +1466,10 @@ TEST_F(RuntimeTest, CallGetDayOfWeekTimestamp) {
 
 TEST_F(RuntimeTest, CallGetDayOfYearTimestamp) {
   // Days of the year are zero-based.
-  _cel_ProgramPtr prog =
+  cel_ProgramPtr prog =
       Parse(R"cel(timestamp("2025-12-01T10:20:30.456Z").getDayOfYear())cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 334);
@@ -1551,10 +1509,10 @@ TEST_F(RuntimeTest, CallGetDayOfYearTimestamp) {
 
 TEST_F(RuntimeTest, CallDateAccessorsTimestampWithTimeZone) {
   // Empty and UTC time zones match the single argument overloads.
-  _cel_ProgramPtr prog =
+  cel_ProgramPtr prog =
       Parse(R"cel(timestamp("2025-12-01T02:00:00Z").getDate(""))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 1);
@@ -1743,9 +1701,9 @@ TEST_F(RuntimeTest, CallDateAccessorsTimestampWithTimeZone) {
 }
 
 TEST_F(RuntimeTest, CallTimeAccessorsNoSuchOverload) {
-  _cel_ProgramPtr prog = Parse(R"cel(getHours(1))cel");
+  cel_ProgramPtr prog = Parse(R"cel(getHours(1))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
   EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
@@ -1818,10 +1776,10 @@ TEST_F(RuntimeTest, CallTimeAccessorsNoSuchOverload) {
 }
 
 TEST_F(RuntimeTest, CallTimeAccessorsInvalidTimeZone) {
-  _cel_ProgramPtr prog = Parse(
+  cel_ProgramPtr prog = Parse(
       R"cel(timestamp("2025-12-01T10:20:30Z").getHours("Invalid/Zone"))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
   EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
@@ -1852,9 +1810,9 @@ TEST_F(RuntimeTest, CallTimeAccessorsInvalidTimeZone) {
 }
 
 TEST_F(RuntimeTest, CallTimeAccessorsPropagatesError) {
-  _cel_ProgramPtr prog = Parse(R"cel(getHours(1 / 0))cel");
+  cel_ProgramPtr prog = Parse(R"cel(getHours(1 / 0))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
   EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
@@ -1913,9 +1871,9 @@ TEST_F(RuntimeTest, CallTimeAccessorsPropagatesError) {
 
 TEST_F(RuntimeTest, CallDateAccessorsNoSuchOverload) {
   // Durations do not support the date accessors.
-  _cel_ProgramPtr prog = Parse(R"cel(duration("1h").getFullYear())cel");
+  cel_ProgramPtr prog = Parse(R"cel(duration("1h").getFullYear())cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
   EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
@@ -1994,10 +1952,10 @@ TEST_F(RuntimeTest, CallDateAccessorsNoSuchOverload) {
 }
 
 TEST_F(RuntimeTest, CallDateAccessorsInvalidTimeZone) {
-  _cel_ProgramPtr prog = Parse(
+  cel_ProgramPtr prog = Parse(
       R"cel(timestamp("2025-12-01T10:20:30Z").getFullYear("Invalid/Zone"))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
   EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
@@ -2042,9 +2000,9 @@ TEST_F(RuntimeTest, CallDateAccessorsInvalidTimeZone) {
 }
 
 TEST_F(RuntimeTest, CallDateAccessorsPropagatesError) {
-  _cel_ProgramPtr prog = Parse(R"cel(getFullYear(1 / 0))cel");
+  cel_ProgramPtr prog = Parse(R"cel(getFullYear(1 / 0))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
   EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
@@ -2116,9 +2074,9 @@ TEST_F(RuntimeTest, CallDateAccessorsPropagatesError) {
 }
 
 TEST_F(RuntimeTest, CallDyn) {
-  _cel_ProgramPtr prog = Parse(R"cel(dyn(1))cel");
+  cel_ProgramPtr prog = Parse(R"cel(dyn(1))cel");
   _cel_TestingVariableResolver var_resolver({{"foo", IntValue(42)}});
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 1);
@@ -2166,9 +2124,9 @@ TEST_F(RuntimeTest, CallDyn) {
 }
 
 TEST_F(RuntimeTest, CallDynInControlFlow) {
-  _cel_ProgramPtr prog = Parse(R"cel(dyn(false) && (1 / 0 == 1))cel");
+  cel_ProgramPtr prog = Parse(R"cel(dyn(false) && (1 / 0 == 1))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_FALSE(cel_Value_GetBool(&value));
@@ -2226,9 +2184,9 @@ TEST_F(RuntimeTest, CallDynRequiresSingleGlobalArg) {
 }
 
 TEST_F(RuntimeTest, CallDynPropagatesError) {
-  _cel_ProgramPtr prog = Parse(R"cel(dyn(1 / 0))cel");
+  cel_ProgramPtr prog = Parse(R"cel(dyn(1 / 0))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
   EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
@@ -2236,9 +2194,9 @@ TEST_F(RuntimeTest, CallDynPropagatesError) {
 }
 
 TEST_F(RuntimeTest, CallDynChecked) {
-  _cel_ProgramPtr prog = Compile(R"cel(dyn(1) + 2)cel");
+  cel_ProgramPtr prog = Compile(R"cel(dyn(1) + 2)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 3);
@@ -2247,27 +2205,27 @@ TEST_F(RuntimeTest, CallDynChecked) {
 // TODO: Add addition tests for duration/timestamp
 
 TEST_F(RuntimeTest, IntSub) {
-  _cel_ProgramPtr prog = Parse(R"cel(4 - 2 - 1)cel");
+  cel_ProgramPtr prog = Parse(R"cel(4 - 2 - 1)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 1);
 }
 
 TEST_F(RuntimeTest, UintSub) {
-  _cel_ProgramPtr prog = Parse(R"cel(4u - 2u - 1u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(4u - 2u - 1u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsUint(&value));
   EXPECT_EQ(cel_Value_GetUint(&value), 1);
 }
 
 TEST_F(RuntimeTest, DoubleSub) {
-  _cel_ProgramPtr prog = Parse(R"cel(4.0 - 2.0 - 1.0)cel");
+  cel_ProgramPtr prog = Parse(R"cel(4.0 - 2.0 - 1.0)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsDouble(&value));
   EXPECT_EQ(cel_Value_GetDouble(&value), 1.0);
@@ -2276,27 +2234,27 @@ TEST_F(RuntimeTest, DoubleSub) {
 // TODO: Add subtraction tests for duration/timestamp
 
 TEST_F(RuntimeTest, IntMul) {
-  _cel_ProgramPtr prog = Parse(R"cel(4 * 2 * 1)cel");
+  cel_ProgramPtr prog = Parse(R"cel(4 * 2 * 1)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 8);
 }
 
 TEST_F(RuntimeTest, UintMul) {
-  _cel_ProgramPtr prog = Parse(R"cel(4u * 2u * 1u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(4u * 2u * 1u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsUint(&value));
   EXPECT_EQ(cel_Value_GetUint(&value), 8);
 }
 
 TEST_F(RuntimeTest, DoubleMul) {
-  _cel_ProgramPtr prog = Parse(R"cel(4.0 * 2.0 * 1.0)cel");
+  cel_ProgramPtr prog = Parse(R"cel(4.0 * 2.0 * 1.0)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsDouble(&value));
   EXPECT_EQ(cel_Value_GetDouble(&value), 8.0);
@@ -2306,9 +2264,9 @@ TEST_F(RuntimeTest, DivByZero) {
   cel_Error* error = cel_Error_New(arena());
   cel_Error_SetMessage(error, cel_StringView_From("cel: divide by zero"));
   cel_Error_SetCanonicalCode(error, cel_ErrorCode_kInvalidArgument);
-  _cel_ProgramPtr prog = Parse(R"cel(4 / 0)cel");
+  cel_ProgramPtr prog = Parse(R"cel(4 / 0)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
   EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
@@ -2319,9 +2277,9 @@ TEST_F(RuntimeTest, DivByZeroUint) {
   cel_Error* error = cel_Error_New(arena());
   cel_Error_SetMessage(error, cel_StringView_From("cel: divide by zero"));
   cel_Error_SetCanonicalCode(error, cel_ErrorCode_kInvalidArgument);
-  _cel_ProgramPtr prog = Parse(R"cel(4u / 0u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(4u / 0u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
   EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
@@ -2332,9 +2290,9 @@ TEST_F(RuntimeTest, DivByZeroDouble) {
   cel_Error* error = cel_Error_New(arena());
   cel_Error_SetMessage(error, cel_StringView_From("cel: divide by zero"));
   cel_Error_SetCanonicalCode(error, cel_ErrorCode_kInvalidArgument);
-  _cel_ProgramPtr prog = Parse(R"cel(4.0 / 0.0)cel");
+  cel_ProgramPtr prog = Parse(R"cel(4.0 / 0.0)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
   EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
@@ -2345,23 +2303,23 @@ TEST_F(RuntimeTest, MismatchedTypes) {
   cel_Error* error = cel_Error_New(arena());
   cel_Error_SetMessage(error, cel_StringView_From("cel: no such overload"));
   cel_Error_SetCanonicalCode(error, cel_ErrorCode_kInvalidArgument);
-  _cel_ProgramPtr prog = Parse(R"cel(1u / 1)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1u / 1)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
   EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
             cel_Error_Message(error));
 
-  _cel_ProgramPtr prog2 = Parse(R"cel(1.0 / 1)cel");
-  _cel_ActivationPtr act2(Activate(prog2.get(), &var_resolver));
+  cel_ProgramPtr prog2 = Parse(R"cel(1.0 / 1)cel");
+  cel_ActivationPtr act2(Activate(prog2.get(), &var_resolver));
   value = Execute(act2.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
   EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
             cel_Error_Message(error));
 
-  _cel_ProgramPtr prog3 = Parse(R"cel(1.0 / 1u)cel");
-  _cel_ActivationPtr act3(Activate(prog3.get(), &var_resolver));
+  cel_ProgramPtr prog3 = Parse(R"cel(1.0 / 1u)cel");
+  cel_ActivationPtr act3(Activate(prog3.get(), &var_resolver));
   value = Execute(act3.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
   EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
@@ -2369,54 +2327,54 @@ TEST_F(RuntimeTest, MismatchedTypes) {
 }
 
 TEST_F(RuntimeTest, IntDiv) {
-  _cel_ProgramPtr prog = Parse(R"cel(4 / 2)cel");
+  cel_ProgramPtr prog = Parse(R"cel(4 / 2)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 2);
 }
 
 TEST_F(RuntimeTest, UintDiv) {
-  _cel_ProgramPtr prog = Parse(R"cel(4u / 2u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(4u / 2u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsUint(&value));
   EXPECT_EQ(cel_Value_GetUint(&value), 2);
 }
 
 TEST_F(RuntimeTest, DoubleDiv) {
-  _cel_ProgramPtr prog = Parse(R"cel(4.0 / 2.0)cel");
+  cel_ProgramPtr prog = Parse(R"cel(4.0 / 2.0)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsDouble(&value));
   EXPECT_EQ(cel_Value_GetDouble(&value), 2.0);
 }
 
 TEST_F(RuntimeTest, NegativeIntModTest) {
-  _cel_ProgramPtr prog = Parse(R"cel(-10 % 3)cel");
+  cel_ProgramPtr prog = Parse(R"cel(-10 % 3)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), -1);
 }
 
 TEST_F(RuntimeTest, IntModTest) {
-  _cel_ProgramPtr prog = Parse(R"cel(10 % 3)cel");
+  cel_ProgramPtr prog = Parse(R"cel(10 % 3)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 1);
 }
 
 TEST_F(RuntimeTest, UintMod) {
-  _cel_ProgramPtr prog = Parse(R"cel(4u % 2u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(4u % 2u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsUint(&value));
   EXPECT_EQ(cel_Value_GetUint(&value), 0);
@@ -2426,64 +2384,64 @@ TEST_F(RuntimeTest, IntModByZero) {
   cel_Error* error = cel_Error_New(arena());
   cel_Error_SetMessage(error, cel_StringView_From("cel: modulo by zero"));
   cel_Error_SetCanonicalCode(error, cel_ErrorCode_kInvalidArgument);
-  _cel_ProgramPtr prog = Parse(R"cel(4 % 0)cel");
+  cel_ProgramPtr prog = Parse(R"cel(4 % 0)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
   EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
             cel_Error_Message(error));
 
-  _cel_ProgramPtr prog2 = Parse(R"cel(1.0 / 1)cel");
-  _cel_ActivationPtr act2(Activate(prog2.get(), &var_resolver));
+  cel_ProgramPtr prog2 = Parse(R"cel(1.0 / 1)cel");
+  cel_ActivationPtr act2(Activate(prog2.get(), &var_resolver));
   value = Execute(act2.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
 
-  _cel_ProgramPtr prog3 = Parse(R"cel(1.0 / 1u)cel");
-  _cel_ActivationPtr act3(Activate(prog3.get(), &var_resolver));
+  cel_ProgramPtr prog3 = Parse(R"cel(1.0 / 1u)cel");
+  cel_ActivationPtr act3(Activate(prog3.get(), &var_resolver));
   value = Execute(act3.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
 }
 
 TEST_F(RuntimeTest, LogicalNot) {
-  _cel_ProgramPtr prog = Parse(R"cel(!true)cel");
+  cel_ProgramPtr prog = Parse(R"cel(!true)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_FALSE(cel_Value_GetBool(&value));
 }
 
 TEST_F(RuntimeTest, IntNeg) {
-  _cel_ProgramPtr prog = Parse(R"cel(-(1))cel");
+  cel_ProgramPtr prog = Parse(R"cel(-(1))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), -1);
 }
 
 TEST_F(RuntimeTest, UintNeg) {
-  _cel_ProgramPtr prog = Parse(R"cel(-1u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(-1u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
 }
 
 TEST_F(RuntimeTest, DoubleNeg) {
-  _cel_ProgramPtr prog = Parse(R"cel(-1.0 - 1.0)cel");
+  cel_ProgramPtr prog = Parse(R"cel(-1.0 - 1.0)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsDouble(&value));
   EXPECT_EQ(cel_Value_GetDouble(&value), -2.0);
 }
 
 TEST_F(RuntimeTest, LogicalAnd) {
-  _cel_ProgramPtr prog = Parse(R"cel(true && true)cel");
+  cel_ProgramPtr prog = Parse(R"cel(true && true)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -2502,9 +2460,9 @@ TEST_F(RuntimeTest, LogicalAnd) {
 }
 
 TEST_F(RuntimeTest, LogicalOr) {
-  _cel_ProgramPtr prog = Parse(R"cel(true || true)cel");
+  cel_ProgramPtr prog = Parse(R"cel(true || true)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -2523,9 +2481,9 @@ TEST_F(RuntimeTest, LogicalOr) {
 }
 
 TEST_F(RuntimeTest, LogicalAndWithError) {
-  _cel_ProgramPtr prog = Parse(R"cel(false && (1 / 0))cel");
+  cel_ProgramPtr prog = Parse(R"cel(false && (1 / 0))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_FALSE(cel_Value_GetBool(&value));
@@ -2535,9 +2493,9 @@ TEST_F(RuntimeTest, LogicalOrWithError) {
   cel_Error* error = cel_Error_New(arena());
   cel_Error_SetMessage(error, cel_StringView_From("cel: divide by zero"));
   cel_Error_SetCanonicalCode(error, cel_ErrorCode_kInvalidArgument);
-  _cel_ProgramPtr prog = Parse(R"cel(false || (1 / 0))cel");
+  cel_ProgramPtr prog = Parse(R"cel(false || (1 / 0))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
   EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
@@ -2545,63 +2503,63 @@ TEST_F(RuntimeTest, LogicalOrWithError) {
 }
 
 TEST_F(RuntimeTest, BoolEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(true == true)cel");
+  cel_ProgramPtr prog = Parse(R"cel(true == true)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
 }
 
 TEST_F(RuntimeTest, IntEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(1 == 1)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1 == 1)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
 }
 
 TEST_F(RuntimeTest, UintEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(1u == 1u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1u == 1u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
 }
 
 TEST_F(RuntimeTest, DoubleEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(1.0 == 1.0)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1.0 == 1.0)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
 }
 
 TEST_F(RuntimeTest, BytesEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(b'Hello' == b'Hello')cel");
+  cel_ProgramPtr prog = Parse(R"cel(b'Hello' == b'Hello')cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
 }
 
 TEST_F(RuntimeTest, StringEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel('Hello' == 'Hello')cel");
+  cel_ProgramPtr prog = Parse(R"cel('Hello' == 'Hello')cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
 }
 
 TEST_F(RuntimeTest, ListEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel([] == [])cel");
+  cel_ProgramPtr prog = Parse(R"cel([] == [])cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -2674,9 +2632,9 @@ TEST_F(RuntimeTest, ListEquals) {
 }
 
 TEST_F(RuntimeTest, MapEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel({} == {})cel");
+  cel_ProgramPtr prog = Parse(R"cel({} == {})cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -2755,9 +2713,9 @@ TEST_F(RuntimeTest, MapEquals) {
 }
 
 TEST_F(RuntimeTest, BoolNotEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(true != false)cel");
+  cel_ProgramPtr prog = Parse(R"cel(true != false)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -2770,9 +2728,9 @@ TEST_F(RuntimeTest, BoolNotEquals) {
 }
 
 TEST_F(RuntimeTest, IntNotEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(1 != 2)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1 != 2)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -2785,9 +2743,9 @@ TEST_F(RuntimeTest, IntNotEquals) {
 }
 
 TEST_F(RuntimeTest, UintNotEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(1u != 2u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1u != 2u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -2800,9 +2758,9 @@ TEST_F(RuntimeTest, UintNotEquals) {
 }
 
 TEST_F(RuntimeTest, DoubleNotEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(1.0 != 2.0)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1.0 != 2.0)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -2815,9 +2773,9 @@ TEST_F(RuntimeTest, DoubleNotEquals) {
 }
 
 TEST_F(RuntimeTest, BytesNotEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(b'a' != b'b')cel");
+  cel_ProgramPtr prog = Parse(R"cel(b'a' != b'b')cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -2830,9 +2788,9 @@ TEST_F(RuntimeTest, BytesNotEquals) {
 }
 
 TEST_F(RuntimeTest, StringNotEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel('a' != 'b')cel");
+  cel_ProgramPtr prog = Parse(R"cel('a' != 'b')cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -2845,9 +2803,9 @@ TEST_F(RuntimeTest, StringNotEquals) {
 }
 
 TEST_F(RuntimeTest, ListNotEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(['a', 'b'] != ['x', 'b'])cel");
+  cel_ProgramPtr prog = Parse(R"cel(['a', 'b'] != ['x', 'b'])cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -2860,9 +2818,9 @@ TEST_F(RuntimeTest, ListNotEquals) {
 }
 
 TEST_F(RuntimeTest, MapNotEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel({'a': 1} != {'a': 2})cel");
+  cel_ProgramPtr prog = Parse(R"cel({'a': 1} != {'a': 2})cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -2875,9 +2833,9 @@ TEST_F(RuntimeTest, MapNotEquals) {
 }
 
 TEST_F(RuntimeTest, IntLess) {
-  _cel_ProgramPtr prog = Parse(R"cel(1 < 2)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1 < 2)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -2896,9 +2854,9 @@ TEST_F(RuntimeTest, IntLess) {
 }
 
 TEST_F(RuntimeTest, UintLess) {
-  _cel_ProgramPtr prog = Parse(R"cel(1u < 2u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1u < 2u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -2917,9 +2875,9 @@ TEST_F(RuntimeTest, UintLess) {
 }
 
 TEST_F(RuntimeTest, DoubleLess) {
-  _cel_ProgramPtr prog = Parse(R"cel(1.0 < 2.0)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1.0 < 2.0)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -2938,9 +2896,9 @@ TEST_F(RuntimeTest, DoubleLess) {
 }
 
 TEST_F(RuntimeTest, StringLess) {
-  _cel_ProgramPtr prog = Parse(R"cel('a' < 'b')cel");
+  cel_ProgramPtr prog = Parse(R"cel('a' < 'b')cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -2959,9 +2917,9 @@ TEST_F(RuntimeTest, StringLess) {
 }
 
 TEST_F(RuntimeTest, IntLessEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(1 <= 2)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1 <= 2)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -2980,9 +2938,9 @@ TEST_F(RuntimeTest, IntLessEquals) {
 }
 
 TEST_F(RuntimeTest, UintLessEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(1u <= 2u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1u <= 2u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3001,9 +2959,9 @@ TEST_F(RuntimeTest, UintLessEquals) {
 }
 
 TEST_F(RuntimeTest, DoubleLessEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(1.0 <= 2.0)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1.0 <= 2.0)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3022,9 +2980,9 @@ TEST_F(RuntimeTest, DoubleLessEquals) {
 }
 
 TEST_F(RuntimeTest, StringLessEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel('a' <= 'b')cel");
+  cel_ProgramPtr prog = Parse(R"cel('a' <= 'b')cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3043,9 +3001,9 @@ TEST_F(RuntimeTest, StringLessEquals) {
 }
 
 TEST_F(RuntimeTest, IntGreater) {
-  _cel_ProgramPtr prog = Parse(R"cel(2 > 1)cel");
+  cel_ProgramPtr prog = Parse(R"cel(2 > 1)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3064,9 +3022,9 @@ TEST_F(RuntimeTest, IntGreater) {
 }
 
 TEST_F(RuntimeTest, UintGreater) {
-  _cel_ProgramPtr prog = Parse(R"cel(2u > 1u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(2u > 1u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3085,9 +3043,9 @@ TEST_F(RuntimeTest, UintGreater) {
 }
 
 TEST_F(RuntimeTest, DoubleGreater) {
-  _cel_ProgramPtr prog = Parse(R"cel(2.0 > 1.0)cel");
+  cel_ProgramPtr prog = Parse(R"cel(2.0 > 1.0)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3106,9 +3064,9 @@ TEST_F(RuntimeTest, DoubleGreater) {
 }
 
 TEST_F(RuntimeTest, StringGreater) {
-  _cel_ProgramPtr prog = Parse(R"cel('b' > 'a')cel");
+  cel_ProgramPtr prog = Parse(R"cel('b' > 'a')cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3127,9 +3085,9 @@ TEST_F(RuntimeTest, StringGreater) {
 }
 
 TEST_F(RuntimeTest, IntGreaterEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(2 >= 1)cel");
+  cel_ProgramPtr prog = Parse(R"cel(2 >= 1)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3148,9 +3106,9 @@ TEST_F(RuntimeTest, IntGreaterEquals) {
 }
 
 TEST_F(RuntimeTest, UintGreaterEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(2u >= 1u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(2u >= 1u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3169,9 +3127,9 @@ TEST_F(RuntimeTest, UintGreaterEquals) {
 }
 
 TEST_F(RuntimeTest, DoubleGreaterEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(2.0 >= 1.0)cel");
+  cel_ProgramPtr prog = Parse(R"cel(2.0 >= 1.0)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3190,9 +3148,9 @@ TEST_F(RuntimeTest, DoubleGreaterEquals) {
 }
 
 TEST_F(RuntimeTest, StringGreaterEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel('b' >= 'a')cel");
+  cel_ProgramPtr prog = Parse(R"cel('b' >= 'a')cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3211,9 +3169,9 @@ TEST_F(RuntimeTest, StringGreaterEquals) {
 }
 
 TEST_F(RuntimeTest, BytesLess) {
-  _cel_ProgramPtr prog = Parse(R"cel(b'a' < b'b')cel");
+  cel_ProgramPtr prog = Parse(R"cel(b'a' < b'b')cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3232,9 +3190,9 @@ TEST_F(RuntimeTest, BytesLess) {
 }
 
 TEST_F(RuntimeTest, BytesLessEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(b'a' <= b'b')cel");
+  cel_ProgramPtr prog = Parse(R"cel(b'a' <= b'b')cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3253,9 +3211,9 @@ TEST_F(RuntimeTest, BytesLessEquals) {
 }
 
 TEST_F(RuntimeTest, BytesGreater) {
-  _cel_ProgramPtr prog = Parse(R"cel(b'b' > b'a')cel");
+  cel_ProgramPtr prog = Parse(R"cel(b'b' > b'a')cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3274,9 +3232,9 @@ TEST_F(RuntimeTest, BytesGreater) {
 }
 
 TEST_F(RuntimeTest, BytesGreaterEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(b'b' >= b'a')cel");
+  cel_ProgramPtr prog = Parse(R"cel(b'b' >= b'a')cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3295,27 +3253,27 @@ TEST_F(RuntimeTest, BytesGreaterEquals) {
 }
 
 TEST_F(RuntimeTest, IntDoubleEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(1 == 1.0)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1 == 1.0)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
 }
 
 TEST_F(RuntimeTest, IntDoubleNotEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(1 != 1.1)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1 != 1.1)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
 }
 
 TEST_F(RuntimeTest, IntDoubleLess) {
-  _cel_ProgramPtr prog = Parse(R"cel(1 < 1.1)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1 < 1.1)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3328,9 +3286,9 @@ TEST_F(RuntimeTest, IntDoubleLess) {
 }
 
 TEST_F(RuntimeTest, IntDoubleLessEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(1 <= 1.1)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1 <= 1.1)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3343,9 +3301,9 @@ TEST_F(RuntimeTest, IntDoubleLessEquals) {
 }
 
 TEST_F(RuntimeTest, IntDoubleGreater) {
-  _cel_ProgramPtr prog = Parse(R"cel(1.1 > 1)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1.1 > 1)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3358,9 +3316,9 @@ TEST_F(RuntimeTest, IntDoubleGreater) {
 }
 
 TEST_F(RuntimeTest, IntDoubleGreaterEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(1.1 >= 1)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1.1 >= 1)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3373,9 +3331,9 @@ TEST_F(RuntimeTest, IntDoubleGreaterEquals) {
 }
 
 TEST_F(RuntimeTest, IntUintEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(1 == 1u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1 == 1u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3388,9 +3346,9 @@ TEST_F(RuntimeTest, IntUintEquals) {
 }
 
 TEST_F(RuntimeTest, IntUintNotEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(1 != 2u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1 != 2u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3403,9 +3361,9 @@ TEST_F(RuntimeTest, IntUintNotEquals) {
 }
 
 TEST_F(RuntimeTest, IntUintLess) {
-  _cel_ProgramPtr prog = Parse(R"cel(1 < 2u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1 < 2u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3424,9 +3382,9 @@ TEST_F(RuntimeTest, IntUintLess) {
 }
 
 TEST_F(RuntimeTest, IntUintLessEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(1 <= 2u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1 <= 2u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3439,9 +3397,9 @@ TEST_F(RuntimeTest, IntUintLessEquals) {
 }
 
 TEST_F(RuntimeTest, IntUintGreater) {
-  _cel_ProgramPtr prog = Parse(R"cel(2 > 1u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(2 > 1u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3460,9 +3418,9 @@ TEST_F(RuntimeTest, IntUintGreater) {
 }
 
 TEST_F(RuntimeTest, IntUintGreaterEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(2 >= 1u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(2 >= 1u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3481,9 +3439,9 @@ TEST_F(RuntimeTest, IntUintGreaterEquals) {
 }
 
 TEST_F(RuntimeTest, DoubleUintEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(1.0 == 1u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1.0 == 1u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3496,9 +3454,9 @@ TEST_F(RuntimeTest, DoubleUintEquals) {
 }
 
 TEST_F(RuntimeTest, DoubleUintNotEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(1.0 != 2u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1.0 != 2u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3511,9 +3469,9 @@ TEST_F(RuntimeTest, DoubleUintNotEquals) {
 }
 
 TEST_F(RuntimeTest, DoubleUintLess) {
-  _cel_ProgramPtr prog = Parse(R"cel(1.0 < 2u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1.0 < 2u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3532,9 +3490,9 @@ TEST_F(RuntimeTest, DoubleUintLess) {
 }
 
 TEST_F(RuntimeTest, DoubleUintLessEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(1.0 <= 2u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1.0 <= 2u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3553,9 +3511,9 @@ TEST_F(RuntimeTest, DoubleUintLessEquals) {
 }
 
 TEST_F(RuntimeTest, DoubleUintGreater) {
-  _cel_ProgramPtr prog = Parse(R"cel(2.0 > 1u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(2.0 > 1u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3574,9 +3532,9 @@ TEST_F(RuntimeTest, DoubleUintGreater) {
 }
 
 TEST_F(RuntimeTest, DoubleUintGreaterEquals) {
-  _cel_ProgramPtr prog = Parse(R"cel(2.0 >= 1u)cel");
+  cel_ProgramPtr prog = Parse(R"cel(2.0 >= 1u)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -3595,58 +3553,57 @@ TEST_F(RuntimeTest, DoubleUintGreaterEquals) {
 }
 
 TEST_F(RuntimeTest, TernaryConditional) {
-  _cel_ProgramPtr prog = Parse(R"cel(1 < 2 ? 1 : 2)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1 < 2 ? 1 : 2)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 1);
 }
 
 TEST_F(RuntimeTest, ComplexTernaryConditional) {
-  _cel_ProgramPtr prog =
-      Parse(R"cel(1 > 2 ? 1 : 2 > 3 ? 3 : 4 > 5 ? 5 : 6)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1 > 2 ? 1 : 2 > 3 ? 3 : 4 > 5 ? 5 : 6)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 6);
 }
 
 TEST_F(RuntimeTest, TernaryConditionalDifferentTypes) {
-  _cel_ProgramPtr prog = Parse(R"cel(1 > 2 ? 1 : "2")cel");
+  cel_ProgramPtr prog = Parse(R"cel(1 > 2 ? 1 : "2")cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsString(&value));
   EXPECT_EQ(cel_Value_GetString(&value), cel_StringView_From("2"));
 
-  _cel_ProgramPtr prog2 = Parse(R"cel(true ? true : 1)cel");
+  cel_ProgramPtr prog2 = Parse(R"cel(true ? true : 1)cel");
   _cel_TestingVariableResolver var_resolver2;
-  _cel_ActivationPtr act2(Activate(prog2.get(), &var_resolver2));
+  cel_ActivationPtr act2(Activate(prog2.get(), &var_resolver2));
   value = Execute(act2.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_EQ(cel_Value_GetBool(&value), true);
 
-  _cel_ProgramPtr prog3 = Parse(R"cel(false ? 1 : 1.0)cel");
+  cel_ProgramPtr prog3 = Parse(R"cel(false ? 1 : 1.0)cel");
   _cel_TestingVariableResolver var_resolver3;
-  _cel_ActivationPtr act3(Activate(prog3.get(), &var_resolver3));
+  cel_ActivationPtr act3(Activate(prog3.get(), &var_resolver3));
   value = Execute(act3.get());
   ASSERT_TRUE(cel_Value_IsDouble(&value));
   EXPECT_EQ(cel_Value_GetDouble(&value), 1.0);
 
-  _cel_ProgramPtr prog4 = Parse(R"cel(true ? 1.0 : "1.0")cel");
+  cel_ProgramPtr prog4 = Parse(R"cel(true ? 1.0 : "1.0")cel");
   _cel_TestingVariableResolver var_resolver4;
-  _cel_ActivationPtr act4(Activate(prog4.get(), &var_resolver4));
+  cel_ActivationPtr act4(Activate(prog4.get(), &var_resolver4));
   value = Execute(act4.get());
   ASSERT_TRUE(cel_Value_IsDouble(&value));
   EXPECT_EQ(cel_Value_GetDouble(&value), 1.0);
 }
 
 TEST_F(RuntimeTest, TernaryConditionalString) {
-  _cel_ProgramPtr prog = Parse(R"cel(true ? 'hello' : 'world')cel");
+  cel_ProgramPtr prog = Parse(R"cel(true ? 'hello' : 'world')cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsString(&value));
   EXPECT_EQ(cel_Value_GetString(&value), cel_StringView_From("hello"));
@@ -3659,9 +3616,9 @@ TEST_F(RuntimeTest, TernaryConditionalString) {
 }
 
 TEST_F(RuntimeTest, TernaryConditionalDouble) {
-  _cel_ProgramPtr prog = Parse(R"cel(true ? 1.0 : 2.5)cel");
+  cel_ProgramPtr prog = Parse(R"cel(true ? 1.0 : 2.5)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsDouble(&value));
   EXPECT_EQ(cel_Value_GetDouble(&value), 1.0);
@@ -3674,9 +3631,9 @@ TEST_F(RuntimeTest, TernaryConditionalDouble) {
 }
 
 TEST_F(RuntimeTest, TernaryConditionalBool) {
-  _cel_ProgramPtr prog = Parse(R"cel(true ? false : true)cel");
+  cel_ProgramPtr prog = Parse(R"cel(true ? false : true)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_FALSE(cel_Value_GetBool(&value));
@@ -3689,9 +3646,9 @@ TEST_F(RuntimeTest, TernaryConditionalBool) {
 }
 
 TEST_F(RuntimeTest, TernaryConditionalError) {
-  _cel_ProgramPtr prog = Parse(R"cel(1.0 / 0.0 ? true : false)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1.0 / 0.0 ? true : false)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
 
@@ -3707,9 +3664,9 @@ TEST_F(RuntimeTest, TernaryConditionalError) {
 }
 
 TEST_F(RuntimeTest, ListEmpty) {
-  _cel_ProgramPtr prog = Parse(R"cel([])cel");
+  cel_ProgramPtr prog = Parse(R"cel([])cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsList(&value));
   cel_Value size;
@@ -3720,9 +3677,9 @@ TEST_F(RuntimeTest, ListEmpty) {
 }
 
 TEST_F(RuntimeTest, List) {
-  _cel_ProgramPtr prog = Parse(R"cel([true, 2, 3u, 4.0])cel");
+  cel_ProgramPtr prog = Parse(R"cel([true, 2, 3u, 4.0])cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsList(&value));
   cel_Value size;
@@ -3755,9 +3712,9 @@ TEST_F(RuntimeTest, List) {
 }
 
 TEST_F(RuntimeTest, ListError) {
-  _cel_ProgramPtr prog = Parse(R"cel([1.0 / 0.0, 2, 3u, 4.0])cel");
+  cel_ProgramPtr prog = Parse(R"cel([1.0 / 0.0, 2, 3u, 4.0])cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
 
@@ -3778,9 +3735,9 @@ TEST_F(RuntimeTest, ListError) {
 }
 
 TEST_F(RuntimeTest, MapEmpty) {
-  _cel_ProgramPtr prog = Parse(R"cel({})cel");
+  cel_ProgramPtr prog = Parse(R"cel({})cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsMap(&value));
   cel_Value size;
@@ -3791,10 +3748,10 @@ TEST_F(RuntimeTest, MapEmpty) {
 }
 
 TEST_F(RuntimeTest, Map) {
-  _cel_ProgramPtr prog =
+  cel_ProgramPtr prog =
       Parse(R"cel({true: 2, 3: 4u, 5u: "foo", "bar": null})cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsMap(&value));
   cel_Value size;
@@ -3832,9 +3789,9 @@ TEST_F(RuntimeTest, Map) {
 }
 
 TEST_F(RuntimeTest, MapError) {
-  _cel_ProgramPtr prog = Parse(R"cel({1 / 0: 2, 3: 4u})cel");
+  cel_ProgramPtr prog = Parse(R"cel({1 / 0: 2, 3: 4u})cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
 
@@ -3865,9 +3822,9 @@ TEST_F(RuntimeTest, MapError) {
 }
 
 TEST_F(RuntimeTest, CallSize) {
-  _cel_ProgramPtr prog = Parse(R"cel("hello".size())cel");
+  cel_ProgramPtr prog = Parse(R"cel("hello".size())cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 5);
@@ -3897,9 +3854,9 @@ TEST_F(RuntimeTest, CallSize) {
 }
 
 TEST_F(RuntimeTest, CallSizeList) {
-  _cel_ProgramPtr prog = Parse(R"cel([1, 2, 3].size())cel");
+  cel_ProgramPtr prog = Parse(R"cel([1, 2, 3].size())cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 3);
@@ -3918,9 +3875,9 @@ TEST_F(RuntimeTest, CallSizeList) {
 }
 
 TEST_F(RuntimeTest, CallSizeMap) {
-  _cel_ProgramPtr prog = Parse(R"cel({1: "a", 2: "b"}.size())cel");
+  cel_ProgramPtr prog = Parse(R"cel({1: "a", 2: "b"}.size())cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 2);
@@ -3939,64 +3896,64 @@ TEST_F(RuntimeTest, CallSizeMap) {
 }
 
 TEST_F(RuntimeTest, CallContainsString) {
-  _cel_ProgramPtr prog = Parse(R"cel("hello".contains("el"))cel");
+  cel_ProgramPtr prog = Parse(R"cel("hello".contains("el"))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
 }
 
 TEST_F(RuntimeTest, CallContainsNotString) {
-  _cel_ProgramPtr prog = Parse(R"cel("hello".contains("le"))cel");
+  cel_ProgramPtr prog = Parse(R"cel("hello".contains("le"))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_FALSE(cel_Value_GetBool(&value));
 }
 
 TEST_F(RuntimeTest, CallStartsWithString) {
-  _cel_ProgramPtr prog = Parse(R"cel("hello".startsWith("el"))cel");
+  cel_ProgramPtr prog = Parse(R"cel("hello".startsWith("el"))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_FALSE(cel_Value_GetBool(&value));
 }
 
 TEST_F(RuntimeTest, CallStartsWithNotString) {
-  _cel_ProgramPtr prog = Parse(R"cel("hello".startsWith("ello"))cel");
+  cel_ProgramPtr prog = Parse(R"cel("hello".startsWith("ello"))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_FALSE(cel_Value_GetBool(&value));
 }
 
 TEST_F(RuntimeTest, CallEndsWithString) {
-  _cel_ProgramPtr prog = Parse(R"cel("hello".endsWith("lo"))cel");
+  cel_ProgramPtr prog = Parse(R"cel("hello".endsWith("lo"))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
 }
 
 TEST_F(RuntimeTest, CallEndsWithNotString) {
-  _cel_ProgramPtr prog = Parse(R"cel("hello".endsWith("ell"))cel");
+  cel_ProgramPtr prog = Parse(R"cel("hello".endsWith("ell"))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_FALSE(cel_Value_GetBool(&value));
 }
 
 TEST_F(RuntimeTest, CallRegexExpMatch) {
-  _cel_ProgramPtr prog = Parse(
+  cel_ProgramPtr prog = Parse(
       R"cel(" Hello  World!   ".matches("(\\s*)Hello(\\s+)World!(\\s*)"))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -4010,10 +3967,10 @@ TEST_F(RuntimeTest, CallRegexExpMatch) {
 }
 
 TEST_F(RuntimeTest, ListIndex) {
-  _cel_ProgramPtr prog =
+  cel_ProgramPtr prog =
       Parse(R"cel([true, 2, 3u, 4.0, 'foo', b'bar', null][0])cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -4070,9 +4027,9 @@ TEST_F(RuntimeTest, ListIndexOutOfRange) {
   cel_Error* error = cel_Error_New(arena());
   cel_Error_SetMessage(error, cel_StringView_From("cel: index out of range"));
   cel_Error_SetCanonicalCode(error, cel_ErrorCode_kInvalidArgument);
-  _cel_ProgramPtr prog = Parse(R"cel([1, 2, 3][3])cel");
+  cel_ProgramPtr prog = Parse(R"cel([1, 2, 3][3])cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
   EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
@@ -4109,9 +4066,9 @@ TEST_F(RuntimeTest, ListIndexOutOfRange) {
 }
 
 TEST_F(RuntimeTest, MapIndex) {
-  _cel_ProgramPtr prog = Parse(R"cel({'foo': 1}['foo'])cel");
+  cel_ProgramPtr prog = Parse(R"cel({'foo': 1}['foo'])cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 1);
@@ -4139,9 +4096,9 @@ TEST_F(RuntimeTest, MapIndexNoSuchKey) {
   cel_Error* error = cel_Error_New(arena());
   cel_Error_SetMessage(error, cel_StringView_From("cel: no such key in map"));
   cel_Error_SetCanonicalCode(error, cel_ErrorCode_kNotFound);
-  _cel_ProgramPtr prog = Parse(R"cel({'foo': 1}['bar'])cel");
+  cel_ProgramPtr prog = Parse(R"cel({'foo': 1}['bar'])cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
   EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
@@ -4171,9 +4128,9 @@ TEST_F(RuntimeTest, MapIndexNoSuchKey) {
 
 TEST_F(RuntimeTest, InList) {
   // int
-  _cel_ProgramPtr prog = Parse(R"cel(1 in [1, 2, 3])cel");
+  cel_ProgramPtr prog = Parse(R"cel(1 in [1, 2, 3])cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -4274,9 +4231,9 @@ TEST_F(RuntimeTest, InListError) {
   cel_Error* error = cel_Error_New(arena());
   cel_Error_SetMessage(error, cel_StringView_From("cel: no such overload"));
   cel_Error_SetCanonicalCode(error, cel_ErrorCode_kInvalidArgument);
-  _cel_ProgramPtr prog = Parse(R"cel(1 in 1)cel");
+  cel_ProgramPtr prog = Parse(R"cel(1 in 1)cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
   EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
@@ -4302,9 +4259,9 @@ TEST_F(RuntimeTest, InListError) {
 
 TEST_F(RuntimeTest, InMap) {
   // int
-  _cel_ProgramPtr prog = Parse(R"cel(1 in {1: 2})cel");
+  cel_ProgramPtr prog = Parse(R"cel(1 in {1: 2})cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsBool(&value));
   EXPECT_TRUE(cel_Value_GetBool(&value));
@@ -4359,9 +4316,9 @@ TEST_F(RuntimeTest, InMapError) {
   cel_Error* error = cel_Error_New(arena());
   cel_Error_SetMessage(error, cel_StringView_From("cel: bad map key"));
   cel_Error_SetCanonicalCode(error, cel_ErrorCode_kInvalidArgument);
-  _cel_ProgramPtr prog = Parse(R"cel(1.0 in {1: 2})cel");
+  cel_ProgramPtr prog = Parse(R"cel(1.0 in {1: 2})cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsError(&value));
   EXPECT_EQ(cel_Error_Message(cel_Value_GetError(&value)),
@@ -4369,9 +4326,9 @@ TEST_F(RuntimeTest, InMapError) {
 }
 
 TEST_F(RuntimeTest, BindMemoizes) {
-  _cel_ProgramPtr prog = Parse(R"cel(cel.bind(a, x, a + a))cel");
+  cel_ProgramPtr prog = Parse(R"cel(cel.bind(a, x, a + a))cel");
   _cel_MockVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   EXPECT_CALL(var_resolver, Find(cel_StringView_From("x"), _, _))
       .WillOnce([](cel_StringView name, cel_Value* out,
                    cel_Status* status) -> cel_Trilean {
@@ -4384,28 +4341,28 @@ TEST_F(RuntimeTest, BindMemoizes) {
 }
 
 TEST_F(RuntimeTest, BindError) {
-  _cel_ProgramPtr prog = Parse(R"cel(cel.bind(a, 1 / 0, a))cel");
+  cel_ProgramPtr prog = Parse(R"cel(cel.bind(a, 1 / 0, a))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   EXPECT_TRUE(cel_Value_IsError(&value));
 }
 
 TEST_F(RuntimeTest, NestedBind) {
-  _cel_ProgramPtr prog =
+  cel_ProgramPtr prog =
       Parse(R"cel(cel.bind(a, cel.bind(b, 3, b), cel.bind(c, a, c)))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsInt(&value));
   EXPECT_EQ(cel_Value_GetInt(&value), 3);
 }
 
 TEST_F(RuntimeTest, BindMaxValueStack) {
-  _cel_ProgramPtr prog = Parse(
+  cel_ProgramPtr prog = Parse(
       R"cel(cel.bind(a, cel.bind(b, [0, 1, 2, 3, 4], [0, 1, 2, 3, 4, 5, b]), cel.bind(c, [0, 1, 2, 3, 4, a], [0, 1, 2, 3, 4, 5, c])))cel");
   _cel_TestingVariableResolver var_resolver;
-  _cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
+  cel_ActivationPtr act(Activate(prog.get(), &var_resolver));
   cel_Value value = Execute(act.get());
   ASSERT_TRUE(cel_Value_IsList(&value));
   EXPECT_EQ(prog->max_stack_size, 22);

@@ -17,6 +17,10 @@
 
 #include <stdbool.h>
 
+#ifdef __cplusplus
+#include <memory>
+#endif
+
 #include "cel-c/alloc.h"
 #include "cel-c/ast.h"
 #include "cel-c/config.h"
@@ -76,5 +80,20 @@ CEL_EXTERN cel_Program* cel_nullable cel_Runtime_Compile(
     cel_Status* cel_nonnull status);
 
 CEL_END_DECLS
+
+#ifdef __cplusplus
+namespace std {
+template <>
+struct default_delete<::cel_Runtime> {
+  template <typename U>
+  CEL_INLINE void operator()(U* ptr) const noexcept {
+    ::cel_Runtime_Delete(const_cast<::cel_Runtime*>(ptr));
+  }
+};
+template <>
+struct default_delete<const ::cel_Runtime> : default_delete<::cel_Runtime> {};
+}  // namespace std
+using cel_RuntimePtr = std::unique_ptr<cel_Runtime>;
+#endif
 
 #endif  // THIRD_PARTY_CEL_C_RUNTIME_H_

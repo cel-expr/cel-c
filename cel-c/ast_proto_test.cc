@@ -14,7 +14,6 @@
 
 #include "cel-c/ast_proto.h"
 
-#include <memory>
 #include <string>
 
 #include "cel/expr/checked.pb.h"
@@ -42,12 +41,6 @@ namespace {
 
 using ::testing::IsNull;
 using ::testing::NotNull;
-
-struct AstDeleter {
-  void operator()(CEL_NULLABLE(cel_Ast*) ast) const { cel_Ast_Delete(ast); }
-};
-
-using AstPtr = std::unique_ptr<cel_Ast, AstDeleter>;
 
 class AstFromProtoTest : public ::testing::Test {
  public:
@@ -85,7 +78,8 @@ class AstFromProtoTest : public ::testing::Test {
 };
 
 TEST_F(AstFromProtoTest, Empty) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb()pb"), arena(), status()));
+  cel_AstPtr ast(
+      cel_Ast_FromProto(ParseTextProto(R"pb()pb"), arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 0);
@@ -93,11 +87,12 @@ TEST_F(AstFromProtoTest, Empty) {
 }
 
 TEST_F(AstFromProtoTest, Unspecified) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
-                                 source_info: { positions { key: 1 value: 1 } }
-                                 expr: { id: 1 }
-                               )pb"),
-                               arena(), status()));
+  cel_AstPtr ast(
+      cel_Ast_FromProto(ParseTextProto(R"pb(
+                          source_info: { positions { key: 1 value: 1 } }
+                          expr: { id: 1 }
+                        )pb"),
+                        arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 1);
@@ -112,14 +107,15 @@ TEST_F(AstFromProtoTest, Unspecified) {
 }
 
 TEST_F(AstFromProtoTest, Ident) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
-                                 source_info: { positions { key: 1 value: 1 } }
-                                 expr: {
-                                   id: 1
-                                   ident_expr: { name: "foo" }
-                                 }
-                               )pb"),
-                               arena(), status()));
+  cel_AstPtr ast(
+      cel_Ast_FromProto(ParseTextProto(R"pb(
+                          source_info: { positions { key: 1 value: 1 } }
+                          expr: {
+                            id: 1
+                            ident_expr: { name: "foo" }
+                          }
+                        )pb"),
+                        arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 1);
@@ -136,14 +132,15 @@ TEST_F(AstFromProtoTest, Ident) {
 }
 
 TEST_F(AstFromProtoTest, ConstUnspecified) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
-                                 source_info: { positions { key: 1 value: 1 } }
-                                 expr: {
-                                   id: 1
-                                   const_expr: {}
-                                 }
-                               )pb"),
-                               arena(), status()));
+  cel_AstPtr ast(
+      cel_Ast_FromProto(ParseTextProto(R"pb(
+                          source_info: { positions { key: 1 value: 1 } }
+                          expr: {
+                            id: 1
+                            const_expr: {}
+                          }
+                        )pb"),
+                        arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 1);
@@ -160,14 +157,15 @@ TEST_F(AstFromProtoTest, ConstUnspecified) {
 }
 
 TEST_F(AstFromProtoTest, ConstNull) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
-                                 source_info: { positions { key: 1 value: 1 } }
-                                 expr: {
-                                   id: 1
-                                   const_expr: { null_value: NULL_VALUE }
-                                 }
-                               )pb"),
-                               arena(), status()));
+  cel_AstPtr ast(
+      cel_Ast_FromProto(ParseTextProto(R"pb(
+                          source_info: { positions { key: 1 value: 1 } }
+                          expr: {
+                            id: 1
+                            const_expr: { null_value: NULL_VALUE }
+                          }
+                        )pb"),
+                        arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 1);
@@ -184,14 +182,15 @@ TEST_F(AstFromProtoTest, ConstNull) {
 }
 
 TEST_F(AstFromProtoTest, ConstBool) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
-                                 source_info: { positions { key: 1 value: 1 } }
-                                 expr: {
-                                   id: 1
-                                   const_expr: { bool_value: true }
-                                 }
-                               )pb"),
-                               arena(), status()));
+  cel_AstPtr ast(
+      cel_Ast_FromProto(ParseTextProto(R"pb(
+                          source_info: { positions { key: 1 value: 1 } }
+                          expr: {
+                            id: 1
+                            const_expr: { bool_value: true }
+                          }
+                        )pb"),
+                        arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 1);
@@ -209,14 +208,15 @@ TEST_F(AstFromProtoTest, ConstBool) {
 }
 
 TEST_F(AstFromProtoTest, ConstInt) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
-                                 source_info: { positions { key: 1 value: 1 } }
-                                 expr: {
-                                   id: 1
-                                   const_expr: { int64_value: 1 }
-                                 }
-                               )pb"),
-                               arena(), status()));
+  cel_AstPtr ast(
+      cel_Ast_FromProto(ParseTextProto(R"pb(
+                          source_info: { positions { key: 1 value: 1 } }
+                          expr: {
+                            id: 1
+                            const_expr: { int64_value: 1 }
+                          }
+                        )pb"),
+                        arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 1);
@@ -234,14 +234,15 @@ TEST_F(AstFromProtoTest, ConstInt) {
 }
 
 TEST_F(AstFromProtoTest, ConstUint) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
-                                 source_info: { positions { key: 1 value: 1 } }
-                                 expr: {
-                                   id: 1
-                                   const_expr: { uint64_value: 1 }
-                                 }
-                               )pb"),
-                               arena(), status()));
+  cel_AstPtr ast(
+      cel_Ast_FromProto(ParseTextProto(R"pb(
+                          source_info: { positions { key: 1 value: 1 } }
+                          expr: {
+                            id: 1
+                            const_expr: { uint64_value: 1 }
+                          }
+                        )pb"),
+                        arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 1);
@@ -259,14 +260,15 @@ TEST_F(AstFromProtoTest, ConstUint) {
 }
 
 TEST_F(AstFromProtoTest, ConstDouble) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
-                                 source_info: { positions { key: 1 value: 1 } }
-                                 expr: {
-                                   id: 1
-                                   const_expr: { double_value: 1 }
-                                 }
-                               )pb"),
-                               arena(), status()));
+  cel_AstPtr ast(
+      cel_Ast_FromProto(ParseTextProto(R"pb(
+                          source_info: { positions { key: 1 value: 1 } }
+                          expr: {
+                            id: 1
+                            const_expr: { double_value: 1 }
+                          }
+                        )pb"),
+                        arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 1);
@@ -284,14 +286,15 @@ TEST_F(AstFromProtoTest, ConstDouble) {
 }
 
 TEST_F(AstFromProtoTest, ConstBytes) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
-                                 source_info: { positions { key: 1 value: 1 } }
-                                 expr: {
-                                   id: 1
-                                   const_expr: { bytes_value: "foo" }
-                                 }
-                               )pb"),
-                               arena(), status()));
+  cel_AstPtr ast(
+      cel_Ast_FromProto(ParseTextProto(R"pb(
+                          source_info: { positions { key: 1 value: 1 } }
+                          expr: {
+                            id: 1
+                            const_expr: { bytes_value: "foo" }
+                          }
+                        )pb"),
+                        arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 1);
@@ -311,14 +314,15 @@ TEST_F(AstFromProtoTest, ConstBytes) {
 }
 
 TEST_F(AstFromProtoTest, ConstString) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
-                                 source_info: { positions { key: 1 value: 1 } }
-                                 expr: {
-                                   id: 1
-                                   const_expr: { string_value: "foo" }
-                                 }
-                               )pb"),
-                               arena(), status()));
+  cel_AstPtr ast(
+      cel_Ast_FromProto(ParseTextProto(R"pb(
+                          source_info: { positions { key: 1 value: 1 } }
+                          expr: {
+                            id: 1
+                            const_expr: { string_value: "foo" }
+                          }
+                        )pb"),
+                        arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 1);
@@ -338,7 +342,7 @@ TEST_F(AstFromProtoTest, ConstString) {
 }
 
 TEST_F(AstFromProtoTest, ConstDuration) {
-  AstPtr ast(cel_Ast_FromProto(
+  cel_AstPtr ast(cel_Ast_FromProto(
       ParseTextProto(R"pb(
         source_info: { positions { key: 1 value: 1 } }
         expr: {
@@ -366,7 +370,7 @@ TEST_F(AstFromProtoTest, ConstDuration) {
 }
 
 TEST_F(AstFromProtoTest, ConstTimestamp) {
-  AstPtr ast(cel_Ast_FromProto(
+  cel_AstPtr ast(cel_Ast_FromProto(
       ParseTextProto(R"pb(
         source_info: { positions { key: 1 value: 1 } }
         expr: {
@@ -394,23 +398,23 @@ TEST_F(AstFromProtoTest, ConstTimestamp) {
 }
 
 TEST_F(AstFromProtoTest, Select) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
-                                 source_info: {
-                                   positions { key: 1 value: 1 }
-                                   positions { key: 2 value: 2 }
-                                 }
-                                 expr: {
-                                   id: 1
-                                   select_expr: {
-                                     operand: {
-                                       id: 2
-                                       ident_expr: { name: "foo" }
+  cel_AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
+                                     source_info: {
+                                       positions { key: 1 value: 1 }
+                                       positions { key: 2 value: 2 }
                                      }
-                                     field: "bar"
-                                   }
-                                 }
-                               )pb"),
-                               arena(), status()));
+                                     expr: {
+                                       id: 1
+                                       select_expr: {
+                                         operand: {
+                                           id: 2
+                                           ident_expr: { name: "foo" }
+                                         }
+                                         field: "bar"
+                                       }
+                                     }
+                                   )pb"),
+                                   arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 2);
@@ -436,24 +440,24 @@ TEST_F(AstFromProtoTest, Select) {
 }
 
 TEST_F(AstFromProtoTest, SelectTestOnly) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
-                                 source_info: {
-                                   positions { key: 1 value: 1 }
-                                   positions { key: 2 value: 2 }
-                                 }
-                                 expr: {
-                                   id: 1
-                                   select_expr: {
-                                     operand: {
-                                       id: 2
-                                       ident_expr: { name: "foo" }
+  cel_AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
+                                     source_info: {
+                                       positions { key: 1 value: 1 }
+                                       positions { key: 2 value: 2 }
                                      }
-                                     field: "bar"
-                                     test_only: true
-                                   }
-                                 }
-                               )pb"),
-                               arena(), status()));
+                                     expr: {
+                                       id: 1
+                                       select_expr: {
+                                         operand: {
+                                           id: 2
+                                           ident_expr: { name: "foo" }
+                                         }
+                                         field: "bar"
+                                         test_only: true
+                                       }
+                                     }
+                                   )pb"),
+                                   arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 2);
@@ -479,23 +483,23 @@ TEST_F(AstFromProtoTest, SelectTestOnly) {
 }
 
 TEST_F(AstFromProtoTest, Unary) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
-                                 source_info: {
-                                   positions { key: 1 value: 1 }
-                                   positions { key: 2 value: 2 }
-                                 }
-                                 expr: {
-                                   id: 1
-                                   call_expr: {
-                                     function: "-_"
-                                     args {
-                                       id: 2
-                                       ident_expr: { name: "foo" }
+  cel_AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
+                                     source_info: {
+                                       positions { key: 1 value: 1 }
+                                       positions { key: 2 value: 2 }
                                      }
-                                   }
-                                 }
-                               )pb"),
-                               arena(), status()));
+                                     expr: {
+                                       id: 1
+                                       call_expr: {
+                                         function: "-_"
+                                         args {
+                                           id: 2
+                                           ident_expr: { name: "foo" }
+                                         }
+                                       }
+                                     }
+                                   )pb"),
+                                   arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 2);
@@ -519,28 +523,28 @@ TEST_F(AstFromProtoTest, Unary) {
 }
 
 TEST_F(AstFromProtoTest, Binary) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
-                                 source_info: {
-                                   positions { key: 1 value: 1 }
-                                   positions { key: 2 value: 2 }
-                                   positions { key: 3 value: 3 }
-                                 }
-                                 expr: {
-                                   id: 1
-                                   call_expr: {
-                                     function: "_+_"
-                                     args {
-                                       id: 2
-                                       ident_expr: { name: "foo" }
+  cel_AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
+                                     source_info: {
+                                       positions { key: 1 value: 1 }
+                                       positions { key: 2 value: 2 }
+                                       positions { key: 3 value: 3 }
                                      }
-                                     args {
-                                       id: 3
-                                       ident_expr: { name: "bar" }
+                                     expr: {
+                                       id: 1
+                                       call_expr: {
+                                         function: "_+_"
+                                         args {
+                                           id: 2
+                                           ident_expr: { name: "foo" }
+                                         }
+                                         args {
+                                           id: 3
+                                           ident_expr: { name: "bar" }
+                                         }
+                                       }
                                      }
-                                   }
-                                 }
-                               )pb"),
-                               arena(), status()));
+                                   )pb"),
+                                   arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 3);
@@ -572,33 +576,33 @@ TEST_F(AstFromProtoTest, Binary) {
 }
 
 TEST_F(AstFromProtoTest, Ternary) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
-                                 source_info: {
-                                   positions { key: 1 value: 1 }
-                                   positions { key: 2 value: 2 }
-                                   positions { key: 3 value: 3 }
-                                   positions { key: 4 value: 4 }
-                                 }
-                                 expr: {
-                                   id: 1
-                                   call_expr: {
-                                     function: "_?_:_"
-                                     args {
-                                       id: 2
-                                       ident_expr: { name: "foo" }
+  cel_AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
+                                     source_info: {
+                                       positions { key: 1 value: 1 }
+                                       positions { key: 2 value: 2 }
+                                       positions { key: 3 value: 3 }
+                                       positions { key: 4 value: 4 }
                                      }
-                                     args {
-                                       id: 3
-                                       ident_expr: { name: "bar" }
+                                     expr: {
+                                       id: 1
+                                       call_expr: {
+                                         function: "_?_:_"
+                                         args {
+                                           id: 2
+                                           ident_expr: { name: "foo" }
+                                         }
+                                         args {
+                                           id: 3
+                                           ident_expr: { name: "bar" }
+                                         }
+                                         args {
+                                           id: 4
+                                           ident_expr: { name: "baz" }
+                                         }
+                                       }
                                      }
-                                     args {
-                                       id: 4
-                                       ident_expr: { name: "baz" }
-                                     }
-                                   }
-                                 }
-                               )pb"),
-                               arena(), status()));
+                                   )pb"),
+                                   arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 4);
@@ -638,28 +642,28 @@ TEST_F(AstFromProtoTest, Ternary) {
 }
 
 TEST_F(AstFromProtoTest, Call) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
-                                 source_info: {
-                                   positions { key: 1 value: 1 }
-                                   positions { key: 2 value: 2 }
-                                   positions { key: 3 value: 3 }
-                                 }
-                                 expr: {
-                                   id: 1
-                                   call_expr: {
-                                     target: {
-                                       id: 2
-                                       ident_expr: { name: "foo" }
+  cel_AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
+                                     source_info: {
+                                       positions { key: 1 value: 1 }
+                                       positions { key: 2 value: 2 }
+                                       positions { key: 3 value: 3 }
                                      }
-                                     function: "bar"
-                                     args {
-                                       id: 3
-                                       ident_expr: { name: "baz" }
+                                     expr: {
+                                       id: 1
+                                       call_expr: {
+                                         target: {
+                                           id: 2
+                                           ident_expr: { name: "foo" }
+                                         }
+                                         function: "bar"
+                                         args {
+                                           id: 3
+                                           ident_expr: { name: "baz" }
+                                         }
+                                       }
                                      }
-                                   }
-                                 }
-                               )pb"),
-                               arena(), status()));
+                                   )pb"),
+                                   arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 3);
@@ -697,28 +701,28 @@ TEST_F(AstFromProtoTest, Call) {
 }
 
 TEST_F(AstFromProtoTest, List) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
-                                 source_info: {
-                                   positions { key: 1 value: 1 }
-                                   positions { key: 2 value: 2 }
-                                   positions { key: 3 value: 3 }
-                                 }
-                                 expr: {
-                                   id: 1
-                                   list_expr: {
-                                     elements {
-                                       id: 2
-                                       ident_expr: { name: "foo" }
+  cel_AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
+                                     source_info: {
+                                       positions { key: 1 value: 1 }
+                                       positions { key: 2 value: 2 }
+                                       positions { key: 3 value: 3 }
                                      }
-                                     elements {
-                                       id: 3
-                                       ident_expr: { name: "bar" }
+                                     expr: {
+                                       id: 1
+                                       list_expr: {
+                                         elements {
+                                           id: 2
+                                           ident_expr: { name: "foo" }
+                                         }
+                                         elements {
+                                           id: 3
+                                           ident_expr: { name: "bar" }
+                                         }
+                                         optional_indices: 1
+                                       }
                                      }
-                                     optional_indices: 1
-                                   }
-                                 }
-                               )pb"),
-                               arena(), status()));
+                                   )pb"),
+                                   arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 3);
@@ -760,46 +764,46 @@ TEST_F(AstFromProtoTest, List) {
 }
 
 TEST_F(AstFromProtoTest, Map) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
-                                 source_info: {
-                                   positions { key: 1 value: 1 }
-                                   positions { key: 2 value: 2 }
-                                   positions { key: 3 value: 3 }
-                                   positions { key: 4 value: 4 }
-                                   positions { key: 5 value: 5 }
-                                   positions { key: 6 value: 6 }
-                                   positions { key: 7 value: 7 }
-                                 }
-                                 expr: {
-                                   id: 1
-                                   struct_expr: {
-                                     entries {
-                                       id: 2
-                                       map_key: {
-                                         id: 3
-                                         ident_expr: { name: "foo" }
-                                       }
-                                       value: {
-                                         id: 4
-                                         ident_expr: { name: "bar" }
+  cel_AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
+                                     source_info: {
+                                       positions { key: 1 value: 1 }
+                                       positions { key: 2 value: 2 }
+                                       positions { key: 3 value: 3 }
+                                       positions { key: 4 value: 4 }
+                                       positions { key: 5 value: 5 }
+                                       positions { key: 6 value: 6 }
+                                       positions { key: 7 value: 7 }
+                                     }
+                                     expr: {
+                                       id: 1
+                                       struct_expr: {
+                                         entries {
+                                           id: 2
+                                           map_key: {
+                                             id: 3
+                                             ident_expr: { name: "foo" }
+                                           }
+                                           value: {
+                                             id: 4
+                                             ident_expr: { name: "bar" }
+                                           }
+                                         }
+                                         entries {
+                                           id: 5
+                                           map_key: {
+                                             id: 6
+                                             ident_expr: { name: "baz" }
+                                           }
+                                           value: {
+                                             id: 7
+                                             ident_expr: { name: "bux" }
+                                           }
+                                           optional_entry: true
+                                         }
                                        }
                                      }
-                                     entries {
-                                       id: 5
-                                       map_key: {
-                                         id: 6
-                                         ident_expr: { name: "baz" }
-                                       }
-                                       value: {
-                                         id: 7
-                                         ident_expr: { name: "bux" }
-                                       }
-                                       optional_entry: true
-                                     }
-                                   }
-                                 }
-                               )pb"),
-                               arena(), status()));
+                                   )pb"),
+                                   arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 7);
@@ -857,39 +861,39 @@ TEST_F(AstFromProtoTest, Map) {
 }
 
 TEST_F(AstFromProtoTest, Struct) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
-                                 source_info: {
-                                   positions { key: 1 value: 1 }
-                                   positions { key: 2 value: 2 }
-                                   positions { key: 3 value: 3 }
-                                   positions { key: 4 value: 4 }
-                                   positions { key: 5 value: 5 }
-                                 }
-                                 expr: {
-                                   id: 1
-                                   struct_expr: {
-                                     message_name: "Message"
-                                     entries {
-                                       id: 2
-                                       field_key: "foo"
-                                       value: {
-                                         id: 3
-                                         ident_expr: { name: "bar" }
+  cel_AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
+                                     source_info: {
+                                       positions { key: 1 value: 1 }
+                                       positions { key: 2 value: 2 }
+                                       positions { key: 3 value: 3 }
+                                       positions { key: 4 value: 4 }
+                                       positions { key: 5 value: 5 }
+                                     }
+                                     expr: {
+                                       id: 1
+                                       struct_expr: {
+                                         message_name: "Message"
+                                         entries {
+                                           id: 2
+                                           field_key: "foo"
+                                           value: {
+                                             id: 3
+                                             ident_expr: { name: "bar" }
+                                           }
+                                         }
+                                         entries {
+                                           id: 4
+                                           field_key: "baz"
+                                           value: {
+                                             id: 5
+                                             ident_expr: { name: "bux" }
+                                           }
+                                           optional_entry: true
+                                         }
                                        }
                                      }
-                                     entries {
-                                       id: 4
-                                       field_key: "baz"
-                                       value: {
-                                         id: 5
-                                         ident_expr: { name: "bux" }
-                                       }
-                                       optional_entry: true
-                                     }
-                                   }
-                                 }
-                               )pb"),
-                               arena(), status()));
+                                   )pb"),
+                                   arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 5);
@@ -937,45 +941,45 @@ TEST_F(AstFromProtoTest, Struct) {
 }
 
 TEST_F(AstFromProtoTest, Comprehension) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
-                                 source_info: {
-                                   positions { key: 1 value: 1 }
-                                   positions { key: 2 value: 2 }
-                                   positions { key: 3 value: 3 }
-                                   positions { key: 4 value: 4 }
-                                   positions { key: 5 value: 5 }
-                                   positions { key: 6 value: 6 }
-                                 }
-                                 expr: {
-                                   id: 1
-                                   comprehension_expr: {
-                                     iter_range: {
-                                       id: 2
-                                       ident_expr: { name: "foo" }
+  cel_AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
+                                     source_info: {
+                                       positions { key: 1 value: 1 }
+                                       positions { key: 2 value: 2 }
+                                       positions { key: 3 value: 3 }
+                                       positions { key: 4 value: 4 }
+                                       positions { key: 5 value: 5 }
+                                       positions { key: 6 value: 6 }
                                      }
-                                     iter_var: "a"
-                                     iter_var2: "b"
-                                     accu_var: "__result__"
-                                     accu_init: {
-                                       id: 3
-                                       ident_expr: { name: "bar" }
+                                     expr: {
+                                       id: 1
+                                       comprehension_expr: {
+                                         iter_range: {
+                                           id: 2
+                                           ident_expr: { name: "foo" }
+                                         }
+                                         iter_var: "a"
+                                         iter_var2: "b"
+                                         accu_var: "__result__"
+                                         accu_init: {
+                                           id: 3
+                                           ident_expr: { name: "bar" }
+                                         }
+                                         loop_condition: {
+                                           id: 4
+                                           ident_expr: { name: "a" }
+                                         }
+                                         loop_step: {
+                                           id: 5
+                                           ident_expr: { name: "b" }
+                                         }
+                                         result: {
+                                           id: 6
+                                           ident_expr: { name: "__result__" }
+                                         }
+                                       }
                                      }
-                                     loop_condition: {
-                                       id: 4
-                                       ident_expr: { name: "a" }
-                                     }
-                                     loop_step: {
-                                       id: 5
-                                       ident_expr: { name: "b" }
-                                     }
-                                     result: {
-                                       id: 6
-                                       ident_expr: { name: "__result__" }
-                                     }
-                                   }
-                                 }
-                               )pb"),
-                               arena(), status()));
+                                   )pb"),
+                                   arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 6);
@@ -1041,44 +1045,44 @@ TEST_F(AstFromProtoTest, Comprehension) {
 }
 
 TEST_F(AstFromProtoTest, Bind) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
-                                 source_info: {
-                                   positions { key: 1 value: 1 }
-                                   positions { key: 2 value: 2 }
-                                   positions { key: 3 value: 3 }
-                                   positions { key: 4 value: 4 }
-                                   positions { key: 5 value: 5 }
-                                   positions { key: 6 value: 6 }
-                                 }
-                                 expr: {
-                                   id: 1
-                                   comprehension_expr: {
-                                     iter_range: {
-                                       id: 2
-                                       list_expr: {}
+  cel_AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
+                                     source_info: {
+                                       positions { key: 1 value: 1 }
+                                       positions { key: 2 value: 2 }
+                                       positions { key: 3 value: 3 }
+                                       positions { key: 4 value: 4 }
+                                       positions { key: 5 value: 5 }
+                                       positions { key: 6 value: 6 }
                                      }
-                                     iter_var: "#unused"
-                                     accu_var: "foo"
-                                     accu_init: {
-                                       id: 3
-                                       ident_expr: { name: "bar" }
+                                     expr: {
+                                       id: 1
+                                       comprehension_expr: {
+                                         iter_range: {
+                                           id: 2
+                                           list_expr: {}
+                                         }
+                                         iter_var: "#unused"
+                                         accu_var: "foo"
+                                         accu_init: {
+                                           id: 3
+                                           ident_expr: { name: "bar" }
+                                         }
+                                         loop_condition: {
+                                           id: 4
+                                           const_expr: { bool_value: false }
+                                         }
+                                         loop_step: {
+                                           id: 5
+                                           ident_expr: { name: "foo" }
+                                         }
+                                         result: {
+                                           id: 6
+                                           ident_expr: { name: "baz" }
+                                         }
+                                       }
                                      }
-                                     loop_condition: {
-                                       id: 4
-                                       const_expr: { bool_value: false }
-                                     }
-                                     loop_step: {
-                                       id: 5
-                                       ident_expr: { name: "foo" }
-                                     }
-                                     result: {
-                                       id: 6
-                                       ident_expr: { name: "baz" }
-                                     }
-                                   }
-                                 }
-                               )pb"),
-                               arena(), status()));
+                                   )pb"),
+                                   arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 6);
@@ -1111,14 +1115,15 @@ TEST_F(AstFromProtoTest, Bind) {
 }
 
 TEST_F(AstFromProtoTest, BlockIndex) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
-                                 source_info: { positions { key: 1 value: 1 } }
-                                 expr: {
-                                   id: 1
-                                   ident_expr: { name: "@index1" }
-                                 }
-                               )pb"),
-                               arena(), status()));
+  cel_AstPtr ast(
+      cel_Ast_FromProto(ParseTextProto(R"pb(
+                          source_info: { positions { key: 1 value: 1 } }
+                          expr: {
+                            id: 1
+                            ident_expr: { name: "@index1" }
+                          }
+                        )pb"),
+                        arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 1);
@@ -1134,34 +1139,34 @@ TEST_F(AstFromProtoTest, BlockIndex) {
 }
 
 TEST_F(AstFromProtoTest, Block) {
-  AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
-                                 source_info: {
-                                   positions { key: 1 value: 1 }
-                                   positions { key: 2 value: 2 }
-                                   positions { key: 3 value: 3 }
-                                   positions { key: 4 value: 4 }
-                                 }
-                                 expr: {
-                                   id: 1
-                                   call_expr: {
-                                     function: "cel.@block"
-                                     args {
-                                       id: 2
-                                       list_expr: {
-                                         elements {
-                                           id: 3
-                                           ident_expr: { name: "foo" }
+  cel_AstPtr ast(cel_Ast_FromProto(ParseTextProto(R"pb(
+                                     source_info: {
+                                       positions { key: 1 value: 1 }
+                                       positions { key: 2 value: 2 }
+                                       positions { key: 3 value: 3 }
+                                       positions { key: 4 value: 4 }
+                                     }
+                                     expr: {
+                                       id: 1
+                                       call_expr: {
+                                         function: "cel.@block"
+                                         args {
+                                           id: 2
+                                           list_expr: {
+                                             elements {
+                                               id: 3
+                                               ident_expr: { name: "foo" }
+                                             }
+                                           }
+                                         }
+                                         args {
+                                           id: 4
+                                           ident_expr: { name: "baz" }
                                          }
                                        }
                                      }
-                                     args {
-                                       id: 4
-                                       ident_expr: { name: "baz" }
-                                     }
-                                   }
-                                 }
-                               )pb"),
-                               arena(), status()));
+                                   )pb"),
+                                   arena(), status()));
   ASSERT_THAT(ast, NotNull());
   ASSERT_TRUE(cel_Status_Ok(status()));
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 4);
@@ -1189,7 +1194,7 @@ TEST_F(AstFromProtoTest, Block) {
 }
 
 TEST_F(AstFromProtoTest, Attribute) {
-  AstPtr ast(
+  cel_AstPtr ast(
       cel_Ast_FromProto(ParseTextProto(R"pb(
                           source_info: {
                             positions { key: 1 value: 1 }
@@ -1338,7 +1343,7 @@ TEST_F(AstFromProtoTest, Attribute) {
 }
 
 TEST_F(AstFromProtoTest, HasField) {
-  AstPtr ast(
+  cel_AstPtr ast(
       cel_Ast_FromProto(ParseTextProto(R"pb(
                           source_info: {
                             positions { key: 1 value: 1 }

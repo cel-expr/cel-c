@@ -15,6 +15,10 @@
 #ifndef THIRD_PARTY_CEL_C_AST_H_
 #define THIRD_PARTY_CEL_C_AST_H_
 
+#ifdef __cplusplus
+#include <memory>
+#endif
+
 #include "cel-c/config.h"
 
 CEL_BEGIN_DECLS
@@ -24,8 +28,23 @@ typedef struct cel_Ast cel_Ast;
 // cel_Ast
 
 CEL_ATTRIBUTE_NOTHROW
-CEL_EXTERN void cel_Ast_Delete(CEL_NULLABLE(cel_Ast*) ast);
+CEL_EXTERN void cel_Ast_Delete(cel_Ast* cel_nullable ast);
 
 CEL_END_DECLS
+
+#ifdef __cplusplus
+namespace std {
+template <>
+struct default_delete<::cel_Ast> {
+  template <typename U>
+  CEL_INLINE void operator()(U* ptr) const noexcept {
+    ::cel_Ast_Delete(const_cast<::cel_Ast*>(ptr));
+  }
+};
+template <>
+struct default_delete<const ::cel_Ast> : default_delete<::cel_Ast> {};
+}  // namespace std
+using cel_AstPtr = std::unique_ptr<cel_Ast>;
+#endif
 
 #endif  // THIRD_PARTY_CEL_C_AST_H_

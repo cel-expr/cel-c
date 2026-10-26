@@ -17,6 +17,6 @@
 #include "cel-c/config.h"
 #include "cel-c/internal/ast.h"
 
-extern "C" void cel_Ast_Delete(CEL_NULLABLE(cel_Ast*) ast) {
+extern "C" void cel_Ast_Delete(cel_Ast* cel_nullable ast) {
   _cel_Ast_Delete(ast);
 }

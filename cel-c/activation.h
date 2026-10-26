@@ -15,6 +15,10 @@
 #ifndef THIRD_PARTY_CEL_C_ACTIVATION_H_
 #define THIRD_PARTY_CEL_C_ACTIVATION_H_
 
+#ifdef __cplusplus
+#include <memory>
+#endif
+
 #include "cel-c/arena.h"
 #include "cel-c/config.h"
 #include "cel-c/status.h"
@@ -74,5 +78,21 @@ CEL_EXTERN bool cel_Activation_Execute(cel_Activation* cel_nonnull activation,
                                        cel_Status* cel_nonnull status);
 
 CEL_END_DECLS
+
+#ifdef __cplusplus
+namespace std {
+template <>
+struct default_delete<::cel_Activation> {
+  template <typename U>
+  CEL_INLINE void operator()(U* ptr) const noexcept {
+    ::cel_Activation_Delete(const_cast<::cel_Activation*>(ptr));
+  }
+};
+template <>
+struct default_delete<const ::cel_Activation>
+    : default_delete<::cel_Activation> {};
+}  // namespace std
+using cel_ActivationPtr = std::unique_ptr<cel_Activation>;
+#endif
 
 #endif  // THIRD_PARTY_CEL_C_ACTIVATION_H_

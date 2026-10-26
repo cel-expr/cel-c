@@ -14,13 +14,12 @@
 
 #include "cel-c/internal/ast.h"
 
-#include <memory>
-
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/log/die_if_null.h"
 #include "cel-c/alloc.h"
 #include "cel-c/arena.h"
+#include "cel-c/ast.h"
 #include "cel-c/config.h"
 #include "cel-c/operators.h"
 #include "cel-c/source.h"
@@ -31,12 +30,6 @@ namespace {
 using ::testing::_;
 using ::testing::IsNull;
 using ::testing::NotNull;
-
-struct AstDeleter {
-  void operator()(CEL_NULLABLE(cel_Ast*) ast) const { _cel_Ast_Delete(ast); }
-};
-
-using AstPtr = std::unique_ptr<cel_Ast, AstDeleter>;
 
 class AstTest : public ::testing::Test {
  public:
@@ -57,7 +50,7 @@ class AstTest : public ::testing::Test {
 };
 
 TEST_F(AstTest, Id) {
-  AstPtr ast(cel_Ast_New(arena()));
+  cel_AstPtr ast(cel_Ast_New(arena()));
   ASSERT_THAT(ast, NotNull());
 
   EXPECT_EQ(cel_Ast_MaxId(ast.get()), 0);
@@ -66,7 +59,7 @@ TEST_F(AstTest, Id) {
 }
 
 TEST_F(AstTest, Expr) {
-  AstPtr ast(cel_Ast_New(arena()));
+  cel_AstPtr ast(cel_Ast_New(arena()));
   ASSERT_THAT(ast, NotNull());
   EXPECT_THAT(cel_Ast_Expr(ast.get()), IsNull());
   EXPECT_THAT(cel_Ast_SetExpr(ast.get(), nullptr), IsNull());
@@ -100,7 +93,7 @@ TEST_F(AstTest, Expr) {
 }
 
 TEST_F(AstTest, Unspecified) {
-  AstPtr ast(cel_Ast_New(arena()));
+  cel_AstPtr ast(cel_Ast_New(arena()));
   ASSERT_THAT(ast, NotNull());
 
   cel_UnspecifiedExpr* expr = cel_UnspecifiedExpr_New(ast.get());
@@ -113,7 +106,7 @@ TEST_F(AstTest, Unspecified) {
 }
 
 TEST_F(AstTest, Ident) {
-  AstPtr ast(cel_Ast_New(arena()));
+  cel_AstPtr ast(cel_Ast_New(arena()));
   ASSERT_THAT(ast, NotNull());
 
   cel_IdentExpr* expr = cel_IdentExpr_New(ast.get());
@@ -131,7 +124,7 @@ TEST_F(AstTest, Ident) {
 }
 
 TEST_F(AstTest, Const) {
-  AstPtr ast(cel_Ast_New(arena()));
+  cel_AstPtr ast(cel_Ast_New(arena()));
   ASSERT_THAT(ast, NotNull());
 
   cel_ConstExpr* expr = cel_ConstExpr_New(ast.get());
@@ -145,7 +138,7 @@ TEST_F(AstTest, Const) {
 }
 
 TEST_F(AstTest, Select) {
-  AstPtr ast(cel_Ast_New(arena()));
+  cel_AstPtr ast(cel_Ast_New(arena()));
   ASSERT_THAT(ast, NotNull());
 
   cel_SelectExpr* expr = cel_SelectExpr_New(ast.get());
@@ -185,7 +178,7 @@ TEST_F(AstTest, Select) {
 }
 
 TEST_F(AstTest, CallArg) {
-  AstPtr ast(cel_Ast_New(arena()));
+  cel_AstPtr ast(cel_Ast_New(arena()));
   ASSERT_THAT(ast, NotNull());
 
   cel_CallArgExpr* expr = cel_CallArgExpr_New(ast.get());
@@ -216,7 +209,7 @@ TEST_F(AstTest, CallArg) {
 }
 
 TEST_F(AstTest, Call) {
-  AstPtr ast(cel_Ast_New(arena()));
+  cel_AstPtr ast(cel_Ast_New(arena()));
   ASSERT_THAT(ast, NotNull());
 
   cel_CallExpr* expr = cel_CallExpr_New(ast.get());
@@ -382,7 +375,7 @@ TEST_F(AstTest, Call) {
 }
 
 TEST_F(AstTest, Unary) {
-  AstPtr ast(cel_Ast_New(arena()));
+  cel_AstPtr ast(cel_Ast_New(arena()));
   ASSERT_THAT(ast, NotNull());
 
   cel_UnaryExpr* expr = cel_UnaryExpr_New(ast.get());
@@ -415,7 +408,7 @@ TEST_F(AstTest, Unary) {
 }
 
 TEST_F(AstTest, Binary) {
-  AstPtr ast(cel_Ast_New(arena()));
+  cel_AstPtr ast(cel_Ast_New(arena()));
   ASSERT_THAT(ast, NotNull());
 
   cel_BinaryExpr* expr = cel_BinaryExpr_New(ast.get());
@@ -466,7 +459,7 @@ TEST_F(AstTest, Binary) {
 }
 
 TEST_F(AstTest, Ternary) {
-  AstPtr ast(cel_Ast_New(arena()));
+  cel_AstPtr ast(cel_Ast_New(arena()));
   ASSERT_THAT(ast, NotNull());
 
   cel_TernaryExpr* expr = cel_TernaryExpr_New(ast.get());
@@ -534,7 +527,7 @@ TEST_F(AstTest, Ternary) {
 }
 
 TEST_F(AstTest, ListElement) {
-  AstPtr ast(cel_Ast_New(arena()));
+  cel_AstPtr ast(cel_Ast_New(arena()));
   ASSERT_THAT(ast, NotNull());
 
   cel_ListElementExpr* expr = cel_ListElementExpr_New(ast.get());
@@ -569,7 +562,7 @@ TEST_F(AstTest, ListElement) {
 }
 
 TEST_F(AstTest, List) {
-  AstPtr ast(cel_Ast_New(arena()));
+  cel_AstPtr ast(cel_Ast_New(arena()));
   ASSERT_THAT(ast, NotNull());
 
   cel_ListExpr* expr = cel_ListExpr_New(ast.get());
@@ -712,7 +705,7 @@ TEST_F(AstTest, List) {
 }
 
 TEST_F(AstTest, MapEntry) {
-  AstPtr ast(cel_Ast_New(arena()));
+  cel_AstPtr ast(cel_Ast_New(arena()));
   ASSERT_THAT(ast, NotNull());
 
   cel_MapEntryExpr* expr = cel_MapEntryExpr_New(ast.get());
@@ -764,7 +757,7 @@ TEST_F(AstTest, MapEntry) {
 }
 
 TEST_F(AstTest, Map) {
-  AstPtr ast(cel_Ast_New(arena()));
+  cel_AstPtr ast(cel_Ast_New(arena()));
   ASSERT_THAT(ast, NotNull());
 
   cel_MapExpr* expr = cel_MapExpr_New(ast.get());
@@ -907,7 +900,7 @@ TEST_F(AstTest, Map) {
 }
 
 TEST_F(AstTest, StructField) {
-  AstPtr ast(cel_Ast_New(arena()));
+  cel_AstPtr ast(cel_Ast_New(arena()));
   ASSERT_THAT(ast, NotNull());
 
   cel_StructFieldExpr* expr = cel_StructFieldExpr_New(ast.get());
@@ -948,7 +941,7 @@ TEST_F(AstTest, StructField) {
 }
 
 TEST_F(AstTest, Struct) {
-  AstPtr ast(cel_Ast_New(arena()));
+  cel_AstPtr ast(cel_Ast_New(arena()));
   ASSERT_THAT(ast, NotNull());
 
   cel_StructExpr* expr = cel_StructExpr_New(ast.get());
@@ -1098,7 +1091,7 @@ TEST_F(AstTest, Struct) {
 }
 
 TEST_F(AstTest, Comprehension) {
-  AstPtr ast(cel_Ast_New(arena()));
+  cel_AstPtr ast(cel_Ast_New(arena()));
   ASSERT_THAT(ast, NotNull());
 
   cel_ComprehensionExpr* expr = cel_ComprehensionExpr_New(ast.get());
@@ -1220,9 +1213,9 @@ using AstDeathTest = AstTest;
 
 TEST_F(AstDeathTest, Expr) {
 #ifndef NDEBUG
-  AstPtr ast0(cel_Ast_New(arena()));
+  cel_AstPtr ast0(cel_Ast_New(arena()));
   ASSERT_THAT(ast0, NotNull());
-  AstPtr ast1(cel_Ast_New(arena()));
+  cel_AstPtr ast1(cel_Ast_New(arena()));
   ASSERT_THAT(ast1, NotNull());
   cel_Expr* expr0 = cel_Expr_UpCast(cel_UnspecifiedExpr_New(ast0.get()));
   ASSERT_THAT(expr0, NotNull());
@@ -1234,9 +1227,9 @@ TEST_F(AstDeathTest, Expr) {
 
 TEST_F(AstDeathTest, Select) {
 #ifndef NDEBUG
-  AstPtr ast0(cel_Ast_New(arena()));
+  cel_AstPtr ast0(cel_Ast_New(arena()));
   ASSERT_THAT(ast0, NotNull());
-  AstPtr ast1(cel_Ast_New(arena()));
+  cel_AstPtr ast1(cel_Ast_New(arena()));
   ASSERT_THAT(ast1, NotNull());
   cel_Expr* expr0 = cel_Expr_UpCast(cel_UnspecifiedExpr_New(ast0.get()));
   ASSERT_THAT(expr0, NotNull());

@@ -17,6 +17,10 @@
 
 #include <stdbool.h>
 
+#ifdef __cplusplus
+#include <memory>
+#endif
+
 #include "cel-c/activation.h"
 #include "cel-c/config.h"
 
@@ -45,5 +49,20 @@ cel_Program_Activate(const cel_Program* cel_nonnull program,
                      const cel_ActivationOptions* cel_nullable opts);
 
 CEL_END_DECLS
+
+#ifdef __cplusplus
+namespace std {
+template <>
+struct default_delete<::cel_Program> {
+  template <typename U>
+  CEL_INLINE void operator()(U* ptr) const noexcept {
+    ::cel_Program_Delete(const_cast<::cel_Program*>(ptr));
+  }
+};
+template <>
+struct default_delete<const ::cel_Program> : default_delete<::cel_Program> {};
+}  // namespace std
+using cel_ProgramPtr = std::unique_ptr<cel_Program>;
+#endif
 
 #endif  // THIRD_PARTY_CEL_C_PROGRAM_H_

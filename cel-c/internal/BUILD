@@ -699,8 +699,8 @@ cc_test(
     deps = [
         ":config",
         ":flat_hash_map",
-        ":hash",
         "//cel-c:alloc",
+        "@abseil-cpp//absl/hash",
         "@googletest//:gtest_main",
     ],
 )
@@ -721,8 +721,8 @@ cc_test(
     deps = [
         ":config",
         ":flat_hash_set",
-        ":hash",
         "//cel-c:alloc",
+        "@abseil-cpp//absl/hash",
         "@googletest//:gtest_main",
     ],
 )
@@ -792,39 +792,6 @@ cc_test(
     deps = [
         ":generic_string",
         "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "hash",
-    srcs = [
-        "hash.cc",
-    ],
-    hdrs = [
-        "hash.h",
-    ],
-    deps = [
-        ":bit",
-        ":config",
-        ":unaligned",
-        "//cel-c:assert",
-        "//cel-c:config",
-        "//cel-c:cstring_view",
-        "//cel-c:string_view",
-        "@abseil-cpp//absl/numeric:int128",
-        "@protobuf//upb/base",
-    ],
-)
-
-cc_test(
-    name = "hash_test",
-    srcs = ["hash_test.cc"],
-    deps = [
-        ":hash",
-        "//cel-c:cstring_view",
-        "//cel-c:string_view",
-        "@googletest//:gtest_main",
-        "@protobuf//upb/base",
     ],
 )
 
@@ -1351,7 +1318,6 @@ cc_library(
         ":bit",
         ":ckdint",
         ":config",
-        ":hash",
         ":message_equality",
         ":sort",
         "//cel-c:alloc",
@@ -1367,6 +1333,7 @@ cc_library(
         "//cel-c:type",
         "//cel-c:value_headers",
         "//cel-c:value_kind",
+        "@abseil-cpp//absl/hash",
         "@protobuf//upb/base",
         "@protobuf//upb/message",
         "@protobuf//upb/reflection",
@@ -1392,7 +1359,6 @@ cc_test(
     ],
     deps = [
         ":config",
-        ":hash",
         ":value",
         ":value_testing",
         "//cel-c:duration",
@@ -1402,9 +1368,9 @@ cc_test(
         "//cel-c:string_view",
         "//cel-c:string_view_absl",
         "//cel-c:timestamp",
-        "//cel-c:type",
         "//cel-c:value",
         "//cel-c:value_kind",
+        "@abseil-cpp//absl/hash",
         "@abseil-cpp//absl/strings:string_view",
         "@googletest//:gtest_main",
         "@protobuf//upb/base",

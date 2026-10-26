@@ -20,6 +20,7 @@
 
 #include <type_traits>
 
+#include "absl/hash/hash.h"
 #include "cel-c/alloc.h"
 #include "cel-c/assert.h"
 #include "cel-c/internal/array.h"
@@ -31,7 +32,6 @@
 #include "cel-c/internal/container.h"
 #include "cel-c/internal/deque.h"
 #include "cel-c/internal/flat_hash_map.h"
-#include "cel-c/internal/hash.h"
 #include "cel-c/internal/ref.h"
 #include "cel-c/internal/runtime/instr.h"
 #include "cel-c/internal/runtime/program.h"
@@ -42,6 +42,7 @@
 #include "cel-c/operators.h"
 #include "cel-c/status.h"
 #include "cel-c/string_view.h"
+#include "cel-c/string_view_absl.h"
 #include "cel-c/type.h"
 #include "cel-c/well_known_types.h"
 #include "upb/reflection/def.h"
@@ -1890,8 +1891,7 @@ static const cel_AstVisitorVTable _cel_InterpreterVTable = {
 };
 
 static size_t _cel_Interpreter_StringViewHasher(const void* cel_nonnull key) {
-  return _cel_HashState_Finalize(_cel_HashState_Combine(
-      _cel_HashState_Initialize(), *(const cel_StringView*)key));
+  return absl::HashOf(cel_StringView_ToAbsl(*(const cel_StringView*)key));
 }
 
 static bool _cel_Interpreter_StringViewEqualer(const void* cel_nonnull lhs,

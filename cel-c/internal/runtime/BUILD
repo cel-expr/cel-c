@@ -48,6 +48,7 @@ cc_library(
         "//cel-c:runtime_headers",
         "//cel-c:status",
         "//cel-c:string_view",
+        "//cel-c:string_view_absl",
         "//cel-c:timestamp",
         "//cel-c:trilean",
         "//cel-c:type",
@@ -68,7 +69,6 @@ cc_library(
         "//cel-c/internal:deque",
         "//cel-c/internal:durationconv",
         "//cel-c/internal:flat_hash_map",
-        "//cel-c/internal:hash",
         "//cel-c/internal:number",
         "//cel-c/internal:ref",
         "//cel-c/internal:regexp",
@@ -78,6 +78,7 @@ cc_library(
         "//cel-c/internal:trivial_relocation",
         "//cel-c/internal:utf8",
         "//cel-c/internal:value",
+        "@abseil-cpp//absl/hash",
         "@protobuf//upb/reflection",
     ],
 )

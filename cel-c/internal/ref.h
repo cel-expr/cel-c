@@ -174,22 +174,6 @@ cel_FunctionOverloadRef_Next(const cel_FunctionOverloadRef* cel_nonnull ref);
 
 CEL_END_DECLS
 
-#ifndef __cplusplus
-#define cel_Ref_UpCast(ref)                                 \
-  (_Generic((ref),                                          \
-       const cel_IdentRef*: cel_IdentRef_ConstUpCast,       \
-       cel_IdentRef*: cel_IdentRef_MutableUpCast,           \
-       const cel_FunctionRef*: cel_FunctionRef_ConstUpCast, \
-       cel_FunctionRef*: cel_FunctionRef_MutableUpCast)((ref)))
-#define cel_IdentRef_DownCast(ref)                 \
-  (_Generic((ref),                                 \
-       const cel_Ref*: cel_IdentRef_ConstDownCast, \
-       cel_Ref*: cel_IdentRef_MutableDownCast)((ref)))
-#define cel_FunctionRef_DownCast(ref)                 \
-  (_Generic((ref),                                    \
-       const cel_Ref*: cel_FunctionRef_ConstDownCast, \
-       cel_Ref*: cel_FunctionRef_MutableDownCast)((ref)))
-#else
 CEL_ATTRIBUTE_NODISCARD
 CEL_INLINE const cel_Ref* cel_nullability_unknown
 cel_Ref_UpCast(const cel_IdentRef* cel_nullability_unknown ref) {
@@ -230,6 +214,5 @@ CEL_INLINE cel_FunctionRef* cel_nullability_unknown
 cel_FunctionRef_DownCast(cel_Ref* cel_nullability_unknown ref) {
   return cel_FunctionRef_MutableDownCast(ref);
 }
-#endif
 
 #endif  // THIRD_PARTY_CEL_C_INTERNAL_REF_H_

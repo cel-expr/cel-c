@@ -217,22 +217,6 @@ cel_FunctionOverloadDecl_Next(const cel_FunctionOverloadDecl* cel_nonnull decl);
 
 CEL_END_DECLS
 
-#ifndef __cplusplus
-#define cel_Decl_UpCast(decl)                                 \
-  (_Generic((decl),                                           \
-       const cel_IdentDecl*: cel_IdentDecl_ConstUpCast,       \
-       cel_IdentDecl*: cel_IdentDecl_MutableUpCast,           \
-       const cel_FunctionDecl*: cel_FunctionDecl_ConstUpCast, \
-       cel_FunctionDecl*: cel_FunctionDecl_MutableUpCast)((decl)))
-#define cel_IdentDecl_DownCast(decl)                 \
-  (_Generic((decl),                                  \
-       const cel_Decl*: cel_IdentDecl_ConstDownCast, \
-       cel_Decl*: cel_IdentDecl_MutableDownCast)((decl)))
-#define cel_FunctionDecl_DownCast(decl)                 \
-  (_Generic((decl),                                     \
-       const cel_Decl*: cel_FunctionDecl_ConstDownCast, \
-       cel_Decl*: cel_FunctionDecl_MutableDownCast)((decl)))
-#else
 CEL_ATTRIBUTE_NODISCARD
 CEL_INLINE const cel_Decl* cel_nullability_unknown
 cel_Decl_UpCast(const cel_IdentDecl* cel_nullability_unknown decl) {
@@ -273,6 +257,5 @@ CEL_INLINE cel_FunctionDecl* cel_nullability_unknown
 cel_FunctionDecl_DownCast(cel_Decl* cel_nullability_unknown decl) {
   return cel_FunctionDecl_MutableDownCast(decl);
 }
-#endif
 
 #endif  // THIRD_PARTY_CEL_C_INTERNAL_DECL_H_

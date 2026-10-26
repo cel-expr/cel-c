@@ -341,6 +341,16 @@ static void _cel_AstFromProto_SetRef(CEL_NONNULL(_cel_AstFromProtoState*) state,
   }
 }
 
+static void _cel_AstFromProto_UpdateMetadata(
+    CEL_NONNULL(_cel_AstFromProtoState*) state, cel_Expr* cel_nonnull expr,
+    cel_ExprId id) {
+  _cel_AstFromProto_CheckId(state, id);
+  cel_Expr_SetId(expr, id);
+  _cel_AstFromProto_UpdatePosition(state, expr);
+  _cel_AstFromProto_SetType(state, expr);
+  _cel_AstFromProto_SetRef(state, expr);
+}
+
 static CEL_NONNULL(cel_Expr*)
     _cel_AstFromProto_Expr(CEL_NONNULL(_cel_AstFromProtoState*) state,
                            CEL_NONNULL(const cel_expr_Expr*) in);
@@ -355,10 +365,7 @@ static CEL_NONNULL(cel_Expr*)
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProto_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProto_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   return cel_Expr_UpCast(expr);
 }
 
@@ -375,10 +382,7 @@ static CEL_NONNULL(cel_Expr*)
       cel_OutOfMemoryStatus(state->status);
       _cel_longjmp(state->jmp);
     }
-    cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-    _cel_AstFromProto_UpdatePosition(state, cel_Expr_UpCast(expr));
-    _cel_AstFromProto_SetType(state, cel_Expr_UpCast(expr));
-    _cel_AstFromProto_SetRef(state, cel_Expr_UpCast(expr));
+    _cel_AstFromProto_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
     cel_BlockIndexExpr_SetValue(expr, index);
     return cel_Expr_UpCast(expr);
   }
@@ -387,10 +391,7 @@ static CEL_NONNULL(cel_Expr*)
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProto_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProto_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   cel_IdentExpr_SetName(expr, _cel_AstFromProto_StrDup(
                                   state, cel_expr_Expr_Ident_name(in)));
   return cel_Expr_UpCast(expr);
@@ -407,10 +408,7 @@ static CEL_NONNULL(cel_Expr*)
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProto_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProto_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   if (CEL_UNLIKELY(!cel_Constant_FromProto(cel_ConstExpr_MutableValue(expr), in,
                                            state->arena, state->status))) {
     _cel_longjmp(state->jmp);
@@ -429,10 +427,7 @@ static CEL_NONNULL(cel_Expr*)
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProto_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProto_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   if (cel_expr_Expr_Select_has_operand(in)) {
     cel_SelectExpr_SetOperand(
         expr,
@@ -455,10 +450,7 @@ static CEL_NONNULL(cel_Expr*)
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProto_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProto_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   cel_UnaryExpr_SetOp(expr, op);
   cel_UnaryExpr_SetArg(expr, _cel_AstFromProto_Expr(state, arg));
   return cel_Expr_UpCast(expr);
@@ -476,10 +468,7 @@ static CEL_NONNULL(cel_Expr*)
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProto_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProto_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   cel_BinaryExpr_SetOp(expr, op);
   cel_BinaryExpr_SetLeft(expr, _cel_AstFromProto_Expr(state, left));
   cel_BinaryExpr_SetRight(expr, _cel_AstFromProto_Expr(state, right));
@@ -497,10 +486,7 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProto_TernaryExpr(
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProto_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProto_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   cel_TernaryExpr_SetOp(expr, op);
   cel_TernaryExpr_SetCondition(expr, _cel_AstFromProto_Expr(state, condition));
   cel_TernaryExpr_SetIfTrue(expr, _cel_AstFromProto_Expr(state, if_true));
@@ -523,10 +509,7 @@ static CEL_NONNULL(cel_Expr*)
       cel_OutOfMemoryStatus(state->status);
       _cel_longjmp(state->jmp);
     }
-    cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-    _cel_AstFromProto_UpdatePosition(state, cel_Expr_UpCast(expr));
-    _cel_AstFromProto_SetType(state, cel_Expr_UpCast(expr));
-    _cel_AstFromProto_SetRef(state, cel_Expr_UpCast(expr));
+    _cel_AstFromProto_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
     size_t in_elems_size;
     const cel_expr_Expr* const* in_elems =
         cel_expr_Expr_CreateList_elements(
@@ -553,10 +536,7 @@ static CEL_NONNULL(cel_Expr*)
       cel_OutOfMemoryStatus(state->status);
       _cel_longjmp(state->jmp);
     }
-    cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-    _cel_AstFromProto_UpdatePosition(state, cel_Expr_UpCast(expr));
-    _cel_AstFromProto_SetType(state, cel_Expr_UpCast(expr));
-    _cel_AstFromProto_SetRef(state, cel_Expr_UpCast(expr));
+    _cel_AstFromProto_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
     cel_AttrExpr_SetOperand(expr, _cel_AstFromProto_Expr(state, in_args[0]));
     size_t in_quals_len = 0;
     const cel_expr_Expr* const* in_quals =
@@ -610,11 +590,8 @@ static CEL_NONNULL(cel_Expr*)
                 state, cel_expr_Constant_string_value(
                            cel_expr_Expr_const_expr(in_qual[1]))));
       }
-      _cel_AstFromProto_CheckId(state, qual_expr_id);
-      cel_Expr_SetId(cel_Expr_UpCast(qual_expr), qual_expr_id);
-      _cel_AstFromProto_UpdatePosition(state, cel_Expr_UpCast(qual_expr));
-      _cel_AstFromProto_SetType(state, cel_Expr_UpCast(qual_expr));
-      _cel_AstFromProto_SetRef(state, cel_Expr_UpCast(qual_expr));
+      _cel_AstFromProto_UpdateMetadata(state, cel_Expr_UpCast(qual_expr),
+                                       qual_expr_id);
       cel_AttrExpr_AppendQualifier(expr, qual_expr);
     }
     cel_AttrExpr_SetTestOnly(
@@ -656,10 +633,7 @@ static CEL_NONNULL(cel_Expr*)
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProto_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProto_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   if (cel_expr_Expr_Call_has_target(in)) {
     cel_CallExpr_SetTarget(
         expr,
@@ -692,10 +666,7 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProto_ListExpr(
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProto_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProto_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   size_t in_opt_indices_len = 0;
   const int32_t* in_opt_indices =
       cel_expr_Expr_CreateList_optional_indices(in, &in_opt_indices_len);
@@ -741,10 +712,7 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProto_MapExpr(
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProto_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProto_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   size_t in_ents_len = 0;
   const cel_expr_Expr_CreateStruct_Entry* const* in_ents =
       cel_expr_Expr_CreateStruct_entries(in, &in_ents_len);
@@ -765,13 +733,9 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProto_MapExpr(
       cel_OutOfMemoryStatus(state->status);
       _cel_longjmp(state->jmp);
     }
-    cel_Expr_SetId(
-        cel_Expr_UpCast(ent),
-        _cel_AstFromProto_CheckId(
-            state, cel_expr_Expr_CreateStruct_Entry_id(in_ent)));
-    _cel_AstFromProto_UpdatePosition(state, cel_Expr_UpCast(ent));
-    _cel_AstFromProto_SetType(state, cel_Expr_UpCast(ent));
-    _cel_AstFromProto_SetRef(state, cel_Expr_UpCast(ent));
+    _cel_AstFromProto_UpdateMetadata(
+        state, cel_Expr_UpCast(ent),
+        cel_expr_Expr_CreateStruct_Entry_id(in_ent));
     cel_MapEntryExpr_SetKey(
         ent,
         _cel_AstFromProto_Expr(
@@ -798,10 +762,7 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProto_StructExpr(
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProto_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProto_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   cel_StructExpr_SetName(
       expr, _cel_AstFromProto_StrDup(
                 state, cel_expr_Expr_CreateStruct_message_name(in)));
@@ -826,13 +787,9 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProto_StructExpr(
       cel_OutOfMemoryStatus(state->status);
       _cel_longjmp(state->jmp);
     }
-    cel_Expr_SetId(
-        cel_Expr_UpCast(fld),
-        _cel_AstFromProto_CheckId(
-            state, cel_expr_Expr_CreateStruct_Entry_id(in_fld)));
-    _cel_AstFromProto_UpdatePosition(state, cel_Expr_UpCast(fld));
-    _cel_AstFromProto_SetType(state, cel_Expr_UpCast(fld));
-    _cel_AstFromProto_SetRef(state, cel_Expr_UpCast(fld));
+    _cel_AstFromProto_UpdateMetadata(
+        state, cel_Expr_UpCast(fld),
+        cel_expr_Expr_CreateStruct_Entry_id(in_fld));
     cel_StructFieldExpr_SetName(
         fld,
         _cel_AstFromProto_StrDup(
@@ -860,10 +817,7 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProto_ComprehensionExpr(
       cel_OutOfMemoryStatus(state->status);
       _cel_longjmp(state->jmp);
     }
-    cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-    _cel_AstFromProto_UpdatePosition(state, cel_Expr_UpCast(expr));
-    _cel_AstFromProto_SetType(state, cel_Expr_UpCast(expr));
-    _cel_AstFromProto_SetRef(state, cel_Expr_UpCast(expr));
+    _cel_AstFromProto_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
     cel_BindExpr_SetVar(
         expr, _cel_AstFromProto_StrDup(
                   state, cel_expr_Expr_Comprehension_accu_var(in)));
@@ -881,10 +835,7 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProto_ComprehensionExpr(
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProto_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProto_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProto_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   cel_ComprehensionExpr_SetIterVar(
       expr, _cel_AstFromProto_StrDup(
                 state, cel_expr_Expr_Comprehension_iter_var(in)));

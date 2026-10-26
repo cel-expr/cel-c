@@ -350,6 +350,16 @@ static void _cel_AstFromProtoV1Alpha1_SetRef(
   }
 }
 
+static void _cel_AstFromProtoV1Alpha1_UpdateMetadata(
+    CEL_NONNULL(_cel_AstFromProtoV1Alpha1State*) state,
+    cel_Expr* cel_nonnull expr, cel_ExprId id) {
+  _cel_AstFromProtoV1Alpha1_CheckId(state, id);
+  cel_Expr_SetId(expr, id);
+  _cel_AstFromProtoV1Alpha1_UpdatePosition(state, expr);
+  _cel_AstFromProtoV1Alpha1_SetType(state, expr);
+  _cel_AstFromProtoV1Alpha1_SetRef(state, expr);
+}
+
 static CEL_NONNULL(cel_Expr*) _cel_AstFromProtoV1Alpha1_Expr(
     CEL_NONNULL(_cel_AstFromProtoV1Alpha1State*) state,
     CEL_NONNULL(const google_api_expr_v1alpha1_Expr*) in);
@@ -362,10 +372,7 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProtoV1Alpha1_UnspecifiedExpr(
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProtoV1Alpha1_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProtoV1Alpha1_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   return cel_Expr_UpCast(expr);
 }
 
@@ -380,10 +387,7 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProtoV1Alpha1_IdentExpr(
       cel_OutOfMemoryStatus(state->status);
       _cel_longjmp(state->jmp);
     }
-    cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-    _cel_AstFromProtoV1Alpha1_UpdatePosition(state, cel_Expr_UpCast(expr));
-    _cel_AstFromProtoV1Alpha1_SetType(state, cel_Expr_UpCast(expr));
-    _cel_AstFromProtoV1Alpha1_SetRef(state, cel_Expr_UpCast(expr));
+    _cel_AstFromProtoV1Alpha1_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
     cel_BlockIndexExpr_SetValue(expr, index);
     return cel_Expr_UpCast(expr);
   }
@@ -392,10 +396,7 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProtoV1Alpha1_IdentExpr(
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProtoV1Alpha1_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProtoV1Alpha1_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   cel_IdentExpr_SetName(
       expr, _cel_AstFromProtoV1Alpha1_StrDup(
                 state, google_api_expr_v1alpha1_Expr_Ident_name(in)));
@@ -411,10 +412,7 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProtoV1Alpha1_ConstExpr(
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProtoV1Alpha1_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProtoV1Alpha1_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   if (CEL_UNLIKELY(!cel_Constant_FromProtoV1Alpha1(
           cel_ConstExpr_MutableValue(expr), in, state->arena, state->status))) {
     _cel_longjmp(state->jmp);
@@ -431,10 +429,7 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProtoV1Alpha1_SelectExpr(
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProtoV1Alpha1_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProtoV1Alpha1_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   if (google_api_expr_v1alpha1_Expr_Select_has_operand(in)) {
     cel_SelectExpr_SetOperand(
         expr, _cel_AstFromProtoV1Alpha1_Expr(
@@ -457,10 +452,7 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProtoV1Alpha1_UnaryExpr(
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProtoV1Alpha1_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProtoV1Alpha1_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   cel_UnaryExpr_SetOp(expr, op);
   cel_UnaryExpr_SetArg(expr, _cel_AstFromProtoV1Alpha1_Expr(state, arg));
   return cel_Expr_UpCast(expr);
@@ -476,10 +468,7 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProtoV1Alpha1_BinaryExpr(
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProtoV1Alpha1_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProtoV1Alpha1_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   cel_BinaryExpr_SetOp(expr, op);
   cel_BinaryExpr_SetLeft(expr, _cel_AstFromProtoV1Alpha1_Expr(state, left));
   cel_BinaryExpr_SetRight(expr, _cel_AstFromProtoV1Alpha1_Expr(state, right));
@@ -498,10 +487,7 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProtoV1Alpha1_TernaryExpr(
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProtoV1Alpha1_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProtoV1Alpha1_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   cel_TernaryExpr_SetOp(expr, op);
   cel_TernaryExpr_SetCondition(
       expr, _cel_AstFromProtoV1Alpha1_Expr(state, condition));
@@ -525,10 +511,7 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProtoV1Alpha1_CallExpr(
       cel_OutOfMemoryStatus(state->status);
       _cel_longjmp(state->jmp);
     }
-    cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-    _cel_AstFromProtoV1Alpha1_UpdatePosition(state, cel_Expr_UpCast(expr));
-    _cel_AstFromProtoV1Alpha1_SetType(state, cel_Expr_UpCast(expr));
-    _cel_AstFromProtoV1Alpha1_SetRef(state, cel_Expr_UpCast(expr));
+    _cel_AstFromProtoV1Alpha1_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
     size_t in_elems_size;
     const google_api_expr_v1alpha1_Expr* const* in_elems =
         google_api_expr_v1alpha1_Expr_CreateList_elements(
@@ -557,10 +540,7 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProtoV1Alpha1_CallExpr(
       cel_OutOfMemoryStatus(state->status);
       _cel_longjmp(state->jmp);
     }
-    cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-    _cel_AstFromProtoV1Alpha1_UpdatePosition(state, cel_Expr_UpCast(expr));
-    _cel_AstFromProtoV1Alpha1_SetType(state, cel_Expr_UpCast(expr));
-    _cel_AstFromProtoV1Alpha1_SetRef(state, cel_Expr_UpCast(expr));
+    _cel_AstFromProtoV1Alpha1_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
     cel_AttrExpr_SetOperand(expr,
                             _cel_AstFromProtoV1Alpha1_Expr(state, in_args[0]));
     size_t in_quals_len = 0;
@@ -620,12 +600,8 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProtoV1Alpha1_CallExpr(
                 google_api_expr_v1alpha1_Constant_string_value(
                     google_api_expr_v1alpha1_Expr_const_expr(in_qual[1]))));
       }
-      _cel_AstFromProtoV1Alpha1_CheckId(state, qual_expr_id);
-      cel_Expr_SetId(cel_Expr_UpCast(qual_expr), qual_expr_id);
-      _cel_AstFromProtoV1Alpha1_UpdatePosition(state,
-                                               cel_Expr_UpCast(qual_expr));
-      _cel_AstFromProtoV1Alpha1_SetType(state, cel_Expr_UpCast(qual_expr));
-      _cel_AstFromProtoV1Alpha1_SetRef(state, cel_Expr_UpCast(qual_expr));
+      _cel_AstFromProtoV1Alpha1_UpdateMetadata(
+          state, cel_Expr_UpCast(qual_expr), qual_expr_id);
       cel_AttrExpr_AppendQualifier(expr, qual_expr);
     }
     cel_AttrExpr_SetTestOnly(
@@ -668,10 +644,7 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProtoV1Alpha1_CallExpr(
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProtoV1Alpha1_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProtoV1Alpha1_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   if (google_api_expr_v1alpha1_Expr_Call_has_target(in)) {
     cel_CallExpr_SetTarget(
         expr, _cel_AstFromProtoV1Alpha1_Expr(
@@ -705,10 +678,7 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProtoV1Alpha1_ListExpr(
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProtoV1Alpha1_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProtoV1Alpha1_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   size_t in_opt_indices_len = 0;
   const int32_t* in_opt_indices =
       google_api_expr_v1alpha1_Expr_CreateList_optional_indices(
@@ -755,10 +725,7 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProtoV1Alpha1_MapExpr(
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProtoV1Alpha1_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProtoV1Alpha1_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   size_t in_ents_len = 0;
   const google_api_expr_v1alpha1_Expr_CreateStruct_Entry* const* in_ents =
       google_api_expr_v1alpha1_Expr_CreateStruct_entries(in, &in_ents_len);
@@ -783,14 +750,9 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProtoV1Alpha1_MapExpr(
       cel_OutOfMemoryStatus(state->status);
       _cel_longjmp(state->jmp);
     }
-    cel_Expr_SetId(
-        cel_Expr_UpCast(ent),
-        _cel_AstFromProtoV1Alpha1_CheckId(
-            state,
-            google_api_expr_v1alpha1_Expr_CreateStruct_Entry_id(in_ent)));
-    _cel_AstFromProtoV1Alpha1_UpdatePosition(state, cel_Expr_UpCast(ent));
-    _cel_AstFromProtoV1Alpha1_SetType(state, cel_Expr_UpCast(ent));
-    _cel_AstFromProtoV1Alpha1_SetRef(state, cel_Expr_UpCast(ent));
+    _cel_AstFromProtoV1Alpha1_UpdateMetadata(
+        state, cel_Expr_UpCast(ent),
+        google_api_expr_v1alpha1_Expr_CreateStruct_Entry_id(in_ent));
     cel_MapEntryExpr_SetKey(
         ent,
         _cel_AstFromProtoV1Alpha1_Expr(
@@ -820,10 +782,7 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProtoV1Alpha1_StructExpr(
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProtoV1Alpha1_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProtoV1Alpha1_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   cel_StructExpr_SetName(
       expr,
       _cel_AstFromProtoV1Alpha1_StrDup(
@@ -852,14 +811,9 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProtoV1Alpha1_StructExpr(
       cel_OutOfMemoryStatus(state->status);
       _cel_longjmp(state->jmp);
     }
-    cel_Expr_SetId(
-        cel_Expr_UpCast(fld),
-        _cel_AstFromProtoV1Alpha1_CheckId(
-            state,
-            google_api_expr_v1alpha1_Expr_CreateStruct_Entry_id(in_fld)));
-    _cel_AstFromProtoV1Alpha1_UpdatePosition(state, cel_Expr_UpCast(fld));
-    _cel_AstFromProtoV1Alpha1_SetType(state, cel_Expr_UpCast(fld));
-    _cel_AstFromProtoV1Alpha1_SetRef(state, cel_Expr_UpCast(fld));
+    _cel_AstFromProtoV1Alpha1_UpdateMetadata(
+        state, cel_Expr_UpCast(fld),
+        google_api_expr_v1alpha1_Expr_CreateStruct_Entry_id(in_fld));
     cel_StructFieldExpr_SetName(
         fld,
         _cel_AstFromProtoV1Alpha1_StrDup(
@@ -890,10 +844,7 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProtoV1Alpha1_ComprehensionExpr(
       cel_OutOfMemoryStatus(state->status);
       _cel_longjmp(state->jmp);
     }
-    cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-    _cel_AstFromProtoV1Alpha1_UpdatePosition(state, cel_Expr_UpCast(expr));
-    _cel_AstFromProtoV1Alpha1_SetType(state, cel_Expr_UpCast(expr));
-    _cel_AstFromProtoV1Alpha1_SetRef(state, cel_Expr_UpCast(expr));
+    _cel_AstFromProtoV1Alpha1_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
     cel_BindExpr_SetVar(
         expr,
         _cel_AstFromProtoV1Alpha1_StrDup(
@@ -914,10 +865,7 @@ static CEL_NONNULL(cel_Expr*) _cel_AstFromProtoV1Alpha1_ComprehensionExpr(
     cel_OutOfMemoryStatus(state->status);
     _cel_longjmp(state->jmp);
   }
-  cel_Expr_SetId(cel_Expr_UpCast(expr), id);
-  _cel_AstFromProtoV1Alpha1_UpdatePosition(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetType(state, cel_Expr_UpCast(expr));
-  _cel_AstFromProtoV1Alpha1_SetRef(state, cel_Expr_UpCast(expr));
+  _cel_AstFromProtoV1Alpha1_UpdateMetadata(state, cel_Expr_UpCast(expr), id);
   cel_ComprehensionExpr_SetIterVar(
       expr,
       _cel_AstFromProtoV1Alpha1_StrDup(

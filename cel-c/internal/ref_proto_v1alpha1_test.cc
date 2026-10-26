@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "cel-c/ref_proto_v1alpha1.h"
+#include "cel-c/internal/ref_proto_v1alpha1.h"
 
 #include <string>
 
@@ -25,8 +25,8 @@
 #include "absl/strings/string_view.h"
 #include "cel-c/alloc.h"
 #include "cel-c/arena.h"
-#include "cel-c/constant.h"
-#include "cel-c/ref.h"
+#include "cel-c/internal/constant.h"
+#include "cel-c/internal/ref.h"
 #include "cel-c/status.h"
 #include "cel-c/string_view.h"
 #include "google/protobuf/text_format.h"

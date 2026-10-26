@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "cel-c/ref.h"
+#include "cel-c/internal/ref.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -21,7 +21,7 @@
 #include "cel-c/arena.h"
 #include "cel-c/assert.h"
 #include "cel-c/config.h"
-#include "cel-c/constant.h"
+#include "cel-c/internal/constant.h"
 #include "cel-c/string_view.h"
 
 struct cel_IdentRef {

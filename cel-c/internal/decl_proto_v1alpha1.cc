@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "cel-c/decl_proto_v1alpha1.h"
+#include "cel-c/internal/decl_proto_v1alpha1.h"
 
 #include <stddef.h>
 
@@ -20,9 +20,9 @@
 #include "cel-c/arena.h"
 #include "cel-c/assert.h"
 #include "cel-c/config.h"
-#include "cel-c/constant_proto_v1alpha1.h"
-#include "cel-c/decl.h"
 #include "cel-c/function_scope.h"
+#include "cel-c/internal/constant_proto_v1alpha1.h"
+#include "cel-c/internal/decl.h"
 #include "cel-c/status.h"
 #include "cel-c/string_view.h"
 #include "cel-c/type.h"

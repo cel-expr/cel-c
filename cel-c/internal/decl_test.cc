@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "cel-c/decl.h"
+#include "cel-c/internal/decl.h"
 
 #include <initializer_list>
 #include <memory>

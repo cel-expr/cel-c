@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef THIRD_PARTY_CEL_C_CONSTANT_PROTO_V1ALPHA1_H_
-#define THIRD_PARTY_CEL_C_CONSTANT_PROTO_V1ALPHA1_H_
+#ifndef THIRD_PARTY_CEL_C_INTERNAL_CONSTANT_PROTO_V1ALPHA1_H_
+#define THIRD_PARTY_CEL_C_INTERNAL_CONSTANT_PROTO_V1ALPHA1_H_
 
 #include <stdbool.h>  // IWYU pragma: keep
 
 #include "google/api/expr/v1alpha1/syntax.upb.h"
 #include "cel-c/arena.h"
 #include "cel-c/config.h"
-#include "cel-c/constant.h"
+#include "cel-c/internal/constant.h"
 #include "cel-c/status.h"
 #include "upb/mem/arena.h"
 
@@ -42,4 +42,4 @@ CEL_EXTERN bool cel_Constant_FromProtoV1Alpha1(
 
 CEL_END_DECLS
 
-#endif  // THIRD_PARTY_CEL_C_CONSTANT_PROTO_V1ALPHA1_H_
+#endif  // THIRD_PARTY_CEL_C_INTERNAL_CONSTANT_PROTO_V1ALPHA1_H_

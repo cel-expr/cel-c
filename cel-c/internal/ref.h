@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef THIRD_PARTY_CEL_C_REF_H_
-#define THIRD_PARTY_CEL_C_REF_H_
+#ifndef THIRD_PARTY_CEL_C_INTERNAL_REF_H_
+#define THIRD_PARTY_CEL_C_INTERNAL_REF_H_
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -21,7 +21,7 @@
 #include "cel-c/arena.h"
 #include "cel-c/assert.h"
 #include "cel-c/config.h"
-#include "cel-c/constant.h"
+#include "cel-c/internal/constant.h"
 #include "cel-c/string_view.h"
 
 CEL_BEGIN_DECLS
@@ -232,4 +232,4 @@ cel_FunctionRef_DownCast(cel_Ref* cel_nullability_unknown ref) {
 }
 #endif
 
-#endif  // THIRD_PARTY_CEL_C_REF_H_
+#endif  // THIRD_PARTY_CEL_C_INTERNAL_REF_H_

@@ -12,23 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef THIRD_PARTY_CEL_C_DECL_PROTO_V1ALPHA1_H_
-#define THIRD_PARTY_CEL_C_DECL_PROTO_V1ALPHA1_H_
+#ifndef THIRD_PARTY_CEL_C_INTERNAL_REF_PROTO_V1ALPHA1_H_
+#define THIRD_PARTY_CEL_C_INTERNAL_REF_PROTO_V1ALPHA1_H_
 
 #include "google/api/expr/v1alpha1/checked.upb.h"
 #include "cel-c/arena.h"
 #include "cel-c/config.h"
-#include "cel-c/decl.h"
+#include "cel-c/internal/ref.h"
 #include "cel-c/status.h"
 
 CEL_BEGIN_DECLS
 
 CEL_ATTRIBUTE_NODISCARD
 CEL_ATTRIBUTE_NOTHROW
-CEL_EXTERN cel_Decl* cel_nullable cel_Decl_FromProtoV1Alpha1(
-    const google_api_expr_v1alpha1_Decl* cel_nonnull in,
+CEL_EXTERN cel_Ref* cel_nullable cel_Ref_FromProtoV1Alpha1(
+    const google_api_expr_v1alpha1_Reference* cel_nonnull in,
     cel_Arena* cel_nonnull arena, cel_Status* cel_nonnull status);
 
 CEL_END_DECLS
 
-#endif  // THIRD_PARTY_CEL_C_DECL_PROTO_V1ALPHA1_H_
+#endif  // THIRD_PARTY_CEL_C_INTERNAL_REF_PROTO_V1ALPHA1_H_

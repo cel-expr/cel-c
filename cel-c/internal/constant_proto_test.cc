@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "cel-c/constant_proto.h"
+#include "cel-c/internal/constant_proto.h"
 
 #include "cel/expr/syntax.upb.h"
 #include "google/protobuf/duration.upb.h"
@@ -21,8 +21,8 @@
 #include "gtest/gtest.h"
 #include "absl/log/die_if_null.h"
 #include "cel-c/config.h"
-#include "cel-c/constant.h"
 #include "cel-c/duration.h"
+#include "cel-c/internal/constant.h"
 #include "cel-c/status.h"
 #include "cel-c/string_view.h"
 #include "cel-c/timestamp.h"

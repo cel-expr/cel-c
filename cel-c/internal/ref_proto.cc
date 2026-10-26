@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "cel-c/ref_proto.h"
+#include "cel-c/internal/ref_proto.h"
 
 #include <stddef.h>
 
@@ -20,8 +20,8 @@
 #include "cel-c/arena.h"
 #include "cel-c/assert.h"
 #include "cel-c/config.h"
-#include "cel-c/constant_proto.h"
-#include "cel-c/ref.h"
+#include "cel-c/internal/constant_proto.h"
+#include "cel-c/internal/ref.h"
 #include "cel-c/status.h"
 #include "cel-c/string_view.h"
 #include "upb/base/string_view.h"

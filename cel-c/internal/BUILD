@@ -154,13 +154,13 @@ cc_library(
         "ast.h",
     ],
     deps = [
+        ":attribute",
+        ":constant",
+        ":ref",
         "//cel-c:arena",
         "//cel-c:assert",
-        "//cel-c:attribute",
         "//cel-c:config",
-        "//cel-c:constant",
         "//cel-c:operators",
-        "//cel-c:ref",
         "//cel-c:source",
         "//cel-c:string_view",
         "//cel-c:type",
@@ -228,6 +228,30 @@ cc_library(
     deps = [
         ":ast",
         "//cel-c:config",
+    ],
+)
+
+cc_library(
+    name = "attribute",
+    srcs = ["attribute.cc"],
+    hdrs = [
+        "attribute.h",
+    ],
+    deps = [
+        "//cel-c:assert",
+        "//cel-c:config",
+        "//cel-c:string_view",
+    ],
+)
+
+cc_test(
+    name = "attribute_test",
+    srcs = ["attribute_test.cc"],
+    deps = [
+        ":attribute",
+        "//cel-c:config",
+        "//cel-c:string_view",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -351,6 +375,120 @@ cc_test(
 )
 
 cc_library(
+    name = "constant",
+    srcs = ["constant.cc"],
+    hdrs = ["constant.h"],
+    deps = [
+        "//cel-c:assert",
+        "//cel-c:config",
+        "//cel-c:duration",
+        "//cel-c:string_view",
+        "//cel-c:timestamp",
+    ],
+)
+
+cc_test(
+    name = "constant_test",
+    srcs = ["constant_test.cc"],
+    deps = [
+        ":constant",
+        "//cel-c:config",
+        "//cel-c:duration",
+        "//cel-c:string_view",
+        "//cel-c:timestamp",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "constant_proto",
+    srcs = ["constant_proto.cc"],
+    hdrs = ["constant_proto.h"],
+    deps = [
+        ":constant",
+        "//cel-c:arena",
+        "//cel-c:assert",
+        "//cel-c:config",
+        "//cel-c:duration",
+        "//cel-c:duration_proto",
+        "//cel-c:status",
+        "//cel-c:string_view",
+        "//cel-c:timestamp",
+        "//cel-c:timestamp_proto",
+        "@cel-spec//proto/cel/expr:syntax_upb_proto",
+        "@protobuf//:duration_upb_proto",
+        "@protobuf//:struct_upb_proto",
+        "@protobuf//:timestamp_upb_proto",
+        "@protobuf//upb/mem",
+    ],
+)
+
+cc_test(
+    name = "constant_proto_test",
+    srcs = ["constant_proto_test.cc"],
+    deps = [
+        ":constant",
+        ":constant_proto",
+        "//cel-c:config",
+        "//cel-c:duration",
+        "//cel-c:status",
+        "//cel-c:string_view",
+        "//cel-c:timestamp",
+        "@abseil-cpp//absl/log:die_if_null",
+        "@cel-spec//proto/cel/expr:syntax_upb_proto",
+        "@googletest//:gtest_main",
+        "@protobuf//:duration_upb_proto",
+        "@protobuf//:struct_upb_proto",
+        "@protobuf//:timestamp_upb_proto",
+        "@protobuf//upb/mem",
+    ],
+)
+
+cc_library(
+    name = "constant_proto_v1alpha1",
+    srcs = ["constant_proto_v1alpha1.cc"],
+    hdrs = ["constant_proto_v1alpha1.h"],
+    deps = [
+        ":constant",
+        "//cel-c:arena",
+        "//cel-c:assert",
+        "//cel-c:config",
+        "//cel-c:duration",
+        "//cel-c:duration_proto",
+        "//cel-c:status",
+        "//cel-c:string_view",
+        "//cel-c:timestamp",
+        "//cel-c:timestamp_proto",
+        "@googleapis//google/api/expr/v1alpha1:checked_upb_proto",
+        "@protobuf//:duration_upb_proto",
+        "@protobuf//:struct_upb_proto",
+        "@protobuf//:timestamp_upb_proto",
+        "@protobuf//upb/mem",
+    ],
+)
+
+cc_test(
+    name = "constant_proto_v1alpha1_test",
+    srcs = ["constant_proto_v1alpha1_test.cc"],
+    deps = [
+        ":constant",
+        ":constant_proto_v1alpha1",
+        "//cel-c:config",
+        "//cel-c:duration",
+        "//cel-c:status",
+        "//cel-c:string_view",
+        "//cel-c:timestamp",
+        "@abseil-cpp//absl/log:die_if_null",
+        "@googleapis//google/api/expr/v1alpha1:checked_upb_proto",
+        "@googletest//:gtest_main",
+        "@protobuf//:duration_upb_proto",
+        "@protobuf//:struct_upb_proto",
+        "@protobuf//:timestamp_upb_proto",
+        "@protobuf//upb/mem",
+    ],
+)
+
+cc_library(
     name = "container",
     hdrs = ["container.h"],
     deps = [
@@ -390,6 +528,135 @@ cc_test(
     deps = [
         ":ctype",
         "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "decl",
+    srcs = [
+        "decl.cc",
+    ],
+    hdrs = [
+        "decl.h",
+    ],
+    deps = [
+        ":constant",
+        "//cel-c:arena",
+        "//cel-c:assert",
+        "//cel-c:config",
+        "//cel-c:function_scope",
+        "//cel-c:string_view",
+        "//cel-c:type",
+        "//cel-c:type_kind",
+    ],
+)
+
+cc_test(
+    name = "decl_test",
+    srcs = ["decl_test.cc"],
+    deps = [
+        ":decl",
+        "//cel-c:alloc",
+        "//cel-c:arena",
+        "//cel-c:function_scope",
+        "//cel-c:string_view",
+        "//cel-c:string_view_absl",
+        "//cel-c:type",
+        "@abseil-cpp//absl/log:die_if_null",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "decl_proto",
+    srcs = [
+        "decl_proto.cc",
+    ],
+    hdrs = [
+        "decl_proto.h",
+    ],
+    deps = [
+        ":constant_proto",
+        ":decl",
+        "//cel-c:arena",
+        "//cel-c:assert",
+        "//cel-c:config",
+        "//cel-c:function_scope",
+        "//cel-c:status",
+        "//cel-c:string_view",
+        "//cel-c:type",
+        "//cel-c:type_proto",
+        "@cel-spec//proto/cel/expr:checked_upb_proto",
+    ],
+)
+
+cc_test(
+    name = "decl_proto_test",
+    srcs = ["decl_proto_test.cc"],
+    deps = [
+        ":constant",
+        ":decl",
+        ":decl_proto",
+        "//cel-c:alloc",
+        "//cel-c:arena",
+        "//cel-c:function_scope",
+        "//cel-c:status",
+        "//cel-c:string_view",
+        "//cel-c:type",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/log:die_if_null",
+        "@abseil-cpp//absl/strings:string_view",
+        "@cel-spec//proto/cel/expr:checked_cc_proto",
+        "@cel-spec//proto/cel/expr:checked_upb_proto",
+        "@googletest//:gtest_main",
+        "@protobuf",
+    ],
+)
+
+cc_library(
+    name = "decl_proto_v1alpha1",
+    srcs = [
+        "decl_proto_v1alpha1.cc",
+    ],
+    hdrs = [
+        "decl_proto_v1alpha1.h",
+    ],
+    deps = [
+        ":constant_proto_v1alpha1",
+        ":decl",
+        "//cel-c:arena",
+        "//cel-c:assert",
+        "//cel-c:config",
+        "//cel-c:function_scope",
+        "//cel-c:status",
+        "//cel-c:string_view",
+        "//cel-c:type",
+        "//cel-c:type_proto_v1alpha1",
+        "@googleapis//google/api/expr/v1alpha1:checked_upb_proto",
+    ],
+)
+
+cc_test(
+    name = "decl_proto_v1alpha1_test",
+    srcs = ["decl_proto_v1alpha1_test.cc"],
+    deps = [
+        ":constant",
+        ":decl",
+        ":decl_proto_v1alpha1",
+        "//cel-c:alloc",
+        "//cel-c:arena",
+        "//cel-c:function_scope",
+        "//cel-c:status",
+        "//cel-c:string_view",
+        "//cel-c:type",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/log:die_if_null",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googleapis//google/api/expr/v1alpha1:checked_cc_proto",
+        "@googleapis//google/api/expr/v1alpha1:checked_upb_proto",
+        "@googletest//:gtest_main",
+        "@protobuf",
     ],
 )
 
@@ -705,6 +972,108 @@ cc_test(
         ":config",
         ":rc",
         "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "ref",
+    srcs = [
+        "ref.cc",
+    ],
+    hdrs = [
+        "ref.h",
+    ],
+    deps = [
+        ":constant",
+        "//cel-c:arena",
+        "//cel-c:assert",
+        "//cel-c:config",
+        "//cel-c:string_view",
+    ],
+)
+
+cc_library(
+    name = "ref_proto",
+    srcs = [
+        "ref_proto.cc",
+    ],
+    hdrs = [
+        "ref_proto.h",
+    ],
+    deps = [
+        ":constant_proto",
+        ":ref",
+        "//cel-c:arena",
+        "//cel-c:assert",
+        "//cel-c:config",
+        "//cel-c:status",
+        "//cel-c:string_view",
+        "@cel-spec//proto/cel/expr:checked_upb_proto",
+        "@protobuf//upb/base",
+    ],
+)
+
+cc_test(
+    name = "ref_proto_test",
+    srcs = ["ref_proto_test.cc"],
+    deps = [
+        ":constant",
+        ":ref",
+        ":ref_proto",
+        "//cel-c:alloc",
+        "//cel-c:arena",
+        "//cel-c:status",
+        "//cel-c:string_view",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/log:die_if_null",
+        "@abseil-cpp//absl/strings:string_view",
+        "@cel-spec//proto/cel/expr:checked_cc_proto",
+        "@cel-spec//proto/cel/expr:checked_upb_proto",
+        "@googletest//:gtest_main",
+        "@protobuf",
+    ],
+)
+
+cc_library(
+    name = "ref_proto_v1alpha1",
+    srcs = [
+        "ref_proto_v1alpha1.cc",
+    ],
+    hdrs = [
+        "ref_proto_v1alpha1.h",
+    ],
+    deps = [
+        ":constant_proto",
+        ":constant_proto_v1alpha1",
+        ":ref",
+        "//cel-c:arena",
+        "//cel-c:assert",
+        "//cel-c:config",
+        "//cel-c:status",
+        "//cel-c:string_view",
+        "@googleapis//google/api/expr/v1alpha1:checked_upb_proto",
+        "@protobuf//upb/base",
+    ],
+)
+
+cc_test(
+    name = "ref_proto_v1alpha1_test",
+    srcs = ["ref_proto_v1alpha1_test.cc"],
+    deps = [
+        ":constant",
+        ":ref",
+        ":ref_proto_v1alpha1",
+        "//cel-c:alloc",
+        "//cel-c:arena",
+        "//cel-c:status",
+        "//cel-c:string_view",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/log:die_if_null",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googleapis//google/api/expr/v1alpha1:checked_cc_proto",
+        "@googleapis//google/api/expr/v1alpha1:checked_upb_proto",
+        "@googletest//:gtest_main",
+        "@protobuf",
     ],
 )
 

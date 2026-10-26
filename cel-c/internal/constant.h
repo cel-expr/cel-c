@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef THIRD_PARTY_CEL_C_CONSTANT_H_
-#define THIRD_PARTY_CEL_C_CONSTANT_H_
+#ifndef THIRD_PARTY_CEL_C_INTERNAL_CONSTANT_H_
+#define THIRD_PARTY_CEL_C_INTERNAL_CONSTANT_H_
 
 #include <stdalign.h>
 #include <stdbool.h>  // IWYU pragma: keep
@@ -384,4 +384,4 @@ inline bool operator!=(const cel_Constant& lhs, const cel_Constant& rhs) {
 
 #endif
 
-#endif  // THIRD_PARTY_CEL_C_CONSTANT_H_
+#endif  // THIRD_PARTY_CEL_C_INTERNAL_CONSTANT_H_

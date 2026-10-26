@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef THIRD_PARTY_CEL_C_REF_PROTO_H_
-#define THIRD_PARTY_CEL_C_REF_PROTO_H_
+#ifndef THIRD_PARTY_CEL_C_INTERNAL_REF_PROTO_H_
+#define THIRD_PARTY_CEL_C_INTERNAL_REF_PROTO_H_
 
 #include "cel/expr/checked.upb.h"
 #include "cel-c/arena.h"
 #include "cel-c/config.h"
-#include "cel-c/ref.h"
+#include "cel-c/internal/ref.h"
 #include "cel-c/status.h"
 
 CEL_BEGIN_DECLS
@@ -31,4 +31,4 @@ cel_Ref_FromProto(const cel_expr_Reference* cel_nonnull in,
 
 CEL_END_DECLS
 
-#endif  // THIRD_PARTY_CEL_C_REF_PROTO_H_
+#endif  // THIRD_PARTY_CEL_C_INTERNAL_REF_PROTO_H_

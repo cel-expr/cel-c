@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef THIRD_PARTY_CEL_C_ATTRIBUTE_H_
-#define THIRD_PARTY_CEL_C_ATTRIBUTE_H_
+#ifndef THIRD_PARTY_CEL_C_INTERNAL_ATTRIBUTE_H_
+#define THIRD_PARTY_CEL_C_INTERNAL_ATTRIBUTE_H_
 
 #include <stdalign.h>
 #include <stdbool.h>
@@ -222,4 +222,4 @@ CEL_EXTERN bool cel_AttributeQualifier_Equals(
 
 CEL_END_DECLS
 
-#endif  // THIRD_PARTY_CEL_C_ATTRIBUTE_H_
+#endif  // THIRD_PARTY_CEL_C_INTERNAL_ATTRIBUTE_H_

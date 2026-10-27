@@ -82,18 +82,17 @@ CEL_EXTERN cel_Program* cel_nullable cel_Runtime_Compile(
 CEL_END_DECLS
 
 #ifdef __cplusplus
-namespace std {
-template <>
-struct default_delete<::cel_Runtime> {
-  template <typename U>
-  CEL_INLINE void operator()(U* ptr) const noexcept {
-    ::cel_Runtime_Delete(const_cast<::cel_Runtime*>(ptr));
+struct cel_RuntimeDeleter {
+  CEL_INLINE void operator()(
+      cel_Runtime* cel_nullable activation) const noexcept {
+    cel_Runtime_Delete(activation);
+  }
+  CEL_INLINE void operator()(
+      const cel_Runtime* cel_nullable activation) const noexcept {
+    (*this)(const_cast<cel_Runtime*>(activation));
   }
 };
-template <>
-struct default_delete<const ::cel_Runtime> : default_delete<::cel_Runtime> {};
-}  // namespace std
-using cel_RuntimePtr = std::unique_ptr<cel_Runtime>;
+using cel_RuntimePtr = std::unique_ptr<cel_Runtime, cel_RuntimeDeleter>;
 #endif
 
 #endif  // THIRD_PARTY_CEL_C_RUNTIME_H_

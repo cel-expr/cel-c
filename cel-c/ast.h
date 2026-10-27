@@ -33,18 +33,16 @@ CEL_EXTERN void cel_Ast_Delete(cel_Ast* cel_nullable ast);
 CEL_END_DECLS
 
 #ifdef __cplusplus
-namespace std {
-template <>
-struct default_delete<::cel_Ast> {
-  template <typename U>
-  CEL_INLINE void operator()(U* ptr) const noexcept {
-    ::cel_Ast_Delete(const_cast<::cel_Ast*>(ptr));
+struct cel_AstDeleter {
+  CEL_INLINE void operator()(cel_Ast* cel_nullable activation) const noexcept {
+    cel_Ast_Delete(activation);
+  }
+  CEL_INLINE void operator()(
+      const cel_Ast* cel_nullable activation) const noexcept {
+    (*this)(const_cast<cel_Ast*>(activation));
   }
 };
-template <>
-struct default_delete<const ::cel_Ast> : default_delete<::cel_Ast> {};
-}  // namespace std
-using cel_AstPtr = std::unique_ptr<cel_Ast>;
+using cel_AstPtr = std::unique_ptr<cel_Ast, cel_AstDeleter>;
 #endif
 
 #endif  // THIRD_PARTY_CEL_C_AST_H_

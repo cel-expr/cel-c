@@ -80,19 +80,18 @@ CEL_EXTERN bool cel_Activation_Execute(cel_Activation* cel_nonnull activation,
 CEL_END_DECLS
 
 #ifdef __cplusplus
-namespace std {
-template <>
-struct default_delete<::cel_Activation> {
-  template <typename U>
-  CEL_INLINE void operator()(U* ptr) const noexcept {
-    ::cel_Activation_Delete(const_cast<::cel_Activation*>(ptr));
+struct cel_ActivationDeleter {
+  CEL_INLINE void operator()(
+      cel_Activation* cel_nullable activation) const noexcept {
+    cel_Activation_Delete(activation);
+  }
+  CEL_INLINE void operator()(
+      const cel_Activation* cel_nullable activation) const noexcept {
+    (*this)(const_cast<cel_Activation*>(activation));
   }
 };
-template <>
-struct default_delete<const ::cel_Activation>
-    : default_delete<::cel_Activation> {};
-}  // namespace std
-using cel_ActivationPtr = std::unique_ptr<cel_Activation>;
+using cel_ActivationPtr =
+    std::unique_ptr<cel_Activation, cel_ActivationDeleter>;
 #endif
 
 #endif  // THIRD_PARTY_CEL_C_ACTIVATION_H_

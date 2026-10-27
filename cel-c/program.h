@@ -51,18 +51,17 @@ cel_Program_Activate(const cel_Program* cel_nonnull program,
 CEL_END_DECLS
 
 #ifdef __cplusplus
-namespace std {
-template <>
-struct default_delete<::cel_Program> {
-  template <typename U>
-  CEL_INLINE void operator()(U* ptr) const noexcept {
-    ::cel_Program_Delete(const_cast<::cel_Program*>(ptr));
+struct cel_ProgramDeleter {
+  CEL_INLINE void operator()(
+      cel_Program* cel_nullable activation) const noexcept {
+    cel_Program_Delete(activation);
+  }
+  CEL_INLINE void operator()(
+      const cel_Program* cel_nullable activation) const noexcept {
+    (*this)(const_cast<cel_Program*>(activation));
   }
 };
-template <>
-struct default_delete<const ::cel_Program> : default_delete<::cel_Program> {};
-}  // namespace std
-using cel_ProgramPtr = std::unique_ptr<cel_Program>;
+using cel_ProgramPtr = std::unique_ptr<cel_Program, cel_ProgramDeleter>;
 #endif
 
 #endif  // THIRD_PARTY_CEL_C_PROGRAM_H_

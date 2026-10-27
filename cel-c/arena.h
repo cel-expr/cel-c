@@ -20,6 +20,10 @@
 #include <stddef.h>
 #include <string.h>
 
+#ifdef __cplusplus
+#include <memory>
+#endif
+
 #include "cel-c/alloc.h"
 #include "cel-c/assert.h"
 #include "cel-c/config.h"
@@ -175,5 +179,19 @@ CEL_INLINE bool cel_Arena_PrintF(CEL_NONNULL(cel_Arena*) arena,
 }
 
 CEL_END_DECLS
+
+#ifdef __cplusplus
+struct cel_ArenaDeleter {
+  CEL_INLINE void operator()(
+      cel_Arena* cel_nullable activation) const noexcept {
+    cel_Arena_Delete(activation);
+  }
+  CEL_INLINE void operator()(
+      const cel_Arena* cel_nullable activation) const noexcept {
+    (*this)(const_cast<cel_Arena*>(activation));
+  }
+};
+using cel_ArenaPtr = std::unique_ptr<cel_Arena, cel_ArenaDeleter>;
+#endif
 
 #endif  // THIRD_PARTY_CEL_C_ARENA_H_

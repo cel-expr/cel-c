@@ -129,13 +129,13 @@ class RuntimeHarness {
  public:
   void SetUp() {
     cel_Status_Construct(&status_);
-    arena_ = ABSL_DIE_IF_NULL(cel_Arena_New(alloc()));
+    arena_ = cel_ArenaPtr(ABSL_DIE_IF_NULL(cel_Arena_New(alloc())));
     rt_ = NewRuntime(nullptr);
     parser_ = _cel_TestingParserPtr(_cel_TestingParser_New());
     compiler_ = _cel_TestingCompilerPtr(_cel_TestingCompiler_New());
     std::memset(&context_, 0, sizeof(context_));
     context_.alloc = alloc();
-    context_.arena = arena_;
+    context_.arena = arena_.get();
     context_.def_pool = cel_Runtime_DefPool(rt_.get());
     context_.well_known_types = cel_Runtime_WellKnownTypes(rt_.get());
   }
@@ -144,8 +144,7 @@ class RuntimeHarness {
     compiler_.reset();
     parser_.reset();
     rt_.reset();
-    cel_Arena_Delete(arena_);
-    arena_ = nullptr;
+    arena_.reset();
     cel_Status_Destruct(&status_);
   }
 
@@ -182,7 +181,7 @@ class RuntimeHarness {
 
   cel_Allocator* alloc() { return cel_DefaultAllocator; }
 
-  cel_Arena* arena() { return ABSL_DIE_IF_NULL(arena_); }
+  cel_Arena* arena() { return ABSL_DIE_IF_NULL(arena_.get()); }
 
   cel_Status* status() { return &status_; }
 
@@ -248,7 +247,7 @@ class RuntimeHarness {
 
  private:
   cel_Status status_;
-  cel_Arena* arena_ = nullptr;
+  cel_ArenaPtr arena_;
   cel_RuntimePtr rt_;
   _cel_TestingParserPtr parser_;
   _cel_TestingCompilerPtr compiler_;

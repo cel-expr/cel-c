@@ -35,7 +35,7 @@ CEL_BEGIN_DECLS
 // syscalls. We do not need this feature, so we prefer using
 // sigsetjmp/siglongjmp on platforms that have it and explicitly opt-out of from
 // preserving the signal mask.
-#if defined(_POSIX_VERSION) && _POSIX_VERSION >= 200112L
+#if defined(__APPLE__) || defined(_POSIX_C_SOURCE) || defined(__ANDROID__)
 typedef sigjmp_buf _cel_jmp_buf;
 #define _cel_setjmp(env) sigsetjmp((env), 0)
 #define _cel_longjmp(env) siglongjmp((env), 1)

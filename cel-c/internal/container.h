@@ -15,124 +15,148 @@
 #ifndef THIRD_PARTY_CEL_C_INTERNAL_CONTAINER_H_
 #define THIRD_PARTY_CEL_C_INTERNAL_CONTAINER_H_
 
-#include <stddef.h>
+#include <cstddef>
+#include <utility>
 
-#include "cel-c/alloc.h"
 #include "cel-c/assert.h"
+#include "cel-c/config.h"
 #include "cel-c/internal/config.h"
 #include "cel-c/internal/string.h"
 #include "cel-c/string_view.h"
 
-CEL_BEGIN_DECLS
+struct _cel_ContainerIterator {
+  cel_StringView name = cel_StringView{.data = "", .size = 0};
+  size_t size = 0;
 
-typedef struct {
-  _cel_String name;
-  size_t count;
-} _cel_Container;
+  [[nodiscard]]
+  bool HasNext() const {
+    return size > 0;
+  }
 
-typedef struct {
-  cel_StringView name;
-  size_t size;
-} _cel_ContainerIterator;
+  [[nodiscard]]
+  cel_StringView Next() {
+    CEL_ASSERT_GT(size, 0);
 
-static CEL_INLINE void _cel_Container_Construct(
-    _cel_Container* cel_nonnull container) {
-  CEL_ASSERT_NOT_NULL(container);
-
-  _cel_String_Construct(&container->name);
-  container->count = 0;
-}
-
-static CEL_INLINE void _cel_Container_Destruct(
-    _cel_Container* cel_nonnull container, cel_Allocator* cel_nonnull alloc) {
-  CEL_ASSERT_NOT_NULL(container);
-  CEL_ASSERT_NOT_NULL(alloc);
-
-  _cel_String_Destruct(&container->name, alloc);
-}
-
-CEL_ATTRIBUTE_NODISCARD
-static CEL_INLINE bool _cel_Container_Empty(
-    const _cel_Container* cel_nonnull container) {
-  return container->count == 0;
-}
-
-CEL_ATTRIBUTE_NODISCARD
-static CEL_INLINE size_t
-_cel_Container_Count(const _cel_Container* cel_nonnull container) {
-  return container->count;
-}
-
-CEL_ATTRIBUTE_NODISCARD
-static CEL_INLINE bool _cel_Container_Update(
-    _cel_Container* cel_nonnull container, cel_StringView name,
-    cel_Allocator* cel_nonnull alloc) {
-  CEL_ASSERT_NOT_NULL(container);
-  CEL_ASSERT_NOT_NULL(alloc);
-
-  _cel_String_Clear(&container->name);
-  container->count = 0;
-  _cel_String_Reserve(&container->name, alloc, cel_StringView_Size(name));
-
-  cel_StringViewTokenizer tokenizer =
-      cel_StringView_Tokenize(name, cel_StringView_FromString("."));
-  cel_StringView token;
-  while (cel_StringViewTokenizer_Next(&tokenizer, &token)) {
-    if (cel_StringView_Empty(token)) {
-      continue;
+    cel_StringView name = this->name;
+    --size;
+    const char* pos =
+        cel_StringView_FindLast(this->name, cel_StringView_FromString("."));
+    if (pos == cel_nullptr) {
+      CEL_ASSERT_EQ(size, 0);
+      pos = cel_StringView_Data(this->name);
     }
-    ++container->count;
-    if (!_cel_String_Empty(&container->name)) {
-      if (!_cel_String_PushBack(&container->name, alloc, '.')) {
+    cel_StringView_RemoveSuffix(&this->name, (cel_StringView_Data(this->name) +
+                                              cel_StringView_Size(this->name)) -
+                                                 pos);
+    return name;
+  }
+};
+
+class _cel_Container {
+ public:
+  _cel_Container() = default;
+  _cel_Container(const _cel_Container&) = delete;
+  _cel_Container& operator=(const _cel_Container&) = delete;
+
+  CEL_INLINE _cel_Container(_cel_Container&& other) noexcept
+      : name_(std::move(other.name_)), count_(std::exchange(other.count_, 0)) {}
+
+  CEL_INLINE _cel_Container& operator=(_cel_Container&& other) noexcept {
+    if (CEL_LIKELY(this != &other)) {
+      name_ = std::move(other.name_);
+      count_ = std::exchange(other.count_, 0);
+    }
+    return *this;
+  }
+
+  [[nodiscard]]
+  CEL_INLINE bool empty() const {
+    return count() == 0;
+  }
+
+  [[nodiscard]]
+  CEL_INLINE size_t count() const {
+    return count_;
+  }
+
+  [[nodiscard]]
+  CEL_INLINE cel_StringView name() const CEL_ATTRIBUTE_LIFETIME_BOUND {
+    return _cel_String_ToStringView(&name_);
+  }
+
+  [[nodiscard]]
+  CEL_INLINE bool Update(cel_StringView name) {
+    _cel_String_Clear(&name_);
+    count_ = 0;
+    _cel_String_Reserve(&name_, cel_StringView_Size(name));
+
+    cel_StringViewTokenizer tokenizer =
+        cel_StringView_Tokenize(name, cel_StringView_FromString("."));
+    cel_StringView token;
+    while (cel_StringViewTokenizer_Next(&tokenizer, &token)) {
+      if (cel_StringView_Empty(token)) {
+        continue;
+      }
+      ++count_;
+      if (!_cel_String_Empty(&name_)) {
+        if (!_cel_String_PushBack(&name_, '.')) {
+          return false;
+        }
+      }
+      if (!_cel_String_Append(&name_, token)) {
         return false;
       }
     }
-    if (!_cel_String_Append(&container->name, alloc, token)) {
-      return false;
-    }
+    return true;
   }
-  return true;
+
+  [[nodiscard]]
+  CEL_INLINE _cel_ContainerIterator Iterate() const {
+    _cel_ContainerIterator iter;
+    iter.name = _cel_String_ToStringView(&name_);
+    iter.size = count_;
+    return iter;
+  }
+
+ private:
+  _cel_String name_;
+  size_t count_ = 0;
+};
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_DEPRECATE_AND_INLINE CEL_INLINE bool _cel_Container_Empty(
+    const _cel_Container* cel_nonnull container) {
+  return container->empty();
 }
 
 CEL_ATTRIBUTE_NODISCARD
-static CEL_INLINE _cel_ContainerIterator
+CEL_DEPRECATE_AND_INLINE CEL_INLINE size_t
+_cel_Container_Count(const _cel_Container* cel_nonnull container) {
+  return container->count();
+}
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_DEPRECATE_AND_INLINE CEL_INLINE bool _cel_Container_Update(
+    _cel_Container* cel_nonnull container, cel_StringView name) {
+  return container->Update(name);
+}
+
+CEL_ATTRIBUTE_NODISCARD
+CEL_DEPRECATE_AND_INLINE CEL_INLINE _cel_ContainerIterator
 _cel_Container_Iterate(const _cel_Container* cel_nonnull container) {
-  CEL_ASSERT_NOT_NULL(container);
-
-  _cel_ContainerIterator iter;
-  iter.name = _cel_String_ToStringView(&container->name);
-  iter.size = container->count;
-  return iter;
+  return container->Iterate();
 }
 
 CEL_ATTRIBUTE_NODISCARD
-static CEL_INLINE bool _cel_ContainerIterator_HasNext(
+CEL_DEPRECATE_AND_INLINE CEL_INLINE bool _cel_ContainerIterator_HasNext(
     const _cel_ContainerIterator* cel_nonnull iter) {
-  CEL_ASSERT_NOT_NULL(iter);
-
-  return iter->size > 0;
+  return iter->HasNext();
 }
 
 CEL_ATTRIBUTE_NODISCARD
-static CEL_INLINE cel_StringView
+CEL_DEPRECATE_AND_INLINE CEL_INLINE cel_StringView
 _cel_ContainerIterator_Next(_cel_ContainerIterator* cel_nonnull iter) {
-  CEL_ASSERT_NOT_NULL(iter);
-  CEL_ASSERT_GT(iter->size, 0);
-
-  cel_StringView name = iter->name;
-  --iter->size;
-  const char* pos =
-      cel_StringView_FindLast(iter->name, cel_StringView_FromString("."));
-  if (pos == cel_nullptr) {
-    CEL_ASSERT_EQ(iter->size, 0);
-    pos = cel_StringView_Data(iter->name);
-  }
-  cel_StringView_RemoveSuffix(&iter->name, (cel_StringView_Data(iter->name) +
-                                            cel_StringView_Size(iter->name)) -
-                                               pos);
-  return name;
+  return iter->Next();
 }
-
-CEL_END_DECLS
 
 #endif  // THIRD_PARTY_CEL_C_INTERNAL_CONTAINER_H_

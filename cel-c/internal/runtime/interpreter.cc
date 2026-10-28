@@ -66,17 +66,6 @@ struct _cel_InterpreterNspaceVar {
   _cel_String name;
 };
 
-static void _cel_InterpreterNspaceVar_Construct(
-    _cel_InterpreterNspaceVar* cel_nonnull nspace_var) {
-  _cel_String_Construct(&nspace_var->name);
-}
-
-static void _cel_InterpreterNspaceVar_Destruct(
-    _cel_InterpreterNspaceVar* cel_nonnull nspace_var,
-    cel_Allocator* cel_nonnull alloc) {
-  _cel_String_Destruct(&nspace_var->name, alloc);
-}
-
 struct _cel_InterpreterBinaryCond {
   const cel_BinaryExpr* cel_nullability_unknown node = nullptr;
   uint32_t pc = 0;
@@ -558,12 +547,11 @@ static uint32_t _cel_Interpreter_InternString(
       cel_OutOfMemoryStatus(interp->status);
       _cel_longjmp(interp->jmp);
     }
-    _cel_String_Construct(string_ptr);
-    if (!_cel_String_Assign(string_ptr, interp->alloc, string)) {
+    if (!_cel_String_Assign(string_ptr, string)) {
       cel_OutOfMemoryStatus(interp->status);
       _cel_longjmp(interp->jmp);
     }
-    if (!_cel_String_Stabilize(string_ptr, interp->alloc)) {
+    if (!_cel_String_Stabilize(string_ptr)) {
       cel_OutOfMemoryStatus(interp->status);
       _cel_longjmp(interp->jmp);
     }
@@ -655,20 +643,17 @@ static void _cel_Interpreter_PlanIdent(_cel_Interpreter* cel_nonnull interp,
         _cel_longjmp(interp->jmp);
       }
       _cel_String candidate_name;
-      _cel_String_Construct(&candidate_name);
       _cel_ContainerIterator cont_iter =
           _cel_Container_Iterate(&interp->rt->container);
       for (size_t i = 0; i < candidate_names->size - 1; ++i) {
         _cel_String_Clear(&candidate_name);
         CEL_ASSERT(_cel_ContainerIterator_HasNext(&cont_iter));
         cel_StringView prefix = _cel_ContainerIterator_Next(&cont_iter);
-        _cel_String_Reserve(
-            &candidate_name, interp->alloc,
-            cel_StringView_Size(prefix) + 1 + cel_StringView_Size(name));
-        if (!_cel_String_Append(&candidate_name, interp->alloc, prefix) ||
-            !_cel_String_PushBack(&candidate_name, interp->alloc, '.') ||
-            !_cel_String_Append(&candidate_name, interp->alloc, name)) {
-          _cel_String_Destruct(&candidate_name, interp->alloc);
+        _cel_String_Reserve(&candidate_name, cel_StringView_Size(prefix) + 1 +
+                                                 cel_StringView_Size(name));
+        if (!_cel_String_Append(&candidate_name, prefix) ||
+            !_cel_String_PushBack(&candidate_name, '.') ||
+            !_cel_String_Append(&candidate_name, name)) {
           cel_Allocator_FreeSized(interp->alloc, candidate_names->data,
                                   candidate_names->size * sizeof(uint32_t));
           _cel_Array_Pop(&interp->prog->candidate_names_table);
@@ -966,15 +951,15 @@ static void _cel_Interpreter_BuildIdentName(_cel_Interpreter* interp,
   _cel_InterpreterNspaceVarSelect* const selects =
       _cel_Array_MutableData(&interp->nspace_var.selects);
   _cel_String_Clear(&interp->nspace_var.name);
-  if (!_cel_String_Append(&interp->nspace_var.name, interp->alloc,
+  if (!_cel_String_Append(&interp->nspace_var.name,
                           cel_IdentExpr_Name(interp->nspace_var.ident.expr))) {
     cel_OutOfMemoryStatus(interp->status);
     _cel_longjmp(interp->jmp);
   }
   for (size_t i = 0; i < selects_num; ++i) {
-    if (!_cel_String_PushBack(&interp->nspace_var.name, interp->alloc, '.') ||
+    if (!_cel_String_PushBack(&interp->nspace_var.name, '.') ||
         !_cel_String_Append(
-            &interp->nspace_var.name, interp->alloc,
+            &interp->nspace_var.name,
             cel_SelectExpr_Field(selects[selects_count - i - 1].expr))) {
       cel_OutOfMemoryStatus(interp->status);
       _cel_longjmp(interp->jmp);
@@ -1914,7 +1899,6 @@ _cel_Interpreter::_cel_Interpreter(const cel_Runtime* cel_nonnull rt,
   _cel_FlatHashMap_Construct(&candidate_names_indices,
                              &_cel_Interpreter_StringViewHasher,
                              &_cel_Interpreter_StringViewEqualer);
-  _cel_InterpreterNspaceVar_Construct(&nspace_var);
   _cel_Deque_Construct(&slots);
   _cel_FlatHashMap_Construct(&slot_map, &_cel_Interpreter_StringViewHasher,
                              &_cel_Interpreter_StringViewEqualer);
@@ -1924,7 +1908,6 @@ _cel_Interpreter::~_cel_Interpreter() {
   cel_AstTraverser_Delete(traverser);
   _cel_FlatHashMap_Destruct(&slot_map, alloc);
   _cel_Deque_Destruct(&slots, alloc);
-  _cel_InterpreterNspaceVar_Destruct(&nspace_var, alloc);
   _cel_FlatHashMap_Destruct(&candidate_names_indices, alloc);
   _cel_FlatHashMap_Destruct(&string_pool_indices, alloc);
   // interp->prog is only non-null when planning failed, call cel_Program_Delete
@@ -2029,7 +2012,7 @@ extern "C" cel_Program* cel_nullable _cel_Interpreter_Compile(
     _cel_String* string_pool_ptr = _cel_Array_MutableData(&prog->strings_table);
     size_t string_pool_len = _cel_Array_Size(&prog->strings_table);
     for (; string_pool_len > 0; ++string_pool_ptr, --string_pool_len) {
-      _cel_String_Destabilize(string_pool_ptr, interp.alloc);
+      _cel_String_Destabilize(string_pool_ptr);
     }
     // Now that we have destablized strings, we can convert instructions from
     // their indirect references to direct.

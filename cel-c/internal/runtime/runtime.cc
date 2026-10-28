@@ -23,7 +23,6 @@
 #include "cel-c/internal/config.h"
 #include "cel-c/internal/container.h"
 #include "cel-c/internal/runtime/interpreter.h"
-#include "cel-c/internal/string.h"
 #include "cel-c/program.h"
 #include "cel-c/status.h"
 #include "cel-c/well_known_types.h"
@@ -64,13 +63,13 @@ cel_Runtime* cel_nullable cel_Runtime_New(
     cel_Allocator_FreeSized(alloc, rt, sizeof(*rt));
     return cel_nullptr;
   }
-  _cel_Container_Construct(&rt->container);
-  if (!_cel_Container_Update(&rt->container, rt->opts.container, rt->alloc)) {
-    _cel_Container_Destruct(&rt->container, rt->alloc);
+  ::new (static_cast<void*>(&rt->container)) _cel_Container();
+  if (!_cel_Container_Update(&rt->container, rt->opts.container)) {
+    rt->container.~_cel_Container();
     cel_Allocator_FreeSized(alloc, rt, sizeof(*rt));
     return cel_nullptr;
   }
-  rt->opts.container = _cel_String_ToStringView(&rt->container.name);
+  rt->opts.container = rt->container.name();
   _cel_AtomicRefCount_Initialize(&rt->rc);
   return rt;
 }
@@ -128,6 +127,7 @@ void _cel_Runtime_Delete(cel_Runtime* cel_nonnull rt) {
   CEL_ASSERT(_cel_AtomicRefCount_Expired(&rt->rc));
   CEL_ASSERT(rt->deleted);
 
-  _cel_Container_Destruct(&rt->container, rt->alloc);
-  cel_Allocator_FreeSized(rt->alloc, rt, sizeof(*rt));
+  cel_Allocator* alloc = rt->alloc;
+  rt->~cel_Runtime();
+  cel_Allocator_FreeSized(alloc, rt, sizeof(*rt));
 }

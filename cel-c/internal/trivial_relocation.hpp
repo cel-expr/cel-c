@@ -51,7 +51,7 @@ CEL_INLINE void cel_TriviallyCopy(void* cel_nullability_unknown dst,
 template <typename T>
 CEL_INLINE void cel_TriviallyCopy(T* cel_nullability_unknown dst,
                                   const T* cel_nullability_unknown src,
-                                  size_t count) {
+                                  size_t count = 1) {
   static_assert(!std::is_void_v<T>, "T must not be void");
   static_assert(cel_kIsTriviallyRelocatable<T>,
                 "T must be trivially relocatable");
@@ -71,12 +71,29 @@ CEL_INLINE void cel_TriviallyMove(void* cel_nullability_unknown dst,
 template <typename T>
 CEL_INLINE void cel_TriviallyMove(T* cel_nullability_unknown dst,
                                   const T* cel_nullability_unknown src,
-                                  size_t count) {
+                                  size_t count = 1) {
   static_assert(!std::is_void_v<T>, "T must not be void");
   static_assert(cel_kIsTriviallyRelocatable<T>,
                 "T must be trivially relocatable");
   (cel_TriviallyMove)(reinterpret_cast<void*>(dst),
                       reinterpret_cast<const void*>(src), count * sizeof(T));
+}
+
+// Performs trivial default initialization via memset.
+CEL_INLINE void cel_TriviallyClear(void* cel_nullability_unknown dst,
+                                   size_t count) {
+  memset(dst, 0, count);
+}
+
+// Performs trivial default initialization via memset, silencing undefined
+// behavior warnings if cel_kIsTriviallyRelocatable<T> is true.
+template <typename T>
+CEL_INLINE void cel_TriviallyClear(T* cel_nullability_unknown dst,
+                                   size_t count = 1) {
+  static_assert(!std::is_void_v<T>, "T must not be void");
+  static_assert(cel_kIsTriviallyRelocatable<T>,
+                "T must be trivially relocatable");
+  (cel_TriviallyClear)(reinterpret_cast<void*>(dst), count * sizeof(T));
 }
 
 #endif  // THIRD_PARTY_CEL_C_INTERNAL_TRIVIAL_RELOCATION_HPP_

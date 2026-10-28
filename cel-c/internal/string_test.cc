@@ -22,6 +22,7 @@
 #include "cel-c/cstring_view.h"
 #include "cel-c/internal/config.h"
 #include "cel-c/internal/generic_string.h"
+#include "cel-c/internal/trivial_relocation.hpp"
 #include "cel-c/string_view.h"
 
 namespace {
@@ -30,11 +31,6 @@ using ::testing::NotNull;
 using ::testing::Test;
 
 class StringTest : public Test {
- public:
-  void SetUp() override { _cel_String_Construct(&str_); }
-
-  void TearDown() override { _cel_String_Destruct(&str_, alloc()); }
-
  protected:
   CEL_NONNULL(cel_Allocator*) alloc() { return cel_DefaultAllocator; }
 
@@ -206,7 +202,7 @@ TEST_F(StringTest, Assign) {
       "erat. Quisque congue turpis id erat egestas pellentesque. Nulla "
       "fermentum ac massa nec sollicitudin. Fusce sed ultrices tellus.");
 
-  ASSERT_TRUE(_cel_String_Assign(str(), alloc(), cel_StringView_From(small)));
+  ASSERT_TRUE(_cel_String_Assign(str(), cel_StringView_From(small)));
 
   EXPECT_FALSE(_cel_String_Empty(str()));
   EXPECT_EQ(_cel_String_Size(str()), cel_CStringView_Size(small));
@@ -218,7 +214,7 @@ TEST_F(StringTest, Assign) {
                                     cel_StringView_From(small)));
   EXPECT_TRUE(cel_CStringView_Equals(_cel_String_ToCStringView(str()), small));
 
-  ASSERT_TRUE(_cel_String_Assign(str(), alloc(), cel_StringView_From(large)));
+  ASSERT_TRUE(_cel_String_Assign(str(), cel_StringView_From(large)));
 
   EXPECT_FALSE(_cel_String_Empty(str()));
   EXPECT_EQ(_cel_String_Size(str()), cel_CStringView_Size(large));
@@ -230,7 +226,7 @@ TEST_F(StringTest, Assign) {
                                     cel_StringView_From(large)));
   EXPECT_TRUE(cel_CStringView_Equals(_cel_String_ToCStringView(str()), large));
 
-  ASSERT_TRUE(_cel_String_Assign(str(), alloc(), cel_StringView_From(small)));
+  ASSERT_TRUE(_cel_String_Assign(str(), cel_StringView_From(small)));
 
   EXPECT_FALSE(_cel_String_Empty(str()));
   EXPECT_EQ(_cel_String_Size(str()), cel_CStringView_Size(small));
@@ -242,7 +238,7 @@ TEST_F(StringTest, Assign) {
                                     cel_StringView_From(small)));
   EXPECT_TRUE(cel_CStringView_Equals(_cel_String_ToCStringView(str()), small));
 
-  ASSERT_TRUE(_cel_String_Assign(str(), alloc(), cel_StringView_From(huge)));
+  ASSERT_TRUE(_cel_String_Assign(str(), cel_StringView_From(huge)));
 
   EXPECT_FALSE(_cel_String_Empty(str()));
   EXPECT_EQ(_cel_String_Size(str()), cel_CStringView_Size(huge));
@@ -396,7 +392,7 @@ TEST_F(StringTest, AppendF) {
       "erat. Quisque congue turpis id erat egestas pellentesque. Nulla "
       "fermentum ac massa nec sollicitudin. Fusce sed ultrices tellus.");
 
-  ASSERT_EQ(_cel_String_AppendF(str(), alloc(), CEL_CSTRINGVIEW_FMT,
+  ASSERT_EQ(_cel_String_AppendF(str(), CEL_CSTRINGVIEW_FMT,
                                 CEL_CSTRINGVIEW_ARGS(small)),
             cel_CStringView_Size(small));
 
@@ -410,7 +406,7 @@ TEST_F(StringTest, AppendF) {
                                     cel_StringView_From(small)));
   EXPECT_TRUE(cel_CStringView_Equals(_cel_String_ToCStringView(str()), small));
 
-  ASSERT_EQ(_cel_String_AppendF(str(), alloc(), "%s", ""), 0);
+  ASSERT_EQ(_cel_String_AppendF(str(), "%s", ""), 0);
 
   EXPECT_FALSE(_cel_String_Empty(str()));
   EXPECT_EQ(_cel_String_Size(str()), cel_CStringView_Size(small));
@@ -422,7 +418,7 @@ TEST_F(StringTest, AppendF) {
                                     cel_StringView_From(small)));
   EXPECT_TRUE(cel_CStringView_Equals(_cel_String_ToCStringView(str()), small));
 
-  ASSERT_EQ(_cel_String_AppendF(str(), alloc(), CEL_CSTRINGVIEW_FMT,
+  ASSERT_EQ(_cel_String_AppendF(str(), CEL_CSTRINGVIEW_FMT,
                                 CEL_CSTRINGVIEW_ARGS(large)),
             cel_CStringView_Size(large));
 
@@ -442,7 +438,7 @@ TEST_F(StringTest, AppendF) {
   EXPECT_TRUE(
       cel_CStringView_StartsWith(_cel_String_ToCStringView(str()), small));
 
-  ASSERT_EQ(_cel_String_AppendF(str(), alloc(), "%s", ""), 0);
+  ASSERT_EQ(_cel_String_AppendF(str(), "%s", ""), 0);
 
   EXPECT_FALSE(_cel_String_Empty(str()));
   EXPECT_EQ(_cel_String_Size(str()),
@@ -460,7 +456,7 @@ TEST_F(StringTest, AppendF) {
   EXPECT_TRUE(
       cel_CStringView_StartsWith(_cel_String_ToCStringView(str()), small));
 
-  ASSERT_EQ(_cel_String_AppendF(str(), alloc(), CEL_CSTRINGVIEW_FMT,
+  ASSERT_EQ(_cel_String_AppendF(str(), CEL_CSTRINGVIEW_FMT,
                                 CEL_CSTRINGVIEW_ARGS(small)),
             cel_CStringView_Size(small));
 
@@ -480,7 +476,7 @@ TEST_F(StringTest, AppendF) {
   EXPECT_TRUE(
       cel_CStringView_StartsWith(_cel_String_ToCStringView(str()), small));
 
-  EXPECT_TRUE(_cel_String_ShrinkToFit(str(), alloc()));
+  EXPECT_TRUE(_cel_String_ShrinkToFit(str()));
 
   EXPECT_FALSE(_cel_String_Empty(str()));
   EXPECT_EQ(_cel_String_Size(str()),
@@ -509,7 +505,7 @@ TEST_F(StringTest, AppendF) {
   EXPECT_TRUE(cel_StringView_Empty(_cel_String_ToStringView(str())));
   EXPECT_TRUE(cel_CStringView_Empty(_cel_String_ToCStringView(str())));
 
-  ASSERT_EQ(_cel_String_AppendF(str(), alloc(), CEL_CSTRINGVIEW_FMT,
+  ASSERT_EQ(_cel_String_AppendF(str(), CEL_CSTRINGVIEW_FMT,
                                 CEL_CSTRINGVIEW_ARGS(huge)),
             cel_CStringView_Size(huge));
 
@@ -525,7 +521,7 @@ TEST_F(StringTest, AppendF) {
 
   _cel_String_Clear(str());
 
-  EXPECT_TRUE(_cel_String_ShrinkToFit(str(), alloc()));
+  EXPECT_TRUE(_cel_String_ShrinkToFit(str()));
 
   EXPECT_TRUE(_cel_String_Empty(str()));
   EXPECT_EQ(_cel_String_Size(str()), 0);
@@ -536,7 +532,7 @@ TEST_F(StringTest, AppendF) {
   EXPECT_TRUE(cel_StringView_Empty(_cel_String_ToStringView(str())));
   EXPECT_TRUE(cel_CStringView_Empty(_cel_String_ToCStringView(str())));
 
-  _cel_String_Reset(str(), alloc());
+  _cel_String_Reset(str());
 }
 
 TEST_F(StringTest, Append) {
@@ -680,7 +676,7 @@ TEST_F(StringTest, Append) {
       "erat. Quisque congue turpis id erat egestas pellentesque. Nulla "
       "fermentum ac massa nec sollicitudin. Fusce sed ultrices tellus.");
 
-  ASSERT_TRUE(_cel_String_Append(str(), alloc(), small));
+  ASSERT_TRUE(_cel_String_Append(str(), small));
 
   EXPECT_FALSE(_cel_String_Empty(str()));
   EXPECT_EQ(_cel_String_Size(str()), cel_StringView_Size(small));
@@ -691,7 +687,7 @@ TEST_F(StringTest, Append) {
   EXPECT_TRUE(cel_StringView_Equals(_cel_String_ToStringView(str()), small));
   EXPECT_TRUE(cel_StringView_Equals(_cel_String_ToStringView(str()), small));
 
-  ASSERT_TRUE(_cel_String_Append(str(), alloc(), cel_StringView_From("")));
+  ASSERT_TRUE(_cel_String_Append(str(), cel_StringView_From("")));
 
   EXPECT_FALSE(_cel_String_Empty(str()));
   EXPECT_EQ(_cel_String_Size(str()), cel_StringView_Size(small));
@@ -702,7 +698,7 @@ TEST_F(StringTest, Append) {
   EXPECT_TRUE(cel_StringView_Equals(_cel_String_ToStringView(str()), small));
   EXPECT_TRUE(cel_StringView_Equals(_cel_String_ToStringView(str()), small));
 
-  ASSERT_TRUE(_cel_String_Append(str(), alloc(), large));
+  ASSERT_TRUE(_cel_String_Append(str(), large));
 
   EXPECT_FALSE(_cel_String_Empty(str()));
   EXPECT_EQ(_cel_String_Size(str()),
@@ -719,7 +715,7 @@ TEST_F(StringTest, Append) {
   EXPECT_TRUE(
       cel_StringView_StartsWith(_cel_String_ToStringView(str()), small));
 
-  ASSERT_TRUE(_cel_String_Append(str(), alloc(), cel_StringView_From("")));
+  ASSERT_TRUE(_cel_String_Append(str(), cel_StringView_From("")));
 
   EXPECT_FALSE(_cel_String_Empty(str()));
   EXPECT_EQ(_cel_String_Size(str()),
@@ -736,7 +732,7 @@ TEST_F(StringTest, Append) {
   EXPECT_TRUE(
       cel_StringView_StartsWith(_cel_String_ToStringView(str()), small));
 
-  ASSERT_TRUE(_cel_String_Append(str(), alloc(), small));
+  ASSERT_TRUE(_cel_String_Append(str(), small));
 
   EXPECT_FALSE(_cel_String_Empty(str()));
   EXPECT_EQ(_cel_String_Size(str()),
@@ -753,7 +749,7 @@ TEST_F(StringTest, Append) {
   EXPECT_TRUE(
       cel_StringView_StartsWith(_cel_String_ToStringView(str()), small));
 
-  EXPECT_TRUE(_cel_String_ShrinkToFit(str(), alloc()));
+  EXPECT_TRUE(_cel_String_ShrinkToFit(str()));
 
   EXPECT_FALSE(_cel_String_Empty(str()));
   EXPECT_EQ(_cel_String_Size(str()),
@@ -781,7 +777,7 @@ TEST_F(StringTest, Append) {
   EXPECT_TRUE(cel_StringView_Empty(_cel_String_ToStringView(str())));
   EXPECT_TRUE(cel_StringView_Empty(_cel_String_ToStringView(str())));
 
-  ASSERT_TRUE(_cel_String_Append(str(), alloc(), huge));
+  ASSERT_TRUE(_cel_String_Append(str(), huge));
 
   EXPECT_FALSE(_cel_String_Empty(str()));
   EXPECT_EQ(_cel_String_Size(str()), cel_StringView_Size(huge));
@@ -794,7 +790,7 @@ TEST_F(StringTest, Append) {
 
   _cel_String_Clear(str());
 
-  EXPECT_TRUE(_cel_String_ShrinkToFit(str(), alloc()));
+  EXPECT_TRUE(_cel_String_ShrinkToFit(str()));
 
   EXPECT_TRUE(_cel_String_Empty(str()));
   EXPECT_EQ(_cel_String_Size(str()), 0);
@@ -805,15 +801,14 @@ TEST_F(StringTest, Append) {
   EXPECT_TRUE(cel_StringView_Empty(_cel_String_ToStringView(str())));
   EXPECT_TRUE(cel_StringView_Empty(_cel_String_ToStringView(str())));
 
-  _cel_String_Reset(str(), alloc());
+  _cel_String_Reset(str());
 }
 
-void DoAppendViaPushBack(_cel_String* str, cel_Allocator* alloc,
-                         cel_StringView to_append) {
+void DoAppendViaPushBack(_cel_String* str, cel_StringView to_append) {
   const char* data = cel_StringView_Data(to_append);
   size_t size = cel_StringView_Size(to_append);
   for (size_t i = 0; i < size; ++i) {
-    ASSERT_TRUE(_cel_String_PushBack(str, alloc, data[i]));
+    ASSERT_TRUE(_cel_String_PushBack(str, data[i]));
   }
 }
 
@@ -958,7 +953,7 @@ TEST_F(StringTest, PushBack) {
       "erat. Quisque congue turpis id erat egestas pellentesque. Nulla "
       "fermentum ac massa nec sollicitudin. Fusce sed ultrices tellus.");
 
-  DoAppendViaPushBack(str(), alloc(), small);
+  DoAppendViaPushBack(str(), small);
 
   EXPECT_FALSE(_cel_String_Empty(str()));
   EXPECT_EQ(_cel_String_Size(str()), cel_StringView_Size(small));
@@ -978,7 +973,7 @@ TEST_F(StringTest, PushBack) {
   EXPECT_TRUE(cel_StringView_Equals(_cel_String_ToStringView(str()), small));
   EXPECT_TRUE(cel_StringView_Equals(_cel_String_ToStringView(str()), small));
 
-  DoAppendViaPushBack(str(), alloc(), large);
+  DoAppendViaPushBack(str(), large);
 
   EXPECT_FALSE(_cel_String_Empty(str()));
   EXPECT_EQ(_cel_String_Size(str()),
@@ -1010,7 +1005,7 @@ TEST_F(StringTest, PushBack) {
   EXPECT_TRUE(
       cel_StringView_StartsWith(_cel_String_ToStringView(str()), small));
 
-  DoAppendViaPushBack(str(), alloc(), small);
+  DoAppendViaPushBack(str(), small);
 
   EXPECT_FALSE(_cel_String_Empty(str()));
   EXPECT_EQ(_cel_String_Size(str()),
@@ -1027,7 +1022,7 @@ TEST_F(StringTest, PushBack) {
   EXPECT_TRUE(
       cel_StringView_StartsWith(_cel_String_ToStringView(str()), small));
 
-  EXPECT_TRUE(_cel_String_ShrinkToFit(str(), alloc()));
+  EXPECT_TRUE(_cel_String_ShrinkToFit(str()));
 
   EXPECT_FALSE(_cel_String_Empty(str()));
   EXPECT_EQ(_cel_String_Size(str()),
@@ -1055,7 +1050,7 @@ TEST_F(StringTest, PushBack) {
   EXPECT_TRUE(cel_StringView_Empty(_cel_String_ToStringView(str())));
   EXPECT_TRUE(cel_StringView_Empty(_cel_String_ToStringView(str())));
 
-  DoAppendViaPushBack(str(), alloc(), huge);
+  DoAppendViaPushBack(str(), huge);
 
   EXPECT_FALSE(_cel_String_Empty(str()));
   EXPECT_EQ(_cel_String_Size(str()), cel_StringView_Size(huge));
@@ -1068,7 +1063,7 @@ TEST_F(StringTest, PushBack) {
 
   _cel_String_Clear(str());
 
-  EXPECT_TRUE(_cel_String_ShrinkToFit(str(), alloc()));
+  EXPECT_TRUE(_cel_String_ShrinkToFit(str()));
 
   EXPECT_TRUE(_cel_String_Empty(str()));
   EXPECT_EQ(_cel_String_Size(str()), 0);
@@ -1079,33 +1074,34 @@ TEST_F(StringTest, PushBack) {
   EXPECT_TRUE(cel_StringView_Empty(_cel_String_ToStringView(str())));
   EXPECT_TRUE(cel_StringView_Empty(_cel_String_ToStringView(str())));
 
-  _cel_String_Reset(str(), alloc());
+  _cel_String_Reset(str());
 }
 
 TEST_F(StringTest, Reserve) {
   EXPECT_EQ(_cel_String_Capacity(str()), _cel_GenericStringSmall_kCapacity);
-  ASSERT_TRUE(
-      _cel_String_Reserve(str(), alloc(), _cel_GenericStringSmall_kCapacity));
+  ASSERT_TRUE(_cel_String_Reserve(str(), _cel_GenericStringSmall_kCapacity));
   EXPECT_EQ(_cel_String_Capacity(str()), _cel_GenericStringSmall_kCapacity);
-  ASSERT_TRUE(_cel_String_Reserve(str(), alloc(),
-                                  _cel_GenericStringSmall_kCapacity + 1));
+  ASSERT_TRUE(
+      _cel_String_Reserve(str(), _cel_GenericStringSmall_kCapacity + 1));
   EXPECT_GE(_cel_String_Capacity(str()), _cel_GenericStringSmall_kCapacity + 1);
-  ASSERT_TRUE(_cel_String_Reserve(str(), alloc(),
-                                  _cel_GenericStringSmall_kCapacity + 2));
+  ASSERT_TRUE(
+      _cel_String_Reserve(str(), _cel_GenericStringSmall_kCapacity + 2));
   EXPECT_GE(_cel_String_Capacity(str()), _cel_GenericStringSmall_kCapacity + 2);
 }
 
 TEST_F(StringTest, Stability) {
   cel_StringView small = cel_StringView_FromString("Hello World!");
-  ASSERT_TRUE(_cel_String_Append(str(), alloc(), small));
-  _cel_String other_str = *str();
+  ASSERT_TRUE(_cel_String_Append(str(), small));
+  _cel_String other_str;
+  cel_TriviallyCopy(&other_str, str());
   EXPECT_NE(_cel_String_Data(&other_str), _cel_String_Data(str()));
-  ASSERT_TRUE(_cel_String_Stabilize(str(), alloc()));
-  other_str = *str();
+  ASSERT_TRUE(_cel_String_Stabilize(str()));
+  cel_TriviallyCopy(&other_str, str());
   EXPECT_EQ(_cel_String_Data(&other_str), _cel_String_Data(str()));
-  _cel_String_Destabilize(str(), alloc());
-  other_str = *str();
+  _cel_String_Destabilize(str());
+  cel_TriviallyCopy(&other_str, str());
   EXPECT_NE(_cel_String_Data(&other_str), _cel_String_Data(str()));
+  cel_TriviallyClear(&other_str);
 }
 
 }  // namespace

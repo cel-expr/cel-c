@@ -727,7 +727,6 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        ":alloc",
         ":assert",
         ":config",
         ":error_space",
@@ -735,6 +734,7 @@ cc_library(
         ":string_view",
         "//cel-c/internal:array",
         "//cel-c/internal:string",
+        "//cel-c/internal:trivial_relocation",
     ],
 )
 

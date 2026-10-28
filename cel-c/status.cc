@@ -22,14 +22,14 @@
 #include <string.h>
 
 #include <memory>
-#include <new>
+#include <type_traits>
 
-#include "cel-c/alloc.h"
 #include "cel-c/assert.h"
 #include "cel-c/config.h"
 #include "cel-c/error_space.h"
 #include "cel-c/internal/array.h"
 #include "cel-c/internal/string.h"
+#include "cel-c/internal/trivial_relocation.hpp"
 #include "cel-c/status_code.h"
 #include "cel-c/string_view.h"
 
@@ -45,17 +45,23 @@ typedef struct {
   _cel_String value;
 } _cel_StatusRepPayload;
 
-typedef struct alignas(cel_Status) {
-  // code **must** be first.
-  unsigned int code;
+template <>
+struct cel_IsTriviallyRelocatable<_cel_StatusRepPayload> : std::true_type {};
 
-  int raw_code;
+struct alignas(cel_Status) _cel_StatusRep {
+  explicit _cel_StatusRep(const cel_ErrorSpace* cel_nonnull space)
+      : space(space) {}
+
+  // code **must** be first.
+  unsigned int code = 0;
+
+  int raw_code = 0;
   CEL_NONNULL(const cel_ErrorSpace*) space;
   _cel_String message;
   _cel_Array(_cel_StatusRepPayload) payloads;
-  CEL_NULLABLE(const char*) file;
-  int line;
-} _cel_StatusRep;
+  CEL_NULLABLE(const char*) file = nullptr;
+  int line = 0;
+};
 
 CEL_STATIC_ASSERT(sizeof(_cel_StatusRep) <= sizeof(cel_Status));
 CEL_STATIC_ASSERT(alignof(_cel_StatusRep) == alignof(cel_Status));
@@ -73,30 +79,13 @@ static CEL_INLINE CEL_NONNULL(_cel_StatusRep*)
   return (_cel_StatusRep*)status;
 }
 
-static void _cel_StatusRepPayload_Construct(CEL_NONNULL(_cel_StatusRepPayload*)
-                                                payload) {
-  _cel_String_Construct(&payload->type_url);
-  _cel_String_Construct(&payload->value);
-}
-
-static void _cel_StatusRepPayload_Destruct(CEL_NONNULL(_cel_StatusRepPayload*)
-                                               payload) {
-  _cel_String_Destruct(&payload->value, cel_DefaultAllocator);
-  _cel_String_Destruct(&payload->type_url, cel_DefaultAllocator);
-}
-
 static void _cel_StatusRep_ResetMessage(CEL_NONNULL(_cel_StatusRep*)
                                             status_rep) {
-  _cel_String_Reset(&status_rep->message, cel_DefaultAllocator);
+  _cel_String_Reset(&status_rep->message);
 }
 
 static void _cel_StatusRep_ResetPayloads(CEL_NONNULL(_cel_StatusRep*)
                                              status_rep) {
-  const size_t payloads_size = _cel_Array_Size(&status_rep->payloads);
-  for (size_t i = 0; i < payloads_size; ++i) {
-    _cel_StatusRepPayload_Destruct(
-        _cel_Array_MutableAt(&status_rep->payloads, i));
-  }
   _cel_Array_Reset(&status_rep->payloads);
 }
 
@@ -109,36 +98,19 @@ static unsigned int _cel_StatusRep_EncodeCanonical(cel_StatusCode code,
 extern "C" void cel_Status_Construct(CEL_NONNULL(cel_Status*) status) {
   CEL_ASSERT_NOT_NULL(status);
 
-  CEL_NONNULL(_cel_StatusRep*) status_rep = _cel_Status_Rep(status);
-  memset(status, '\0', sizeof(*status));
-  status_rep->space = cel_CanonicalErrorSpace;
-  _cel_String_Construct(&status_rep->message);
-  ::new (static_cast<void*>(&status_rep->payloads))
-      cel_Array<_cel_StatusRepPayload>();
+  ::new (static_cast<void*>(status)) _cel_StatusRep(cel_CanonicalErrorSpace);
 }
 
 extern "C" void cel_Status_Destruct(CEL_NONNULL(cel_Status*) status) {
   CEL_ASSERT_NOT_NULL(status);
 
-  CEL_NONNULL(_cel_StatusRep*) status_rep = _cel_Status_Rep(status);
-  const size_t payloads_size = _cel_Array_Size(&status_rep->payloads);
-  for (size_t i = 0; i < payloads_size; ++i) {
-    _cel_StatusRepPayload_Destruct(
-        _cel_Array_MutableAt(&status_rep->payloads, i));
-  }
-  std::destroy_at(&status_rep->payloads);
-  _cel_String_Destruct(&status_rep->message, cel_DefaultAllocator);
+  std::destroy_at(_cel_Status_Rep(status));
 }
 
 extern "C" void cel_Status_Clear(CEL_NONNULL(cel_Status*) status) {
   CEL_ASSERT_NOT_NULL(status);
 
   CEL_NONNULL(_cel_StatusRep*) status_rep = _cel_Status_Rep(status);
-  const size_t payloads_size = _cel_Array_Size(&status_rep->payloads);
-  for (size_t i = 0; i < payloads_size; ++i) {
-    _cel_StatusRepPayload_Destruct(
-        _cel_Array_MutableAt(&status_rep->payloads, i));
-  }
   _cel_Array_Clear(&status_rep->payloads);
   _cel_String_Clear(&status_rep->message);
   status_rep->code =
@@ -214,8 +186,7 @@ extern "C" bool cel_Status_SetMessage(CEL_NONNULL(cel_Status*) status,
     return true;
   }
 
-  if (!_cel_String_Assign(&_cel_Status_Rep(status)->message,
-                          cel_DefaultAllocator, message)) {
+  if (!_cel_String_Assign(&_cel_Status_Rep(status)->message, message)) {
     cel_OutOfMemoryStatus(status, file, line);
     return false;
   }
@@ -251,8 +222,7 @@ extern "C" bool cel_Status_VFormatMessage(CEL_NONNULL(cel_Status*) status,
 
   CEL_NONNULL(_cel_StatusRep*) status_rep = _cel_Status_Rep(status);
   _cel_String_Clear(&status_rep->message);
-  if (!_cel_String_VAppendF(&status_rep->message, cel_DefaultAllocator, fmt,
-                            args)) {
+  if (!_cel_String_VAppendF(&status_rep->message, fmt, args)) {
     cel_OutOfMemoryStatus(status, file, line);
     return false;
   }
@@ -306,8 +276,7 @@ extern "C" bool cel_Status_SetPayload(CEL_NONNULL(cel_Status*) status,
     payload_at = _cel_Array_MutableAt(&status_rep->payloads, i);
     if (cel_StringView_Equals(_cel_String_ToStringView(&payload_at->type_url),
                               type_url)) {
-      if (!_cel_String_Assign(&payload_at->value, cel_DefaultAllocator,
-                              value)) {
+      if (!_cel_String_Assign(&payload_at->value, value)) {
         cel_OutOfMemoryStatus(status, file, line);
         return false;
       }
@@ -322,14 +291,12 @@ extern "C" bool cel_Status_SetPayload(CEL_NONNULL(cel_Status*) status,
     return false;
   }
 
-  _cel_StatusRepPayload_Construct(payload);
-
-  if (!_cel_String_Assign(&payload->type_url, cel_DefaultAllocator, type_url)) {
+  if (!_cel_String_Assign(&payload->type_url, type_url)) {
     cel_OutOfMemoryStatus(status, file, line);
     return false;
   }
 
-  if (!_cel_String_Assign(&payload->value, cel_DefaultAllocator, value)) {
+  if (!_cel_String_Assign(&payload->value, value)) {
     cel_OutOfMemoryStatus(status, file, line);
     return false;
   }
@@ -352,7 +319,6 @@ extern "C" bool cel_Status_DeletePayload(CEL_NONNULL(cel_Status*) status,
     payload_at = _cel_Array_MutableAt(&status_rep->payloads, i);
     if (cel_StringView_Equals(_cel_String_ToStringView(&payload_at->type_url),
                               type_url)) {
-      _cel_StatusRepPayload_Destruct(payload_at);
       _cel_Array_Erase(&status_rep->payloads, i);
       return true;
     }

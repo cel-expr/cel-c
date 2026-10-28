@@ -496,8 +496,8 @@ cc_library(
     deps = [
         ":config",
         ":string",
-        "//cel-c:alloc",
         "//cel-c:assert",
+        "//cel-c:config",
         "//cel-c:string_view",
     ],
 )
@@ -1190,7 +1190,9 @@ cc_library(
     deps = [
         ":config",
         ":generic_string",
+        ":trivial_relocation",
         "//cel-c:alloc",
+        "//cel-c:assert",
         "//cel-c:cstring_view",
         "//cel-c:string_view",
     ],
@@ -1203,6 +1205,7 @@ cc_test(
         ":config",
         ":generic_string",
         ":string",
+        ":trivial_relocation",
         "//cel-c:alloc",
         "//cel-c:cstring_view",
         "//cel-c:string_view",

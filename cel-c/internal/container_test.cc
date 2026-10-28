@@ -27,10 +27,6 @@ namespace {
 
 class ContainerTest : public ::testing::Test {
  public:
-  void SetUp() override { _cel_Container_Construct(&cont_); }
-
-  void TearDown() override { _cel_Container_Destruct(cont(), alloc()); }
-
   cel_Allocator* alloc() { return cel_DefaultAllocator; }
 
   _cel_Container* cont() { return &cont_; }
@@ -45,8 +41,7 @@ TEST_F(ContainerTest, Empty) {
   _cel_ContainerIterator cont_it = _cel_Container_Iterate(cont());
   EXPECT_FALSE(_cel_ContainerIterator_HasNext(&cont_it));
 
-  ASSERT_TRUE(
-      _cel_Container_Update(cont(), cel_StringView_FromString(""), alloc()));
+  ASSERT_TRUE(_cel_Container_Update(cont(), cel_StringView_FromString("")));
 
   EXPECT_TRUE(_cel_Container_Empty(cont()));
   EXPECT_EQ(_cel_Container_Count(cont()), 0);
@@ -66,8 +61,7 @@ class ContainerTestWithParam
 TEST_P(ContainerTestWithParam, Match) {
   const auto& param = GetParam();
   ASSERT_TRUE(_cel_Container_Update(
-      cont(), cel_StringView_FromAbsl(absl::string_view(param.subject)),
-      alloc()));
+      cont(), cel_StringView_FromAbsl(absl::string_view(param.subject))));
   EXPECT_EQ(_cel_Container_Count(cont()), param.results.size());
   _cel_ContainerIterator cont_it = _cel_Container_Iterate(cont());
   for (const auto& part : param.results) {

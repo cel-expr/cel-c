@@ -18,16 +18,13 @@
 #include <string.h>
 
 #include <memory>
-#include <new>
 
 #include "cel-c/alloc.h"
 #include "cel-c/assert.h"
 #include "cel-c/internal/arc.h"
-#include "cel-c/internal/array.h"
 #include "cel-c/internal/config.h"
 #include "cel-c/internal/runtime/activation.h"
 #include "cel-c/internal/runtime/runtime.h"
-#include "cel-c/internal/string.h"
 
 extern "C" cel_ProgramOptions* cel_nonnull
 cel_ProgramOptions_Default(cel_ProgramOptions* cel_nonnull opts) {
@@ -79,11 +76,6 @@ extern "C" void _cel_Program_Delete(cel_Program* cel_nonnull prog) {
 
   const cel_Runtime* rt = prog->rt;
   cel_Allocator* alloc = rt->alloc;
-  _cel_String* string_ptr = _cel_Array_MutableData(&prog->strings_table);
-  size_t string_len = _cel_Array_Size(&prog->strings_table);
-  for (; string_len > 0; ++string_ptr, --string_len) {
-    _cel_String_Destruct(string_ptr, alloc);
-  }
   std::destroy_at(prog);
   cel_Allocator_FreeSized(alloc, prog, sizeof(*prog));
   _cel_Runtime_Unref(rt);

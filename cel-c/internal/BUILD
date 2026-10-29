@@ -147,15 +147,14 @@ cc_library(
 
 cc_library(
     name = "ast",
-    srcs = [
-        "ast.cc",
-    ],
     hdrs = [
         "ast.h",
     ],
     deps = [
         ":attribute",
+        ":config",
         ":constant",
+        ":malloc",
         ":ref",
         "//cel-c:arena",
         "//cel-c:assert",

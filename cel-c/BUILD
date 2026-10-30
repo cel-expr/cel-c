@@ -899,6 +899,33 @@ cc_test(
 )
 
 cc_library(
+    name = "string_pool",
+    srcs = ["string_pool.cc"],
+    hdrs = ["string_pool.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":arena",
+        ":assert",
+        ":config",
+        ":string_view",
+        "//cel-c/internal:malloc",
+        "//cel-c/internal:string_pool",
+    ],
+)
+
+cc_test(
+    name = "string_pool_test",
+    srcs = ["string_pool_test.cc"],
+    deps = [
+        ":alloc",
+        ":arena",
+        ":string_pool",
+        ":string_view",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "string_view",
     srcs = [
         "string_view.cc",

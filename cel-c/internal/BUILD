@@ -1197,6 +1197,21 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "string_pool",
+    hdrs = ["string_pool.h"],
+    deps = [
+        ":flat_hash_set",
+        "//cel-c:alloc",
+        "//cel-c:arena",
+        "//cel-c:assert",
+        "//cel-c:config",
+        "//cel-c:string_view",
+        "//cel-c:string_view_absl",
+        "@abseil-cpp//absl/hash",
+    ],
+)
+
 cc_test(
     name = "string_test",
     srcs = ["string_test.cc"],

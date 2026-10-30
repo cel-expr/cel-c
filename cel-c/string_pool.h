@@ -17,7 +17,10 @@
 
 #include <stdbool.h>  // IWYU pragma: keep
 
-#include "cel-c/alloc.h"
+#ifdef __cplusplus
+#include <memory>
+#endif
+
 #include "cel-c/arena.h"
 #include "cel-c/config.h"
 #include "cel-c/string_view.h"
@@ -28,20 +31,32 @@ typedef struct cel_StringPool cel_StringPool;
 
 CEL_ATTRIBUTE_NODISCARD
 CEL_ATTRIBUTE_NOTHROW
-CEL_EXTERN CEL_NULLABLE(cel_StringPool*)
-    cel_StringPool_New(CEL_NONNULL(cel_Allocator*) alloc,
-                       CEL_NONNULL(cel_Arena*) arena);
+CEL_EXTERN cel_StringPool* cel_nullable
+cel_StringPool_New(cel_Arena* cel_nonnull arena);
 
 CEL_ATTRIBUTE_NOTHROW
-CEL_EXTERN void cel_StringPool_Delete(CEL_NULLABLE(cel_StringPool*)
-                                          string_pool);
+CEL_EXTERN void cel_StringPool_Delete(cel_StringPool* cel_nullable string_pool);
 
 CEL_ATTRIBUTE_NODISCARD
 CEL_ATTRIBUTE_NOTHROW
-CEL_EXTERN bool cel_StringPool_Intern(CEL_NONNULL(cel_StringPool*) string_pool,
+CEL_EXTERN bool cel_StringPool_Intern(cel_StringPool* cel_nonnull string_pool,
                                       cel_StringView in,
-                                      CEL_NONNULL(cel_StringView*) out);
+                                      cel_StringView* cel_nonnull out);
 
 CEL_END_DECLS
+
+#ifdef __cplusplus
+struct cel_StringPoolDeleter {
+  CEL_INLINE void operator()(cel_StringPool* cel_nullable pool) const noexcept {
+    cel_StringPool_Delete(pool);
+  }
+  CEL_INLINE void operator()(
+      const cel_StringPool* cel_nullable pool) const noexcept {
+    (*this)(const_cast<cel_StringPool*>(pool));
+  }
+};
+using cel_StringPoolPtr =
+    std::unique_ptr<cel_StringPool, cel_StringPoolDeleter>;
+#endif
 
 #endif  // THIRD_PARTY_CEL_C_STRING_POOL_H_

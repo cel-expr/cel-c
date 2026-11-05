@@ -301,13 +301,13 @@ static cel_MapValueIterator* cel_nullable _cel_ParsedMapFieldValue_NewIterator(
 }
 
 extern "C" const cel_MapValueVTable _cel_ParsedMapFieldValueVTable = {
-    .Equals = &_cel_ParsedMapFieldValue_Equals,
-    .FastSize = &_cel_ParsedMapFieldValue_FastSize,
-    .SlowSize = &_cel_ParsedMapFieldValue_SlowSize,
-    .Get = &_cel_ParsedMapFieldValue_Get,
-    .Find = &_cel_ParsedMapFieldValue_Find,
-    .Has = &_cel_ParsedMapFieldValue_Has,
-    .NewIterator = &_cel_ParsedMapFieldValue_NewIterator,
+    /*Equals=*/&_cel_ParsedMapFieldValue_Equals,
+    /*FastSize=*/&_cel_ParsedMapFieldValue_FastSize,
+    /*SlowSize=*/&_cel_ParsedMapFieldValue_SlowSize,
+    /*Get=*/&_cel_ParsedMapFieldValue_Get,
+    /*Find=*/&_cel_ParsedMapFieldValue_Find,
+    /*Has=*/&_cel_ParsedMapFieldValue_Has,
+    /*NewIterator=*/&_cel_ParsedMapFieldValue_NewIterator,
 };
 
 static void _cel_ParsedMapFieldValueIterator_Delete(
@@ -449,12 +449,12 @@ static bool _cel_ParsedMapFieldValueIterator_Next(
 }
 
 const cel_MapValueIteratorVTable _cel_ParsedMapFieldValueIteratorVTable = {
-    .super =
-        {
-            .Delete = &_cel_ParsedMapFieldValueIterator_Delete,
-            .Next1 = &_cel_ParsedMapFieldValueIterator_Next1,
-            .Next2 = &_cel_ParsedMapFieldValueIterator_Next2,
-            .Remaining = &_cel_ParsedMapFieldValueIterator_Remaining,
-        },
-    .Next = &_cel_ParsedMapFieldValueIterator_Next,
+    /*super=*/
+    {
+        /*Delete=*/&_cel_ParsedMapFieldValueIterator_Delete,
+        /*Next1=*/&_cel_ParsedMapFieldValueIterator_Next1,
+        /*Next2=*/&_cel_ParsedMapFieldValueIterator_Next2,
+        /*Remaining=*/&_cel_ParsedMapFieldValueIterator_Remaining,
+    },
+    /*Next=*/&_cel_ParsedMapFieldValueIterator_Next,
 };

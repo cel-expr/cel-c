@@ -275,11 +275,11 @@ _cel_ParsedMessageValue_NewIterator(
 }
 
 extern "C" const cel_StructValueVTable _cel_ParsedMessageValueVTable = {
-    .Equals = &_cel_ParsedMessageValue_Equals,
-    .TypeName = &_cel_ParsedMessageValue_TypeName,
-    .Get = &_cel_ParsedMessageValue_Get,
-    .Has = &_cel_ParsedMessageValue_Has,
-    .NewIterator = &_cel_ParsedMessageValue_NewIterator,
+    /*Equals=*/&_cel_ParsedMessageValue_Equals,
+    /*TypeName=*/&_cel_ParsedMessageValue_TypeName,
+    /*Get=*/&_cel_ParsedMessageValue_Get,
+    /*Has=*/&_cel_ParsedMessageValue_Has,
+    /*NewIterator=*/&_cel_ParsedMessageValue_NewIterator,
 };
 
 static void _cel_ParsedMessageValueIterator_Delete(
@@ -342,7 +342,7 @@ static bool _cel_ParsedMessageValueIterator_Remaining(
 }
 
 const cel_StructValueIteratorVTable _cel_ParsedMessageValueIteratorVTable = {
-    .Delete = &_cel_ParsedMessageValueIterator_Delete,
-    .Next = &_cel_ParsedMessageValueIterator_Next,
-    .Remaining = &_cel_ParsedMessageValueIterator_Remaining,
+    /*Delete=*/&_cel_ParsedMessageValueIterator_Delete,
+    /*Next=*/&_cel_ParsedMessageValueIterator_Next,
+    /*Remaining=*/&_cel_ParsedMessageValueIterator_Remaining,
 };

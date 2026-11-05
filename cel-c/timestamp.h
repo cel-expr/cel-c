@@ -61,28 +61,28 @@ CEL_BEGIN_DECLS
 
 #ifdef _CEL_IS_BIG_ENDIAN
 #define cel_Timestamp_kUnixEpoch \
-  ((cel_Timestamp){{INT32_C(0), UINT32_C{0}}, INT32_C(0)})
+  (CEL_COMPOUND_LITERAL(cel_Timestamp){{INT32_C(0), UINT32_C(0)}, INT32_C(0)})
 #define cel_Timestamp_kMin                                               \
-  ((cel_Timestamp){                                                      \
+  (CEL_COMPOUND_LITERAL(cel_Timestamp){                                  \
       {(int32_t)(uint32_t)(((uint64_t)cel_Timestamp_kMinSeconds) >> 32), \
        ((uint32_t)(uint64_t)cel_Timestamp_kMinSeconds)},                 \
       cel_Timestamp_kMinNanos})
 #define cel_Timestamp_kMax                                               \
-  ((cel_Timestamp){                                                      \
+  (CEL_COMPOUND_LITERAL(cel_Timestamp){                                  \
       {(int32_t)(uint32_t)(((uint64_t)cel_Timestamp_kMaxSeconds) >> 32), \
        ((uint32_t)(uint64_t)cel_Timestamp_kMaxSeconds)},                 \
       cel_Timestamp_kMaxNanos})
 #endif
 #ifdef _CEL_IS_LITTLE_ENDIAN
 #define cel_Timestamp_kUnixEpoch \
-  ((cel_Timestamp){{UINT32_C(0), INT32_C(0)}, INT32_C(0)})
+  (CEL_COMPOUND_LITERAL(cel_Timestamp){{UINT32_C(0), INT32_C(0)}, INT32_C(0)})
 #define cel_Timestamp_kMin                                                \
-  ((cel_Timestamp){                                                       \
+  (CEL_COMPOUND_LITERAL(cel_Timestamp){                                   \
       {((uint32_t)(uint64_t)cel_Timestamp_kMinSeconds),                   \
        (int32_t)(uint32_t)(((uint64_t)cel_Timestamp_kMinSeconds) >> 32)}, \
       cel_Timestamp_kMinNanos})
 #define cel_Timestamp_kMax                                                \
-  ((cel_Timestamp){                                                       \
+  (CEL_COMPOUND_LITERAL(cel_Timestamp){                                   \
       {((uint32_t)(uint64_t)cel_Timestamp_kMaxSeconds),                   \
        (int32_t)(uint32_t)(((uint64_t)cel_Timestamp_kMaxSeconds) >> 32)}, \
       cel_Timestamp_kMaxNanos})

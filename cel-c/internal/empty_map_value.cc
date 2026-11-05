@@ -133,13 +133,13 @@ static cel_MapValueIterator* cel_nullable _cel_EmptyMapValue_NewIterator(
 }
 
 const cel_MapValueVTable _cel_EmptyMapValueVTable = {
-    .Equals = cel_nullptr,
-    .FastSize = &_cel_EmptyMapValue_FastSize,
-    .SlowSize = &_cel_EmptyMapValue_SlowSize,
-    .Get = &_cel_EmptyMapValue_Get,
-    .Find = &_cel_EmptyMapValue_Find,
-    .Has = &_cel_EmptyMapValue_Has,
-    .NewIterator = &_cel_EmptyMapValue_NewIterator,
+    /*Equals=*/cel_nullptr,
+    /*FastSize=*/&_cel_EmptyMapValue_FastSize,
+    /*SlowSize=*/&_cel_EmptyMapValue_SlowSize,
+    /*Get=*/&_cel_EmptyMapValue_Get,
+    /*Find=*/&_cel_EmptyMapValue_Find,
+    /*Has=*/&_cel_EmptyMapValue_Has,
+    /*NewIterator=*/&_cel_EmptyMapValue_NewIterator,
 };
 
 static bool _cel_EmptyMapValueIterator_Next1(
@@ -196,16 +196,16 @@ static bool _cel_EmptyMapValueIterator_Next(
 }
 
 const cel_MapValueIteratorVTable _cel_EmptyMapValueIteratorVTable = {
-    .super =
-        {
-            .Delete = cel_nullptr,
-            .Next1 = &_cel_EmptyMapValueIterator_Next1,
-            .Next2 = &_cel_EmptyMapValueIterator_Next2,
-            .Remaining = &_cel_EmptyMapValueIterator_Remaining,
-        },
-    .Next = &_cel_EmptyMapValueIterator_Next,
+    /*super=*/
+    {
+        /*Delete=*/cel_nullptr,
+        /*Next1=*/&_cel_EmptyMapValueIterator_Next1,
+        /*Next2=*/&_cel_EmptyMapValueIterator_Next2,
+        /*Remaining=*/&_cel_EmptyMapValueIterator_Remaining,
+    },
+    /*Next=*/&_cel_EmptyMapValueIterator_Next,
 };
 
 extern "C" cel_MapValueIterator _cel_EmptyMapValueIterator = {
-    .vtable = &_cel_EmptyMapValueIteratorVTable,
+    /*vtable=*/&_cel_EmptyMapValueIteratorVTable,
 };

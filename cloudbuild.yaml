@@ -26,6 +26,12 @@ steps:
   - '...'
   - '--enable_bzlmod'
   - '--copt=-Wno-deprecated-declarations'
+  # Designated initializers are C++20; MSVC rejects them with /std:c++17.
+  # Reject them in non-test cel-c C++ sources (clang only; GCC lacks the flag).
+  # google3 builds cel-c as C++20 and cannot detect this, so this step is the
+  # guard. External sources are excluded by both label (@@repo//...) and exec
+  # path (external/...), since Bazel applies the copt if either one matches.
+  - '--per_file_copt=\.cc$,-^@,-^external/,-_test\.cc$@-Werror=c++20-designator,-Werror=c99-designator'
   - '--compilation_mode=fastbuild'
   - '--test_output=errors'
   - '--show_timestamps'

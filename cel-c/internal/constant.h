@@ -18,6 +18,7 @@
 #include <stdalign.h>
 #include <stdbool.h>  // IWYU pragma: keep
 #include <stdint.h>
+#include <string.h>
 
 #include "cel-c/assert.h"
 #include "cel-c/config.h"
@@ -73,6 +74,8 @@ typedef struct {
 
 CEL_STATIC_ASSERT(sizeof(cel_Constant) == 16);
 CEL_STATIC_ASSERT(alignof(cel_Constant) == 8);
+
+#ifndef __cplusplus
 
 // cel_UnspecifiedConstant
 //
@@ -167,6 +170,24 @@ CEL_STATIC_ASSERT(alignof(cel_Constant) == 8);
                       },              \
                   .kind = cel_ConstantKind_kTimestamp})
 
+#else  // __cplusplus
+
+// In C++ the constant-returning macros are implemented with the inline
+// functions defined below, since designated initializers are a C++20 feature
+// and are rejected by some compilers (e.g. MSVC) in earlier language modes.
+#define cel_UnspecifiedConstant() (_cel_Constant_MakeUnspecified())
+#define cel_NullConstant() (_cel_Constant_MakeNull())
+#define cel_BoolConstant(val) (_cel_Constant_MakeBool((val)))
+#define cel_IntConstant(val) (_cel_Constant_MakeInt((val)))
+#define cel_UintConstant(val) (_cel_Constant_MakeUint((val)))
+#define cel_DoubleConstant(val) (_cel_Constant_MakeDouble((val)))
+#define cel_BytesConstant(val) (_cel_Constant_MakeBytes((val)))
+#define cel_StringConstant(val) (_cel_Constant_MakeString((val)))
+#define cel_DurationConstant(val) (_cel_Constant_MakeDuration((val)))
+#define cel_TimestampConstant(val) (_cel_Constant_MakeTimestamp((val)))
+
+#endif  // __cplusplus
+
 // cel_Constant_SetNull
 //
 // Sets the constant to be null.
@@ -174,7 +195,8 @@ static CEL_INLINE void cel_Constant_SetNull(CEL_NONNULL(cel_Constant*)
                                                 constant) {
   CEL_ASSERT_NOT_NULL(constant);
 
-  *constant = cel_NullConstant();
+  memset(&constant->data, 0, sizeof(constant->data));
+  constant->kind = cel_ConstantKind_kNull;
 }
 
 // cel_Constant_SetBool
@@ -184,7 +206,9 @@ static CEL_INLINE void cel_Constant_SetBool(CEL_NONNULL(cel_Constant*) constant,
                                             bool val) {
   CEL_ASSERT_NOT_NULL(constant);
 
-  *constant = cel_BoolConstant(val);
+  memset(&constant->data, 0, sizeof(constant->data));
+  constant->data.b = val;
+  constant->kind = cel_ConstantKind_kBool;
 }
 
 // cel_Constant_SetInt
@@ -194,7 +218,9 @@ static CEL_INLINE void cel_Constant_SetInt(CEL_NONNULL(cel_Constant*) constant,
                                            int64_t val) {
   CEL_ASSERT_NOT_NULL(constant);
 
-  *constant = cel_IntConstant(val);
+  memset(&constant->data, 0, sizeof(constant->data));
+  constant->data.i = val;
+  constant->kind = cel_ConstantKind_kInt;
 }
 
 // cel_Constant_SetUint
@@ -204,7 +230,9 @@ static CEL_INLINE void cel_Constant_SetUint(CEL_NONNULL(cel_Constant*) constant,
                                             uint64_t val) {
   CEL_ASSERT_NOT_NULL(constant);
 
-  *constant = cel_UintConstant(val);
+  memset(&constant->data, 0, sizeof(constant->data));
+  constant->data.u = val;
+  constant->kind = cel_ConstantKind_kUint;
 }
 
 // cel_Constant_SetDouble
@@ -215,7 +243,9 @@ static CEL_INLINE void cel_Constant_SetDouble(CEL_NONNULL(cel_Constant*)
                                               double val) {
   CEL_ASSERT_NOT_NULL(constant);
 
-  *constant = cel_DoubleConstant(val);
+  memset(&constant->data, 0, sizeof(constant->data));
+  constant->data.f = val;
+  constant->kind = cel_ConstantKind_kDouble;
 }
 
 // cel_Constant_SetBytes
@@ -226,7 +256,10 @@ static CEL_INLINE void cel_Constant_SetBytes(CEL_NONNULL(cel_Constant*)
                                              cel_StringView val) {
   CEL_ASSERT_NOT_NULL(constant);
 
-  *constant = cel_BytesConstant(val);
+  memset(&constant->data, 0, sizeof(constant->data));
+  constant->data.s.data = cel_StringView_Data(val);
+  constant->data.s.size = cel_StringView_Size32(val);
+  constant->kind = cel_ConstantKind_kBytes;
 }
 
 // cel_Constant_SetString
@@ -237,7 +270,10 @@ static CEL_INLINE void cel_Constant_SetString(CEL_NONNULL(cel_Constant*)
                                               cel_StringView val) {
   CEL_ASSERT_NOT_NULL(constant);
 
-  *constant = cel_StringConstant(val);
+  memset(&constant->data, 0, sizeof(constant->data));
+  constant->data.s.data = cel_StringView_Data(val);
+  constant->data.s.size = cel_StringView_Size32(val);
+  constant->kind = cel_ConstantKind_kString;
 }
 
 // cel_Constant_SetDuration
@@ -248,7 +284,9 @@ static CEL_INLINE void cel_Constant_SetDuration(CEL_NONNULL(cel_Constant*)
                                                 cel_Duration val) {
   CEL_ASSERT_NOT_NULL(constant);
 
-  *constant = cel_DurationConstant(val);
+  memset(&constant->data, 0, sizeof(constant->data));
+  constant->data.d = val;
+  constant->kind = cel_ConstantKind_kDuration;
 }
 
 // cel_Constant_SetTimestamp
@@ -259,8 +297,77 @@ static CEL_INLINE void cel_Constant_SetTimestamp(CEL_NONNULL(cel_Constant*)
                                                  cel_Timestamp val) {
   CEL_ASSERT_NOT_NULL(constant);
 
-  *constant = cel_TimestampConstant(val);
+  memset(&constant->data, 0, sizeof(constant->data));
+  constant->data.t = val;
+  constant->kind = cel_ConstantKind_kTimestamp;
 }
+
+#ifdef __cplusplus
+
+// Implementation details of the C++ versions of the `cel_*Constant()` macros.
+
+static CEL_INLINE cel_Constant _cel_Constant_MakeUnspecified(void) {
+  cel_Constant constant;
+  memset(&constant.data, 0, sizeof(constant.data));
+  constant.kind = cel_ConstantKind_kUnspecified;
+  return constant;
+}
+
+static CEL_INLINE cel_Constant _cel_Constant_MakeNull(void) {
+  cel_Constant constant;
+  cel_Constant_SetNull(&constant);
+  return constant;
+}
+
+static CEL_INLINE cel_Constant _cel_Constant_MakeBool(bool val) {
+  cel_Constant constant;
+  cel_Constant_SetBool(&constant, val);
+  return constant;
+}
+
+static CEL_INLINE cel_Constant _cel_Constant_MakeInt(int64_t val) {
+  cel_Constant constant;
+  cel_Constant_SetInt(&constant, val);
+  return constant;
+}
+
+static CEL_INLINE cel_Constant _cel_Constant_MakeUint(uint64_t val) {
+  cel_Constant constant;
+  cel_Constant_SetUint(&constant, val);
+  return constant;
+}
+
+static CEL_INLINE cel_Constant _cel_Constant_MakeDouble(double val) {
+  cel_Constant constant;
+  cel_Constant_SetDouble(&constant, val);
+  return constant;
+}
+
+static CEL_INLINE cel_Constant _cel_Constant_MakeBytes(cel_StringView val) {
+  cel_Constant constant;
+  cel_Constant_SetBytes(&constant, val);
+  return constant;
+}
+
+static CEL_INLINE cel_Constant _cel_Constant_MakeString(cel_StringView val) {
+  cel_Constant constant;
+  cel_Constant_SetString(&constant, val);
+  return constant;
+}
+
+static CEL_INLINE cel_Constant _cel_Constant_MakeDuration(cel_Duration val) {
+  cel_Constant constant;
+  cel_Constant_SetDuration(&constant, val);
+  return constant;
+}
+
+static CEL_INLINE cel_Constant _cel_Constant_MakeTimestamp(cel_Timestamp val) {
+  cel_Constant constant;
+  cel_Constant_SetTimestamp(&constant, val);
+  return constant;
+}
+
+#endif  // __cplusplus
 
 // cel_Constant_Kind
 //

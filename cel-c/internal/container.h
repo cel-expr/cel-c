@@ -25,7 +25,7 @@
 #include "cel-c/string_view.h"
 
 struct _cel_ContainerIterator {
-  cel_StringView name = cel_StringView{.data = "", .size = 0};
+  cel_StringView name = cel_StringView{/*data=*/"", /*size=*/0};
   size_t size = 0;
 
   [[nodiscard]]

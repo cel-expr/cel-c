@@ -96,11 +96,11 @@ static cel_ListValueIterator* cel_nullable _cel_EmptyListValue_NewIterator(
 }
 
 const cel_ListValueVTable _cel_EmptyListValueVTable = {
-    .Equals = cel_nullptr,
-    .FastSize = &_cel_EmptyListValue_FastSize,
-    .SlowSize = &_cel_EmptyListValue_SlowSize,
-    .Get = &_cel_EmptyListValue_Get,
-    .NewIterator = &_cel_EmptyListValue_NewIterator,
+    /*Equals=*/cel_nullptr,
+    /*FastSize=*/&_cel_EmptyListValue_FastSize,
+    /*SlowSize=*/&_cel_EmptyListValue_SlowSize,
+    /*Get=*/&_cel_EmptyListValue_Get,
+    /*NewIterator=*/&_cel_EmptyListValue_NewIterator,
 };
 
 static bool _cel_EmptyListValueIterator_Next1(
@@ -155,16 +155,16 @@ static bool _cel_EmptyListValueIterator_Next(
 }
 
 const cel_ListValueIteratorVTable _cel_EmptyListValueIteratorVTable = {
-    .super =
-        {
-            .Delete = cel_nullptr,
-            .Next1 = &_cel_EmptyListValueIterator_Next1,
-            .Next2 = &_cel_EmptyListValueIterator_Next2,
-            .Remaining = &_cel_EmptyListValueIterator_Remaining,
-        },
-    .Next = &_cel_EmptyListValueIterator_Next,
+    /*super=*/
+    {
+        /*Delete=*/cel_nullptr,
+        /*Next1=*/&_cel_EmptyListValueIterator_Next1,
+        /*Next2=*/&_cel_EmptyListValueIterator_Next2,
+        /*Remaining=*/&_cel_EmptyListValueIterator_Remaining,
+    },
+    /*Next=*/&_cel_EmptyListValueIterator_Next,
 };
 
 extern "C" cel_ListValueIterator _cel_EmptyListValueIterator = {
-    .vtable = &_cel_EmptyListValueIteratorVTable,
+    /*vtable=*/&_cel_EmptyListValueIteratorVTable,
 };

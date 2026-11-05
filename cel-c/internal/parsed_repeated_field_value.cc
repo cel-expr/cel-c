@@ -193,11 +193,11 @@ _cel_ParsedRepeatedFieldValue_NewIterator(
 }
 
 extern "C" const cel_ListValueVTable _cel_ParsedRepeatedFieldValueVTable = {
-    .Equals = &_cel_ParsedRepeatedFieldValue_Equals,
-    .FastSize = &_cel_ParsedRepeatedFieldValue_FastSize,
-    .SlowSize = &_cel_ParsedRepeatedFieldValue_SlowSize,
-    .Get = &_cel_ParsedRepeatedFieldValue_Get,
-    .NewIterator = &_cel_ParsedRepeatedFieldValue_NewIterator,
+    /*Equals=*/&_cel_ParsedRepeatedFieldValue_Equals,
+    /*FastSize=*/&_cel_ParsedRepeatedFieldValue_FastSize,
+    /*SlowSize=*/&_cel_ParsedRepeatedFieldValue_SlowSize,
+    /*Get=*/&_cel_ParsedRepeatedFieldValue_Get,
+    /*NewIterator=*/&_cel_ParsedRepeatedFieldValue_NewIterator,
 };
 
 static void _cel_ParsedRepeatedFieldValueIterator_Delete(
@@ -328,12 +328,12 @@ static bool _cel_ParsedRepeatedFieldValueIterator_Next(
 
 const cel_ListValueIteratorVTable _cel_ParsedRepeatedFieldValueIteratorVTable =
     {
-        .super =
-            {
-                .Delete = &_cel_ParsedRepeatedFieldValueIterator_Delete,
-                .Next1 = &_cel_ParsedRepeatedFieldValueIterator_Next1,
-                .Next2 = &_cel_ParsedRepeatedFieldValueIterator_Next2,
-                .Remaining = &_cel_ParsedRepeatedFieldValueIterator_Remaining,
-            },
-        .Next = &_cel_ParsedRepeatedFieldValueIterator_Next,
+        /*super=*/
+        {
+            /*Delete=*/&_cel_ParsedRepeatedFieldValueIterator_Delete,
+            /*Next1=*/&_cel_ParsedRepeatedFieldValueIterator_Next1,
+            /*Next2=*/&_cel_ParsedRepeatedFieldValueIterator_Next2,
+            /*Remaining=*/&_cel_ParsedRepeatedFieldValueIterator_Remaining,
+        },
+        /*Next=*/&_cel_ParsedRepeatedFieldValueIterator_Next,
     };

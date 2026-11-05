@@ -69,7 +69,7 @@ static CEL_NULLABILITY_UNKNOWN(void*) _cel_DefaultAllocator_AllocFunc(
 }
 
 static cel_Allocator _cel_DefaultAllocator = {
-    .func = &_cel_DefaultAllocator_AllocFunc,
+    /*func=*/&_cel_DefaultAllocator_AllocFunc,
 };
 
 extern "C" CEL_NONNULL(cel_Allocator*) const cel_DefaultAllocator =

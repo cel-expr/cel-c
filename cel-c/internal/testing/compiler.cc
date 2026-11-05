@@ -42,13 +42,12 @@
 
 extern "C" CEL_ATTRIBUTE_NOTHROW _cel_TestingCompiler* cel_nonnull
 _cel_TestingCompiler_New() {
+  cel::CompilerOptions compiler_options;
+  compiler_options.parser_options.enable_optional_syntax = true;
+  compiler_options.checker_options.enable_cross_numeric_comparisons = true;
+  compiler_options.checker_options.update_struct_type_names = true;
   auto status_or_compiler_builder = cel::NewCompilerBuilder(
-      cel::internal::GetTestingDescriptorPool(),
-      cel::CompilerOptions{
-          .parser_options = cel::ParserOptions{.enable_optional_syntax = true},
-          .checker_options =
-              cel::CheckerOptions{.enable_cross_numeric_comparisons = true,
-                                  .update_struct_type_names = true}});
+      cel::internal::GetTestingDescriptorPool(), compiler_options);
   ABSL_CHECK_OK(status_or_compiler_builder);
   auto compiler_builder = std::move(*status_or_compiler_builder);
   ABSL_CHECK_OK(compiler_builder->AddLibrary(cel::StandardCheckerLibrary()));

@@ -91,14 +91,14 @@ static int _cel_CanonicalErrorSpace_Message(CEL_NONNULL(const cel_ErrorSpace*)
 }
 
 static const cel_ErrorSpaceVTable _cel_CanonicalErrorSpaceVTable = {
-    .name = CEL_CSTRINGVIEW_C("canonical"),
-    .OutOfMemory = _cel_CanonicalErrorSpace_OutOfMemory,
-    .Canonical = _cel_CanonicalErrorSpace_Canonical,
-    .Message = _cel_CanonicalErrorSpace_Message,
+    /*name=*/CEL_CSTRINGVIEW_C("canonical"),
+    /*OutOfMemory=*/_cel_CanonicalErrorSpace_OutOfMemory,
+    /*Canonical=*/_cel_CanonicalErrorSpace_Canonical,
+    /*Message=*/_cel_CanonicalErrorSpace_Message,
 };
 
 static const cel_ErrorSpace _cel_CanonicalErrorSpace = {
-    .vtable = &_cel_CanonicalErrorSpaceVTable,
+    /*vtable=*/&_cel_CanonicalErrorSpaceVTable,
 };
 
 extern "C" CEL_NONNULL(const cel_ErrorSpace*)
@@ -427,14 +427,14 @@ static int _cel_GenericErrorSpace_Message(CEL_NONNULL(const cel_ErrorSpace*)
 }
 
 static const cel_ErrorSpaceVTable _cel_GenericErrorSpaceVTable = {
-    .name = CEL_CSTRINGVIEW_C("generic"),
-    .OutOfMemory = _cel_GenericErrorSpace_OutOfMemory,
-    .Canonical = _cel_GenericErrorSpace_Canonical,
-    .Message = _cel_GenericErrorSpace_Message,
+    /*name=*/CEL_CSTRINGVIEW_C("generic"),
+    /*OutOfMemory=*/_cel_GenericErrorSpace_OutOfMemory,
+    /*Canonical=*/_cel_GenericErrorSpace_Canonical,
+    /*Message=*/_cel_GenericErrorSpace_Message,
 };
 
 static const cel_ErrorSpace _cel_GenericErrorSpace = {
-    .vtable = &_cel_GenericErrorSpaceVTable,
+    /*vtable=*/&_cel_GenericErrorSpaceVTable,
 };
 
 extern "C" CEL_NONNULL(const cel_ErrorSpace*)
@@ -672,14 +672,14 @@ static int _cel_SystemErrorSpace_Message(CEL_NONNULL(const cel_ErrorSpace*)
 }
 
 static const cel_ErrorSpaceVTable _cel_SystemErrorSpaceVTable = {
-    .name = CEL_CSTRINGVIEW_C("system"),
-    .OutOfMemory = _cel_SystemErrorSpace_OutOfMemory,
-    .Canonical = _cel_SystemErrorSpace_Canonical,
-    .Message = _cel_SystemErrorSpace_Message,
+    /*name=*/CEL_CSTRINGVIEW_C("system"),
+    /*OutOfMemory=*/_cel_SystemErrorSpace_OutOfMemory,
+    /*Canonical=*/_cel_SystemErrorSpace_Canonical,
+    /*Message=*/_cel_SystemErrorSpace_Message,
 };
 
 static const cel_ErrorSpace _cel_SystemErrorSpace = {
-    .vtable = &_cel_SystemErrorSpaceVTable,
+    /*vtable=*/&_cel_SystemErrorSpaceVTable,
 };
 
 extern "C" CEL_NONNULL(const cel_ErrorSpace*)

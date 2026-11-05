@@ -42,8 +42,9 @@
 
 extern "C" CEL_ATTRIBUTE_NOTHROW _cel_TestingParser* cel_nonnull
 _cel_TestingParser_New() {
-  auto parser_builder =
-      cel::NewParserBuilder(cel::ParserOptions{.enable_optional_syntax = true});
+  cel::ParserOptions parser_options;
+  parser_options.enable_optional_syntax = true;
+  auto parser_builder = cel::NewParserBuilder(parser_options);
   for (const cel::Macro& macro : cel::extensions::bindings_macros()) {
     ABSL_CHECK_OK(parser_builder->AddMacro(macro));
   }

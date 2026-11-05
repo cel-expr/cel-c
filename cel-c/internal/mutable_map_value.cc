@@ -412,13 +412,13 @@ static cel_MapValueIterator* cel_nullable _cel_MutableMapValue_NewIterator(
 }
 
 extern "C" const cel_MapValueVTable _cel_MutableMapValueVTable = {
-    .Equals = cel_nullptr,
-    .FastSize = &_cel_MutableMapValue_FastSize,
-    .SlowSize = &_cel_MutableMapValue_SlowSize,
-    .Get = &_cel_MutableMapValue_Get,
-    .Find = &_cel_MutableMapValue_Find,
-    .Has = &_cel_MutableMapValue_Has,
-    .NewIterator = &_cel_MutableMapValue_NewIterator,
+    /*Equals=*/cel_nullptr,
+    /*FastSize=*/&_cel_MutableMapValue_FastSize,
+    /*SlowSize=*/&_cel_MutableMapValue_SlowSize,
+    /*Get=*/&_cel_MutableMapValue_Get,
+    /*Find=*/&_cel_MutableMapValue_Find,
+    /*Has=*/&_cel_MutableMapValue_Has,
+    /*NewIterator=*/&_cel_MutableMapValue_NewIterator,
 };
 
 static void _cel_MutableMapValueIterator_Delete(
@@ -541,12 +541,12 @@ static bool _cel_MutableMapValueIterator_Next(
 }
 
 const cel_MapValueIteratorVTable _cel_MutableMapValueIteratorVTable = {
-    .super =
-        {
-            .Delete = &_cel_MutableMapValueIterator_Delete,
-            .Next1 = &_cel_MutableMapValueIterator_Next1,
-            .Next2 = &_cel_MutableMapValueIterator_Next2,
-            .Remaining = &_cel_MutableMapValueIterator_Remaining,
-        },
-    .Next = &_cel_MutableMapValueIterator_Next,
+    /*super=*/
+    {
+        /*Delete=*/&_cel_MutableMapValueIterator_Delete,
+        /*Next1=*/&_cel_MutableMapValueIterator_Next1,
+        /*Next2=*/&_cel_MutableMapValueIterator_Next2,
+        /*Remaining=*/&_cel_MutableMapValueIterator_Remaining,
+    },
+    /*Next=*/&_cel_MutableMapValueIterator_Next,
 };

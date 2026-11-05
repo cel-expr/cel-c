@@ -48,13 +48,13 @@ struct cel_Error {
 };
 
 static const cel_Error _cel_DefaultError = {
-    .message = CEL_STRINGVIEW_C(""),
-    .space = cel_nullptr,
-    .raw_code = cel_ErrorCode_kUnknown,
-    .code = cel_ErrorCode_kUnknown,
-    .payloads_len = 0,
-    .payloads_head = cel_nullptr,
-    .payloads_tail = cel_nullptr,
+    /*message=*/CEL_STRINGVIEW_C(""),
+    /*space=*/cel_nullptr,
+    /*raw_code=*/cel_ErrorCode_kUnknown,
+    /*code=*/cel_ErrorCode_kUnknown,
+    /*payloads_len=*/0,
+    /*payloads_head=*/cel_nullptr,
+    /*payloads_tail=*/cel_nullptr,
 };
 
 extern "C" const cel_Error* const cel_nonnull cel_DefaultError =

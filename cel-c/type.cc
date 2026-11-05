@@ -178,123 +178,123 @@ extern "C" bool cel_IsWellKnownEnumTypeName(cel_StringView name) {
 }
 
 static const cel_Type _cel_DynType = {
-    .kind = cel_TypeKind_kDyn,
+    {{/*kind=*/cel_TypeKind_kDyn}},
 };
 
 extern "C" const cel_Type* const cel_nonnull cel_DynType = &_cel_DynType;
 
 static const cel_Type _cel_NullType = {
-    .kind = cel_TypeKind_kNull,
+    {{/*kind=*/cel_TypeKind_kNull}},
 };
 
 extern "C" const cel_Type* const cel_nonnull cel_NullType = &_cel_NullType;
 
 static const cel_Type _cel_BoolType = {
-    .kind = cel_TypeKind_kBool,
+    {{/*kind=*/cel_TypeKind_kBool}},
 };
 
 extern "C" const cel_Type* const cel_nonnull cel_BoolType = &_cel_BoolType;
 
 static const cel_Type _cel_IntType = {
-    .kind = cel_TypeKind_kInt,
+    {{/*kind=*/cel_TypeKind_kInt}},
 };
 
 extern "C" const cel_Type* const cel_nonnull cel_IntType = &_cel_IntType;
 
 static const cel_Type _cel_UintType = {
-    .kind = cel_TypeKind_kUint,
+    {{/*kind=*/cel_TypeKind_kUint}},
 };
 
 extern "C" const cel_Type* const cel_nonnull cel_UintType = &_cel_UintType;
 
 static const cel_Type _cel_DoubleType = {
-    .kind = cel_TypeKind_kDouble,
+    {{/*kind=*/cel_TypeKind_kDouble}},
 };
 
 extern "C" const cel_Type* const cel_nonnull cel_DoubleType = &_cel_DoubleType;
 
 static const cel_Type _cel_StringType = {
-    .kind = cel_TypeKind_kString,
+    {{/*kind=*/cel_TypeKind_kString}},
 };
 
 extern "C" const cel_Type* const cel_nonnull cel_StringType = &_cel_StringType;
 
 static const cel_Type _cel_BytesType = {
-    .kind = cel_TypeKind_kBytes,
+    {{/*kind=*/cel_TypeKind_kBytes}},
 };
 
 extern "C" const cel_Type* const cel_nonnull cel_BytesType = &_cel_BytesType;
 
 static const cel_Type _cel_AnyType = {
-    .kind = cel_TypeKind_kAny,
+    {{/*kind=*/cel_TypeKind_kAny}},
 };
 
 extern "C" const cel_Type* const cel_nonnull cel_AnyType = &_cel_AnyType;
 
 static const cel_Type _cel_DurationType = {
-    .kind = cel_TypeKind_kDuration,
+    {{/*kind=*/cel_TypeKind_kDuration}},
 };
 
 extern "C" const cel_Type* const cel_nonnull cel_DurationType =
     &_cel_DurationType;
 
 static const cel_Type _cel_TimestampType = {
-    .kind = cel_TypeKind_kTimestamp,
+    {{/*kind=*/cel_TypeKind_kTimestamp}},
 };
 
 extern "C" const cel_Type* const cel_nonnull cel_TimestampType =
     &_cel_TimestampType;
 
 static const cel_Type _cel_UnknownType = {
-    .kind = cel_TypeKind_kUnknown,
+    {{/*kind=*/cel_TypeKind_kUnknown}},
 };
 
 extern "C" const cel_Type* const cel_nonnull cel_UnknownType =
     &_cel_UnknownType;
 
 static const cel_Type _cel_ErrorType = {
-    .kind = cel_TypeKind_kError,
+    {{/*kind=*/cel_TypeKind_kError}},
 };
 
 extern "C" const cel_Type* const cel_nonnull cel_ErrorType = &_cel_ErrorType;
 
 static const cel_Type _cel_BoolWrapperType = {
-    .kind = cel_TypeKind_kBoolWrapper,
+    {{/*kind=*/cel_TypeKind_kBoolWrapper}},
 };
 
 extern "C" const cel_Type* const cel_nonnull cel_BoolWrapperType =
     &_cel_BoolWrapperType;
 
 static const cel_Type _cel_IntWrapperType = {
-    .kind = cel_TypeKind_kIntWrapper,
+    {{/*kind=*/cel_TypeKind_kIntWrapper}},
 };
 
 extern "C" const cel_Type* const cel_nonnull cel_IntWrapperType =
     &_cel_IntWrapperType;
 
 static const cel_Type _cel_UintWrapperType = {
-    .kind = cel_TypeKind_kUintWrapper,
+    {{/*kind=*/cel_TypeKind_kUintWrapper}},
 };
 
 extern "C" const cel_Type* const cel_nonnull cel_UintWrapperType =
     &_cel_UintWrapperType;
 
 static const cel_Type _cel_DoubleWrapperType = {
-    .kind = cel_TypeKind_kDoubleWrapper,
+    {{/*kind=*/cel_TypeKind_kDoubleWrapper}},
 };
 
 extern "C" const cel_Type* const cel_nonnull cel_DoubleWrapperType =
     &_cel_DoubleWrapperType;
 
 static const cel_Type _cel_StringWrapperType = {
-    .kind = cel_TypeKind_kStringWrapper,
+    {{/*kind=*/cel_TypeKind_kStringWrapper}},
 };
 
 extern "C" const cel_Type* const cel_nonnull cel_StringWrapperType =
     &_cel_StringWrapperType;
 
 static const cel_Type _cel_BytesWrapperType = {
-    .kind = cel_TypeKind_kBytesWrapper,
+    {{/*kind=*/cel_TypeKind_kBytesWrapper}},
 };
 
 extern "C" const cel_Type* const cel_nonnull cel_BytesWrapperType =

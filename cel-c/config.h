@@ -121,6 +121,21 @@ CEL_STATIC_ASSERT(sizeof(unsigned char) == 1);
 #define cel_nullptr NULL
 #endif
 
+#ifdef CEL_COMPOUND_LITERAL
+#error CEL_COMPOUND_LITERAL cannot be directly set
+#endif
+
+// CEL_COMPOUND_LITERAL
+//
+// `CEL_COMPOUND_LITERAL(T){...}` expands to the compound literal `(T){...}` in
+// C and to the equivalent explicit type conversion `T{...}` in C++, where
+// compound literals are a non-standard extension (e.g. MSVC warning C4576).
+#ifdef __cplusplus
+#define CEL_COMPOUND_LITERAL(T) T
+#else
+#define CEL_COMPOUND_LITERAL(T) (T)
+#endif
+
 #ifdef CEL_HAVE_BUILTIN
 #error CEL_HAVE_BUILTIN cannot be directly set
 #endif

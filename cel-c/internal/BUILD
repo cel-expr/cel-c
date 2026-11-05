@@ -256,6 +256,20 @@ cc_test(
     ],
 )
 
+# Compiled as C to cover the C99 versions of the macros in constant.h and
+# attribute.h, which C++ translation units do not see.
+cc_test(
+    name = "c_macros_test",
+    srcs = ["c_macros_test.c"],
+    deps = [
+        ":attribute",
+        ":constant",
+        "//cel-c:duration",
+        "//cel-c:string_view",
+        "//cel-c:timestamp",
+    ],
+)
+
 cc_library(
     name = "binary_search",
     hdrs = ["binary_search.h"],

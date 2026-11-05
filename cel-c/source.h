@@ -30,7 +30,8 @@ typedef struct {
   int32_t end;
 } cel_SourceRange;
 
-#define cel_SourceRange(begin, end) ((cel_SourceRange){(begin), (end)})
+#define cel_SourceRange(begin, end) \
+  (CEL_COMPOUND_LITERAL(cel_SourceRange){(begin), (end)})
 
 CEL_ATTRIBUTE_NODISCARD
 static CEL_INLINE bool cel_SourceRange_Equals(cel_SourceRange lhs,

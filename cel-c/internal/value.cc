@@ -44,30 +44,29 @@
 #define _cel_kDoubleToUintMax ((double)(uint64_t)UINT64_MAX)
 
 extern "C" const cel_Value cel_NullValue = {
-    .data =
-        {
-            .v = {(char)0},
-        },
-    .kind = cel_ValueKind_kNull,
-    .padding = {(char)0},
+    /*data=*/{/*v=*/{(char)0}},
+    /*kind=*/cel_ValueKind_kNull,
+    /*padding=*/{(char)0},
 };
 
+// `cel_Value::data` is a union whose first member is `v` (`char[24]`). Standard
+// C++17 aggregate initialization can only initialize the first member of a
+// union, so `cel_FalseValue` and `cel_TrueValue` initialize `data.bl` through
+// its object representation: a `bool` occupies the first byte of `data` and is
+// represented as `0` (false) or `1` (true), with the remaining bytes zeroed.
+// This produces exactly the same bytes as designating `data.bl` directly.
+CEL_STATIC_ASSERT(sizeof(bool) == 1);
+
 extern "C" const cel_Value cel_FalseValue = {
-    .data =
-        {
-            .bl = false,
-        },
-    .kind = cel_ValueKind_kBool,
-    .padding = {(char)0},
+    /*data=*/{/*v=*/{(char)false}},
+    /*kind=*/cel_ValueKind_kBool,
+    /*padding=*/{(char)0},
 };
 
 extern "C" const cel_Value cel_TrueValue = {
-    .data =
-        {
-            .bl = true,
-        },
-    .kind = cel_ValueKind_kBool,
-    .padding = {(char)0},
+    /*data=*/{/*v=*/{(char)true}},
+    /*kind=*/cel_ValueKind_kBool,
+    /*padding=*/{(char)0},
 };
 
 extern "C" cel_StringView cel_Value_TypeName(

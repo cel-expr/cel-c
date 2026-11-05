@@ -60,28 +60,28 @@ CEL_BEGIN_DECLS
 
 #ifdef _CEL_IS_BIG_ENDIAN
 #define cel_Duration_kZero \
-  ((cel_Duration){{INT32_C(0), UINT32_C{0}}, INT32_C(0)})
+  (CEL_COMPOUND_LITERAL(cel_Duration){{INT32_C(0), UINT32_C(0)}, INT32_C(0)})
 #define cel_Duration_kMin                                               \
-  ((cel_Duration){                                                      \
+  (CEL_COMPOUND_LITERAL(cel_Duration){                                  \
       {(int32_t)(uint32_t)(((uint64_t)cel_Duration_kMinSeconds) >> 32), \
        ((uint32_t)(uint64_t)cel_Duration_kMinSeconds)},                 \
       cel_Duration_kMinNanos})
 #define cel_Duration_kMax                                               \
-  ((cel_Duration){                                                      \
+  (CEL_COMPOUND_LITERAL(cel_Duration){                                  \
       {(int32_t)(uint32_t)(((uint64_t)cel_Duration_kMaxSeconds) >> 32), \
        ((uint32_t)(uint64_t)cel_Duration_kMaxSeconds)},                 \
       cel_Duration_kMaxNanos})
 #endif
 #ifdef _CEL_IS_LITTLE_ENDIAN
 #define cel_Duration_kZero \
-  ((cel_Duration){{UINT32_C(0), INT32_C(0)}, INT32_C(0)})
+  (CEL_COMPOUND_LITERAL(cel_Duration){{UINT32_C(0), INT32_C(0)}, INT32_C(0)})
 #define cel_Duration_kMin                                                \
-  ((cel_Duration){                                                       \
+  (CEL_COMPOUND_LITERAL(cel_Duration){                                   \
       {((uint32_t)(uint64_t)cel_Duration_kMinSeconds),                   \
        (int32_t)(uint32_t)(((uint64_t)cel_Duration_kMinSeconds) >> 32)}, \
       cel_Duration_kMinNanos})
 #define cel_Duration_kMax                                                \
-  ((cel_Duration){                                                       \
+  (CEL_COMPOUND_LITERAL(cel_Duration){                                   \
       {((uint32_t)(uint64_t)cel_Duration_kMaxSeconds),                   \
        (int32_t)(uint32_t)(((uint64_t)cel_Duration_kMaxSeconds) >> 32)}, \
       cel_Duration_kMaxNanos})

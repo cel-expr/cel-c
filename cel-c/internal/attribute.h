@@ -18,6 +18,7 @@
 #include <stdalign.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "cel-c/assert.h"
 #include "cel-c/config.h"
@@ -61,6 +62,8 @@ typedef struct {
 
 CEL_STATIC_ASSERT(sizeof(cel_AttributeQualifier) == 16);
 CEL_STATIC_ASSERT(alignof(cel_AttributeQualifier) == 8);
+
+#ifndef __cplusplus
 
 // cel_UnspecifiedAttributeQualifier
 //
@@ -109,6 +112,24 @@ CEL_STATIC_ASSERT(alignof(cel_AttributeQualifier) == 8);
           },                                                                   \
       .kind = cel_AttributeQualifierKind_kString})
 
+#else  // __cplusplus
+
+// In C++ the attribute-qualifier-returning macros are implemented with the
+// inline functions defined below, since designated initializers are a C++20
+// feature and are rejected by some compilers (e.g. MSVC) in earlier language
+// modes.
+#define cel_UnspecifiedAttributeQualifier() \
+  (_cel_AttributeQualifier_MakeUnspecified())
+#define cel_BoolAttributeQualifier(val) \
+  (_cel_AttributeQualifier_MakeBool((val)))
+#define cel_IntAttributeQualifier(val) (_cel_AttributeQualifier_MakeInt((val)))
+#define cel_UintAttributeQualifier(val) \
+  (_cel_AttributeQualifier_MakeUint((val)))
+#define cel_StringAttributeQualifier(val) \
+  (_cel_AttributeQualifier_MakeString((val)))
+
+#endif  // __cplusplus
+
 // cel_AttributeQualifier_SetBool
 //
 // Sets the attribute qualifier to be bool.
@@ -116,7 +137,9 @@ static CEL_INLINE void cel_AttributeQualifier_SetBool(
     CEL_NONNULL(cel_AttributeQualifier*) attribute_qualifier, bool val) {
   CEL_ASSERT_NOT_NULL(attribute_qualifier);
 
-  *attribute_qualifier = cel_BoolAttributeQualifier(val);
+  memset(&attribute_qualifier->data, 0, sizeof(attribute_qualifier->data));
+  attribute_qualifier->data.b = val;
+  attribute_qualifier->kind = cel_AttributeQualifierKind_kBool;
 }
 
 // cel_AttributeQualifier_SetInt
@@ -126,7 +149,9 @@ static CEL_INLINE void cel_AttributeQualifier_SetInt(
     CEL_NONNULL(cel_AttributeQualifier*) attribute_qualifier, int64_t val) {
   CEL_ASSERT_NOT_NULL(attribute_qualifier);
 
-  *attribute_qualifier = cel_IntAttributeQualifier(val);
+  memset(&attribute_qualifier->data, 0, sizeof(attribute_qualifier->data));
+  attribute_qualifier->data.i = val;
+  attribute_qualifier->kind = cel_AttributeQualifierKind_kInt;
 }
 
 // cel_AttributeQualifier_SetUint
@@ -136,7 +161,9 @@ static CEL_INLINE void cel_AttributeQualifier_SetUint(
     CEL_NONNULL(cel_AttributeQualifier*) attribute_qualifier, uint64_t val) {
   CEL_ASSERT_NOT_NULL(attribute_qualifier);
 
-  *attribute_qualifier = cel_UintAttributeQualifier(val);
+  memset(&attribute_qualifier->data, 0, sizeof(attribute_qualifier->data));
+  attribute_qualifier->data.u = val;
+  attribute_qualifier->kind = cel_AttributeQualifierKind_kUint;
 }
 
 // cel_AttributeQualifier_SetString
@@ -147,8 +174,54 @@ static CEL_INLINE void cel_AttributeQualifier_SetString(
     cel_StringView val) {
   CEL_ASSERT_NOT_NULL(attribute_qualifier);
 
-  *attribute_qualifier = cel_StringAttributeQualifier(val);
+  memset(&attribute_qualifier->data, 0, sizeof(attribute_qualifier->data));
+  attribute_qualifier->data.s.data = cel_StringView_Data(val);
+  attribute_qualifier->data.s.size = cel_StringView_Size32(val);
+  attribute_qualifier->kind = cel_AttributeQualifierKind_kString;
 }
+
+#ifdef __cplusplus
+
+// Implementation details of the C++ versions of the
+// `cel_*AttributeQualifier()` macros.
+
+static CEL_INLINE cel_AttributeQualifier
+_cel_AttributeQualifier_MakeUnspecified(void) {
+  cel_AttributeQualifier attribute_qualifier;
+  memset(&attribute_qualifier.data, 0, sizeof(attribute_qualifier.data));
+  attribute_qualifier.kind = cel_AttributeQualifierKind_kUnspecified;
+  return attribute_qualifier;
+}
+
+static CEL_INLINE cel_AttributeQualifier
+_cel_AttributeQualifier_MakeBool(bool val) {
+  cel_AttributeQualifier attribute_qualifier;
+  cel_AttributeQualifier_SetBool(&attribute_qualifier, val);
+  return attribute_qualifier;
+}
+
+static CEL_INLINE cel_AttributeQualifier
+_cel_AttributeQualifier_MakeInt(int64_t val) {
+  cel_AttributeQualifier attribute_qualifier;
+  cel_AttributeQualifier_SetInt(&attribute_qualifier, val);
+  return attribute_qualifier;
+}
+
+static CEL_INLINE cel_AttributeQualifier
+_cel_AttributeQualifier_MakeUint(uint64_t val) {
+  cel_AttributeQualifier attribute_qualifier;
+  cel_AttributeQualifier_SetUint(&attribute_qualifier, val);
+  return attribute_qualifier;
+}
+
+static CEL_INLINE cel_AttributeQualifier
+_cel_AttributeQualifier_MakeString(cel_StringView val) {
+  cel_AttributeQualifier attribute_qualifier;
+  cel_AttributeQualifier_SetString(&attribute_qualifier, val);
+  return attribute_qualifier;
+}
+
+#endif  // __cplusplus
 
 // cel_AttributeQualifier_Kind
 //

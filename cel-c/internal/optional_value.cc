@@ -446,113 +446,113 @@ static bool _cel_OptionalValue_Value(
 const cel_OptionalValueVTable _cel_OptionalValueVTables[11] = {
     // _cel_EmptyOptionalValueVTable
     {
-        .super =
-            {
-                .Equals = &_cel_OptionalValue_Equals,
-                .TypeName = &_cel_OptionalValue_TypeName,
-            },
-        .HasValue = &_cel_EmptyOptionalValue_HasValue,
-        .Value = &_cel_EmptyOptionalValue_Value,
+        /*super=*/
+        {
+            /*Equals=*/&_cel_OptionalValue_Equals,
+            /*TypeName=*/&_cel_OptionalValue_TypeName,
+        },
+        /*HasValue=*/&_cel_EmptyOptionalValue_HasValue,
+        /*Value=*/&_cel_EmptyOptionalValue_Value,
     },
     // _cel_NullOptionalValueVTable
     {
-        .super =
-            {
-                .Equals = &_cel_OptionalValue_Equals,
-                .TypeName = &_cel_OptionalValue_TypeName,
-            },
-        .HasValue = &_cel_OptionalValue_HasValue,
-        .Value = &_cel_NullOptionalValue_Value,
+        /*super=*/
+        {
+            /*Equals=*/&_cel_OptionalValue_Equals,
+            /*TypeName=*/&_cel_OptionalValue_TypeName,
+        },
+        /*HasValue=*/&_cel_OptionalValue_HasValue,
+        /*Value=*/&_cel_NullOptionalValue_Value,
     },
     // _cel_BoolOptionalValueVTable
     {
-        .super =
-            {
-                .Equals = &_cel_OptionalValue_Equals,
-                .TypeName = &_cel_OptionalValue_TypeName,
-            },
-        .HasValue = &_cel_OptionalValue_HasValue,
-        .Value = &_cel_BoolOptionalValue_Value,
+        /*super=*/
+        {
+            /*Equals=*/&_cel_OptionalValue_Equals,
+            /*TypeName=*/&_cel_OptionalValue_TypeName,
+        },
+        /*HasValue=*/&_cel_OptionalValue_HasValue,
+        /*Value=*/&_cel_BoolOptionalValue_Value,
     },
     // _cel_IntOptionalValueVTable
     {
-        .super =
-            {
-                .Equals = &_cel_OptionalValue_Equals,
-                .TypeName = &_cel_OptionalValue_TypeName,
-            },
-        .HasValue = &_cel_OptionalValue_HasValue,
-        .Value = &_cel_IntOptionalValue_Value,
+        /*super=*/
+        {
+            /*Equals=*/&_cel_OptionalValue_Equals,
+            /*TypeName=*/&_cel_OptionalValue_TypeName,
+        },
+        /*HasValue=*/&_cel_OptionalValue_HasValue,
+        /*Value=*/&_cel_IntOptionalValue_Value,
     },
     // _cel_UintOptionalValueVTable
     {
-        .super =
-            {
-                .Equals = &_cel_OptionalValue_Equals,
-                .TypeName = &_cel_OptionalValue_TypeName,
-            },
-        .HasValue = &_cel_OptionalValue_HasValue,
-        .Value = &_cel_UintOptionalValue_Value,
+        /*super=*/
+        {
+            /*Equals=*/&_cel_OptionalValue_Equals,
+            /*TypeName=*/&_cel_OptionalValue_TypeName,
+        },
+        /*HasValue=*/&_cel_OptionalValue_HasValue,
+        /*Value=*/&_cel_UintOptionalValue_Value,
     },
     // _cel_DoubleOptionalValueVTable
     {
-        .super =
-            {
-                .Equals = &_cel_OptionalValue_Equals,
-                .TypeName = &_cel_OptionalValue_TypeName,
-            },
-        .HasValue = &_cel_OptionalValue_HasValue,
-        .Value = &_cel_DoubleOptionalValue_Value,
+        /*super=*/
+        {
+            /*Equals=*/&_cel_OptionalValue_Equals,
+            /*TypeName=*/&_cel_OptionalValue_TypeName,
+        },
+        /*HasValue=*/&_cel_OptionalValue_HasValue,
+        /*Value=*/&_cel_DoubleOptionalValue_Value,
     },
     // _cel_BytesOptionalValueVTable
     {
-        .super =
-            {
-                .Equals = &_cel_OptionalValue_Equals,
-                .TypeName = &_cel_OptionalValue_TypeName,
-            },
-        .HasValue = &_cel_OptionalValue_HasValue,
-        .Value = &_cel_BytesOptionalValue_Value,
+        /*super=*/
+        {
+            /*Equals=*/&_cel_OptionalValue_Equals,
+            /*TypeName=*/&_cel_OptionalValue_TypeName,
+        },
+        /*HasValue=*/&_cel_OptionalValue_HasValue,
+        /*Value=*/&_cel_BytesOptionalValue_Value,
     },
     // _cel_StringOptionalValueVTable
     {
-        .super =
-            {
-                .Equals = &_cel_OptionalValue_Equals,
-                .TypeName = &_cel_OptionalValue_TypeName,
-            },
-        .HasValue = &_cel_OptionalValue_HasValue,
-        .Value = &_cel_StringOptionalValue_Value,
+        /*super=*/
+        {
+            /*Equals=*/&_cel_OptionalValue_Equals,
+            /*TypeName=*/&_cel_OptionalValue_TypeName,
+        },
+        /*HasValue=*/&_cel_OptionalValue_HasValue,
+        /*Value=*/&_cel_StringOptionalValue_Value,
     },
     // _cel_DurationOptionalValueVTable
     {
-        .super =
-            {
-                .Equals = &_cel_OptionalValue_Equals,
-                .TypeName = &_cel_OptionalValue_TypeName,
-            },
-        .HasValue = &_cel_OptionalValue_HasValue,
-        .Value = &_cel_DurationOptionalValue_Value,
+        /*super=*/
+        {
+            /*Equals=*/&_cel_OptionalValue_Equals,
+            /*TypeName=*/&_cel_OptionalValue_TypeName,
+        },
+        /*HasValue=*/&_cel_OptionalValue_HasValue,
+        /*Value=*/&_cel_DurationOptionalValue_Value,
     },
     // _cel_TimestampOptionalValueVTable
     {
-        .super =
-            {
-                .Equals = &_cel_OptionalValue_Equals,
-                .TypeName = &_cel_OptionalValue_TypeName,
-            },
-        .HasValue = &_cel_OptionalValue_HasValue,
-        .Value = &_cel_TimestampOptionalValue_Value,
+        /*super=*/
+        {
+            /*Equals=*/&_cel_OptionalValue_Equals,
+            /*TypeName=*/&_cel_OptionalValue_TypeName,
+        },
+        /*HasValue=*/&_cel_OptionalValue_HasValue,
+        /*Value=*/&_cel_TimestampOptionalValue_Value,
     },
     // _cel_OptionalValueVTable
     {
-        .super =
-            {
-                .Equals = &_cel_OptionalValue_Equals,
-                .TypeName = &_cel_OptionalValue_TypeName,
-            },
-        .HasValue = &_cel_OptionalValue_HasValue,
-        .Value = &_cel_OptionalValue_Value,
+        /*super=*/
+        {
+            /*Equals=*/&_cel_OptionalValue_Equals,
+            /*TypeName=*/&_cel_OptionalValue_TypeName,
+        },
+        /*HasValue=*/&_cel_OptionalValue_HasValue,
+        /*Value=*/&_cel_OptionalValue_Value,
     },
 };
 

@@ -1013,11 +1013,12 @@ extern "C" _cel_MessageEquality _cel_Message_Equals(
   CEL_ASSERT_NOT_NULL(alloc);
 
   _cel_MessageEqualityState state = {
-      .def_pool = def_pool,
-      .wkts = wkts,
-      .alloc = alloc,
-      .arena = cel_nullptr,
-      .depth = 100,
+      /*def_pool=*/def_pool,
+      /*wkts=*/wkts,
+      /*alloc=*/alloc,
+      /*arena=*/cel_nullptr,
+      /*result=*/{},
+      /*depth=*/100,
   };
   _cel_MessageEqualityState* volatile state_ptr = &state;
   if (_cel_setjmp(state_ptr->jmp)) {
@@ -1046,11 +1047,12 @@ extern "C" _cel_MessageEquality _cel_MessageField_Equals(
   CEL_ASSERT_NOT_NULL(alloc);
 
   _cel_MessageEqualityState state = {
-      .def_pool = def_pool,
-      .wkts = wkts,
-      .alloc = alloc,
-      .arena = cel_nullptr,
-      .depth = 100,
+      /*def_pool=*/def_pool,
+      /*wkts=*/wkts,
+      /*alloc=*/alloc,
+      /*arena=*/cel_nullptr,
+      /*result=*/{},
+      /*depth=*/100,
   };
   _cel_MessageEqualityState* volatile state_ptr = &state;
   if (_cel_setjmp(state_ptr->jmp)) {

@@ -241,11 +241,11 @@ static cel_ListValueIterator* cel_nullable _cel_MutableListValue_NewIterator(
 }
 
 extern "C" const cel_ListValueVTable _cel_MutableListValueVTable = {
-    .Equals = cel_nullptr,
-    .FastSize = &_cel_MutableListValue_FastSize,
-    .SlowSize = &_cel_MutableListValue_SlowSize,
-    .Get = &_cel_MutableListValue_Get,
-    .NewIterator = &_cel_MutableListValue_NewIterator,
+    /*Equals=*/cel_nullptr,
+    /*FastSize=*/&_cel_MutableListValue_FastSize,
+    /*SlowSize=*/&_cel_MutableListValue_SlowSize,
+    /*Get=*/&_cel_MutableListValue_Get,
+    /*NewIterator=*/&_cel_MutableListValue_NewIterator,
 };
 
 static void _cel_MutableListValueIterator_Delete(
@@ -355,12 +355,12 @@ static bool _cel_MutableListValueIterator_Next(
 }
 
 const cel_ListValueIteratorVTable _cel_MutableListValueIteratorVTable = {
-    .super =
-        {
-            .Delete = &_cel_MutableListValueIterator_Delete,
-            .Next1 = &_cel_MutableListValueIterator_Next1,
-            .Next2 = &_cel_MutableListValueIterator_Next2,
-            .Remaining = &_cel_MutableListValueIterator_Remaining,
-        },
-    .Next = &_cel_MutableListValueIterator_Next,
+    /*super=*/
+    {
+        /*Delete=*/&_cel_MutableListValueIterator_Delete,
+        /*Next1=*/&_cel_MutableListValueIterator_Next1,
+        /*Next2=*/&_cel_MutableListValueIterator_Next2,
+        /*Remaining=*/&_cel_MutableListValueIterator_Remaining,
+    },
+    /*Next=*/&_cel_MutableListValueIterator_Next,
 };

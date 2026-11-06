@@ -157,9 +157,9 @@ class _cel_String : private _cel_GenericString {
     return _cel_GenericString_AssignAllocator(this, cel_DefaultAllocator, val);
   }
 
-  CEL_ATTRIBUTE_VFORMAT(2)
   [[nodiscard]]
-  CEL_INLINE ptrdiff_t VAppendF(const char* cel_nonnull fmt, va_list args) {
+  CEL_ATTRIBUTE_VFORMAT(2) CEL_INLINE ptrdiff_t
+      VAppendF(const char* cel_nonnull fmt, va_list args) {
     return _cel_GenericString_VAppendFAllocator(this, cel_DefaultAllocator, fmt,
                                                 args);
   }

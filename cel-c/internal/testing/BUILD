@@ -71,7 +71,7 @@ cc_library(
         "//cel-c:assert",
         "//cel-c/internal:config",
         "@abseil-cpp//absl/log:die_if_null",
-        "@cel-spec//proto/cel/expr/conformance/proto3:test_all_types_upb_proto_reflection",
+        "@cel_conformance//proto/cel/expr/conformance/proto3:test_all_types_upb_proto_reflection",
         "@protobuf//:any_upb_reflection_proto",
         "@protobuf//:duration_upb_reflection_proto",
         "@protobuf//:field_mask_upb_reflection_proto",

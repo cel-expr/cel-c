@@ -98,7 +98,7 @@ struct _cel_TestingVariableResolver : cel_VariableResolver {
 
 struct _cel_MockVariableResolver : public _cel_TestingVariableResolver {
  public:
-  _cel_MockVariableResolver() : _cel_TestingVariableResolver() {}
+  _cel_MockVariableResolver() : = default;
 
   MOCK_METHOD(cel_Trilean, Find, (cel_StringView, cel_Value*, cel_Status*),
               (const, override));

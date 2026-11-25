@@ -101,7 +101,6 @@ CEL_ATTRIBUTE_NOTHROW
 CEL_EXTERN const cel_Type* cel_nonnull
 cel_IdentDecl_Type(const cel_IdentDecl* cel_nonnull decl);
 
-CEL_ATTRIBUTE_NODISCARD
 CEL_ATTRIBUTE_NOTHROW
 CEL_EXTERN void cel_IdentDecl_SetType(cel_IdentDecl* cel_nonnull decl,
                                       const cel_Type* cel_nonnull type);

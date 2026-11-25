@@ -3052,21 +3052,18 @@ CEL_INLINE void cel_CallExpr_SetFunction(cel_CallExpr* cel_nonnull expr,
   expr->set_function(function);
 }
 
-CEL_ATTRIBUTE_NODISCARD
 CEL_DEPRECATE_AND_INLINE
 CEL_INLINE void cel_CallExpr_AppendArg(cel_CallExpr* cel_nonnull expr,
                                        cel_CallArgExpr* cel_nonnull arg) {
   expr->AppendArg(arg);
 }
 
-CEL_ATTRIBUTE_NODISCARD
 CEL_DEPRECATE_AND_INLINE
 CEL_INLINE void cel_CallExpr_PrependArg(cel_CallExpr* cel_nonnull expr,
                                         cel_CallArgExpr* cel_nonnull arg) {
   expr->PrependArg(arg);
 }
 
-CEL_ATTRIBUTE_NODISCARD
 CEL_DEPRECATE_AND_INLINE
 CEL_INLINE void cel_CallExpr_InsertArg(cel_CallExpr* cel_nonnull expr,
                                        cel_CallArgExpr* cel_nullable before,
@@ -3366,21 +3363,18 @@ cel_ListExpr_New(cel_Ast* cel_nonnull ast) {
   return ast->NewListExpr();
 }
 
-CEL_ATTRIBUTE_NODISCARD
 CEL_DEPRECATE_AND_INLINE
 CEL_INLINE void cel_ListExpr_AppendElement(
     cel_ListExpr* cel_nonnull expr, cel_ListElementExpr* cel_nonnull element) {
   expr->AppendElement(element);
 }
 
-CEL_ATTRIBUTE_NODISCARD
 CEL_DEPRECATE_AND_INLINE
 CEL_INLINE void cel_ListExpr_PrependElement(
     cel_ListExpr* cel_nonnull expr, cel_ListElementExpr* cel_nonnull element) {
   expr->PrependElement(element);
 }
 
-CEL_ATTRIBUTE_NODISCARD
 CEL_DEPRECATE_AND_INLINE
 CEL_INLINE void cel_ListExpr_InsertElement(
     cel_ListExpr* cel_nonnull expr, cel_ListElementExpr* cel_nullable before,
@@ -3514,21 +3508,18 @@ CEL_INLINE cel_MapExpr* cel_nullable cel_MapExpr_New(cel_Ast* cel_nonnull ast) {
   return ast->NewMapExpr();
 }
 
-CEL_ATTRIBUTE_NODISCARD
 CEL_DEPRECATE_AND_INLINE
 CEL_INLINE void cel_MapExpr_AppendEntry(cel_MapExpr* cel_nonnull expr,
                                         cel_MapEntryExpr* cel_nonnull entry) {
   expr->AppendEntry(entry);
 }
 
-CEL_ATTRIBUTE_NODISCARD
 CEL_DEPRECATE_AND_INLINE
 CEL_INLINE void cel_MapExpr_PrependEntry(cel_MapExpr* cel_nonnull expr,
                                          cel_MapEntryExpr* cel_nonnull entry) {
   expr->PrependEntry(entry);
 }
 
-CEL_ATTRIBUTE_NODISCARD
 CEL_DEPRECATE_AND_INLINE
 CEL_INLINE void cel_MapExpr_InsertEntry(cel_MapExpr* cel_nonnull expr,
                                         cel_MapEntryExpr* cel_nullable before,
@@ -3669,21 +3660,18 @@ CEL_INLINE void cel_StructExpr_SetName(cel_StructExpr* cel_nonnull expr,
   expr->set_name(name);
 }
 
-CEL_ATTRIBUTE_NODISCARD
 CEL_DEPRECATE_AND_INLINE
 CEL_INLINE void cel_StructExpr_AppendField(
     cel_StructExpr* cel_nonnull expr, cel_StructFieldExpr* cel_nonnull field) {
   expr->AppendField(field);
 }
 
-CEL_ATTRIBUTE_NODISCARD
 CEL_DEPRECATE_AND_INLINE
 CEL_INLINE void cel_StructExpr_PrependField(
     cel_StructExpr* cel_nonnull expr, cel_StructFieldExpr* cel_nonnull field) {
   expr->PrependField(field);
 }
 
-CEL_ATTRIBUTE_NODISCARD
 CEL_DEPRECATE_AND_INLINE
 CEL_INLINE void cel_StructExpr_InsertField(
     cel_StructExpr* cel_nonnull expr, cel_StructFieldExpr* cel_nullable before,
@@ -4011,7 +3999,6 @@ cel_BlockIndexExpr_Value(const cel_BlockIndexExpr* cel_nonnull expr) {
   return expr->value();
 }
 
-CEL_ATTRIBUTE_NODISCARD
 CEL_DEPRECATE_AND_INLINE
 CEL_INLINE void cel_BlockIndexExpr_SetValue(
     cel_BlockIndexExpr* cel_nonnull expr, int64_t value) {
@@ -4047,7 +4034,6 @@ cel_BlockExpr_ReleaseBound(cel_BlockExpr* cel_nonnull expr) {
   return expr->ReleaseBound();
 }
 
-CEL_ATTRIBUTE_NODISCARD
 CEL_DEPRECATE_AND_INLINE
 CEL_INLINE void cel_BlockExpr_AppendBinding(cel_BlockExpr* cel_nonnull expr,
                                             cel_BlockBindingExpr* cel_nonnull
@@ -4055,7 +4041,6 @@ CEL_INLINE void cel_BlockExpr_AppendBinding(cel_BlockExpr* cel_nonnull expr,
   return expr->AppendBinding(binding);
 }
 
-CEL_ATTRIBUTE_NODISCARD
 CEL_DEPRECATE_AND_INLINE
 CEL_INLINE void cel_BlockExpr_PrependBinding(cel_BlockExpr* cel_nonnull expr,
                                              cel_BlockBindingExpr* cel_nonnull
@@ -4063,7 +4048,6 @@ CEL_INLINE void cel_BlockExpr_PrependBinding(cel_BlockExpr* cel_nonnull expr,
   return expr->PrependBinding(binding);
 }
 
-CEL_ATTRIBUTE_NODISCARD
 CEL_DEPRECATE_AND_INLINE
 CEL_INLINE void cel_BlockExpr_InsertBinding(
     cel_BlockExpr* cel_nonnull expr, cel_BlockBindingExpr* cel_nullable before,
@@ -4173,21 +4157,18 @@ cel_AttrExpr_ReleaseOperand(cel_AttrExpr* cel_nonnull expr) {
   return expr->ReleaseOperand();
 }
 
-CEL_ATTRIBUTE_NODISCARD
 CEL_DEPRECATE_AND_INLINE
 CEL_INLINE void cel_AttrExpr_AppendQualifier(
     cel_AttrExpr* cel_nonnull expr, cel_AttrQualExpr* cel_nonnull qualifier) {
   expr->AppendQualifier(qualifier);
 }
 
-CEL_ATTRIBUTE_NODISCARD
 CEL_DEPRECATE_AND_INLINE
 CEL_INLINE void cel_AttrExpr_PrependQualifier(
     cel_AttrExpr* cel_nonnull expr, cel_AttrQualExpr* cel_nonnull qualifier) {
   expr->PrependQualifier(qualifier);
 }
 
-CEL_ATTRIBUTE_NODISCARD
 CEL_DEPRECATE_AND_INLINE
 CEL_INLINE void cel_AttrExpr_InsertQualifier(
     cel_AttrExpr* cel_nonnull expr, cel_AttrQualExpr* cel_nullable before,

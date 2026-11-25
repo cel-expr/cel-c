@@ -25,7 +25,6 @@ CEL_ATTRIBUTE_NOTHROW
 CEL_ATTRIBUTE_PURE
 const upb_DefPool* cel_nonnull _cel_TestingDefPool();
 
-CEL_ATTRIBUTE_NODISCARD
 CEL_ATTRIBUTE_NOTHROW
 void _cel_TestingDefs(upb_DefPool* cel_nonnull def_pool);
 

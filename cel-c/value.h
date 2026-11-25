@@ -1363,7 +1363,6 @@ cel_Value_SetOptional(cel_Value* cel_nonnull value) {
   return (cel_OptionalValue*)cel_Value_SetOpaque(value);
 }
 
-CEL_ATTRIBUTE_NODISCARD
 static CEL_INLINE void cel_Value_SetType(cel_Value* cel_nonnull value,
                                          cel_StringView type) {
   CEL_ASSERT_NOT_NULL(value);
